@@ -36,8 +36,15 @@
         #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        
+        /* Modal & Notlar */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-bg); margin: 5% auto; padding: 0; width: 60%; border-radius: 10px; overflow: hidden; }
+        .modal-content { background: var(--card-bg); margin: 2% auto; padding: 0; width: 70%; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+        
+        .note-area { background: rgba(0,0,0,0.03); padding: 15px; border-radius: 5px; margin-top: 15px; border: 1px solid rgba(0,0,0,0.1); }
+        .note-list { max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 0.9rem; }
+        .note-item { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; }
+        .note-author { font-weight: bold; color: #3b82f6; }
         
         .tab-content { display: none; animation: fadeIn 0.3s; } .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -79,11 +86,25 @@
 
 <div id="detayModal" class="modal">
     <div class="modal-content">
-        <div style="padding:20px; background:var(--sidebar-bg); color:white; display:flex; justify-content:space-between;">
+        <div style="padding:20px; background:var(--sidebar-bg); color:white; display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0" id="modalBaslik">Başvuru Detayı</h3>
-            <span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            <div>
+                <button onclick="pdfYazdir()" class="btn btn-green" style="font-size:0.8rem;"><i class="fas fa-print"></i> DOSYAYI YAZDIR</button>
+                <span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem; margin-left:15px;">&times;</span>
+            </div>
         </div>
-        <div id="modalIcerik" style="padding:30px; max-height:60vh; overflow-y:auto; color:var(--text-color);"></div>
+        
+        <div style="padding:30px; overflow-y:auto; flex:1; display:flex; gap:20px;">
+            <div style="flex:2;" id="modalIcerik"></div>
+            
+            <div style="flex:1; border-left:1px solid rgba(0,0,0,0.1); padding-left:20px;">
+                <h4 style="margin-top:0; color:#1f4068;">📋 Yönetici Notları</h4>
+                <div class="note-list" id="noteList">Yükleniyor...</div>
+                <textarea id="newNote" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; height:60px;" placeholder="Not ekle..."></textarea>
+                <button onclick="notEkle()" class="btn btn-blue" style="width:100%; margin-top:5px;">Notu Kaydet</button>
+            </div>
+        </div>
+
         <div style="padding:15px; background:rgba(0,0,0,0.05); text-align:right;"><button onclick="modalKapat()" class="btn btn-red">Kapat</button></div>
     </div>
 </div>
@@ -100,7 +121,7 @@
         <div id="playerStatus" style="color:white; font-size:0.8rem; text-align:center;">Müzik Seçilmedi</div>
         <audio id="radioPlayer" controls class="hidden" style="width:100%; margin-top:5px;"></audio>
         <div id="ytContainer" class="hidden">
-            <input type="text" id="musicUrl" style="width:100%; box-sizing:border-box; margin-bottom:5px; padding:5px;" placeholder="YouTube Linki...">
+            <input type="text" id="musicUrl" style="width:100%; box-sizing:border-box; margin-bottom:5px; padding:5px; background:rgba(0,0,0,0.5); color:white; border:1px solid #00f7ff;" placeholder="YouTube Linki...">
             <button onclick="youtubeCal()" class="btn btn-blue" style="width:100%; padding:5px;">VİDEOYU AÇ</button>
             <iframe id="ytPlayer" style="height:150px; margin-top:5px;" src="" frameborder="0" allow="autoplay; encrypted-media"></iframe>
         </div>
@@ -195,37 +216,33 @@
 
 <script src="config.js"></script>
 <script>
-    // --- SES EFEKTLERİ KÜTÜPHANESİ ---
+    // --- SES EFEKTLERİ ---
     const SFX = {
-        success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), // Onay
-        error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), // Red/Silme
-        alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), // Bildirim
-        click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") // Menü geçişi
+        success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), 
+        error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), 
+        alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), 
+        click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") 
     };
-    
-    // Seslerin sesi çok yüksek olmasın
     SFX.success.volume = 0.5; SFX.error.volume = 0.5; SFX.alert.volume = 0.4; SFX.click.volume = 0.2;
 
     let basvuruVerileri = {};
     let aktifKullanici = "";
     let jitsiApi = null;
+    let aktifBasvuruKey = null; // Detayda açık olan başvurunun key'i
 
     dragElement(document.getElementById("musicPlayer"));
     function toggleMusicPlayer() { document.getElementById("musicPlayer").classList.toggle("minimized"); SFX.click.play(); }
 
     function radyoCal(url, isim) {
-        document.getElementById("playerStatus").innerText = "Çalıyor: " + isim;
-        document.getElementById("ytContainer").classList.add("hidden"); document.getElementById("ytPlayer").src = "";
+        document.getElementById("playerStatus").innerText = "Bağlanıyor: " + isim + "...";
+        document.getElementById("ytContainer").classList.add("hidden"); 
+        document.getElementById("ytPlayer").src = ""; 
         const audio = document.getElementById("radioPlayer");
-        audio.src = url; audio.classList.remove("hidden"); audio.play().catch(e => alert("Radyo başlatılamadı."));
+        audio.src = url; audio.classList.remove("hidden");
+        audio.play().then(() => { document.getElementById("playerStatus").innerText = "Çalıyor: " + isim; }).catch(e => { console.error(e); document.getElementById("playerStatus").innerText = "Hata!"; alert("Radyo çalınamadı. Güvenlik ayarlarını kontrol et."); });
     }
     function youtubeMod() { document.getElementById("playerStatus").innerText = "Mod: YouTube"; document.getElementById("radioPlayer").pause(); document.getElementById("radioPlayer").classList.add("hidden"); document.getElementById("ytContainer").classList.remove("hidden"); }
-    function youtubeCal() {
-        const url = document.getElementById('musicUrl').value;
-        let vId = ""; const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-        if (m && m[2].length === 11) vId = m[2]; else { SFX.error.play(); alert("Geçersiz Link"); return; }
-        document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${vId}?autoplay=1`;
-    }
+    function youtubeCal() { const url = document.getElementById('musicUrl').value; let vId = ""; const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); if (m && m[2].length === 11) vId = m[2]; else { SFX.error.play(); alert("Geçersiz Link"); return; } document.getElementById('ytPlayer').src = `https://www.youtube.com/embed/${vId}?autoplay=1`; }
     function dragElement(e){var n=0,t=0,o=0,l=0;function u(e){(e=e||window.event).preventDefault(),o=e.clientX,l=e.clientY,document.onmouseup=d,document.onmousemove=m}function m(u){(u=u||window.event).preventDefault(),n=o-u.clientX,t=l-u.clientY,o=u.clientX,l=u.clientY,e.style.top=e.offsetTop-t+"px",e.style.left=e.offsetLeft-n+"px"}function d(){document.onmouseup=null,document.onmousemove=null}document.getElementById("musicHeader").onmousedown=u}
 
     window.onload = function() {
@@ -234,47 +251,18 @@
         youtubeMod();
     }
 
-    function temaDegistir() {
-        SFX.click.play();
-        if(document.body.getAttribute('data-theme') === 'dark') { document.body.removeAttribute('data-theme'); localStorage.setItem('tema', 'light'); }
-        else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('tema', 'dark'); }
-    }
+    function temaDegistir() { SFX.click.play(); if(document.body.getAttribute('data-theme') === 'dark') { document.body.removeAttribute('data-theme'); localStorage.setItem('tema', 'light'); } else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('tema', 'dark'); } }
 
-    function girisYap() {
-        SFX.click.play();
-        const k = document.getElementById('kadi').value.trim();
-        const s = document.getElementById('sifre').value.trim();
-        if (k === "Müdür" && s === "GökSancak1881") { basariliGiris("Müdür"); database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', x => { if(!x.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); }); return; }
-        database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value', sn => { let ok = false; sn.forEach(c => { if(c.val().sifre === s) ok = true; }); if(ok) basariliGiris(k); else { SFX.error.play(); document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } });
-    }
+    function girisYap() { SFX.click.play(); const k = document.getElementById('kadi').value.trim(); const s = document.getElementById('sifre').value.trim(); if (k === "Müdür" && s === "GökSancak1881") { basariliGiris("Müdür"); database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', x => { if(!x.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); }); return; } database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value', sn => { let ok = false; sn.forEach(c => { if(c.val().sifre === s) ok = true; }); if(ok) basariliGiris(k); else { SFX.error.play(); document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } }); }
 
-    function basariliGiris(isim) {
-        SFX.success.play();
-        aktifKullanici = isim; document.getElementById('aktifKullaniciAdi').innerText = isim;
-        document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex';
-        if(isim === 'Müdür') document.getElementById('webhookAyarKutusu').style.display = 'block';
-        logKaydet("Giriş", "Giriş yapıldı.");
-        verileriGetir(); yoneticileriGetir(); blacklistGetir(); loglariGetir(); chatBaslat();
-    }
+    function basariliGiris(isim) { SFX.success.play(); aktifKullanici = isim; document.getElementById('aktifKullaniciAdi').innerText = isim; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex'; if(isim === 'Müdür') document.getElementById('webhookAyarKutusu').style.display = 'block'; logKaydet("Giriş", "Giriş yapıldı."); verileriGetir(); yoneticileriGetir(); blacklistGetir(); loglariGetir(); chatBaslat(); }
 
     function logKaydet(i, d) { database.ref('logs').push({ zaman: firebase.database.ServerValue.TIMESTAMP, yonetici: aktifKullanici, islem: i, detay: d }); }
     function loglariGetir() { database.ref('logs').limitToLast(100).on('value', s => { const l = document.getElementById('logListesi'); l.innerHTML = ""; let a = []; s.forEach(c => a.push(c.val())); a.reverse().forEach(log => { let t = new Date(log.zaman).toLocaleString('tr-TR'); l.innerHTML += `<tr><td><small>${t}</small></td><td><b>${log.yonetici}</b></td><td>${log.islem}</td><td>${log.detay}</td></tr>`; }); }); }
 
-    function verileriGetir() {
-        database.ref('basvurular').on('value', s => {
-            const l = document.getElementById('basvuruListesi'); l.innerHTML = ""; basvuruVerileri = {};
-            let [t, b, o, r] = [0, 0, 0, 0];
-            s.forEach(c => {
-                const d = c.val(); const k = c.key; basvuruVerileri[k] = d;
-                t++; if(d.durum === 'Beklemede') b++; else if(d.durum === 'Onaylandı') o++; else r++;
-                let renk = d.durum==='Onaylandı'?'#10b981':(d.durum==='Reddedildi'?'#ef4444':'#f59e0b');
-                l.innerHTML += `<tr><td><div onclick="kopyala('${d.discord_id}')" class="discord-link"><i class="fab fa-discord"></i> ${d.discord_id}</div></td><td>${d.ic_isim}</td><td style="color:${renk}; font-weight:bold;">${d.durum}</td><td><small>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</small></td><td><button onclick="detayAc('${k}')" class="btn btn-blue"><i class="fas fa-eye"></i></button><button onclick="onayla('${k}')" class="btn btn-green"><i class="fas fa-check"></i></button><button onclick="reddet('${k}')" class="btn btn-red"><i class="fas fa-times"></i></button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark"><i class="fas fa-trash"></i></button></td></tr>`;
-            });
-            document.getElementById('statToplam').innerText = t; document.getElementById('statBekleyen').innerText = b; document.getElementById('statOnay').innerText = o; document.getElementById('statRed').innerText = r;
-        });
-    }
+    function verileriGetir() { database.ref('basvurular').on('value', s => { const l = document.getElementById('basvuruListesi'); l.innerHTML = ""; basvuruVerileri = {}; let [t, b, o, r] = [0, 0, 0, 0]; s.forEach(c => { const d = c.val(); const k = c.key; basvuruVerileri[k] = d; t++; if(d.durum === 'Beklemede') b++; else if(d.durum === 'Onaylandı') o++; else r++; let renk = d.durum==='Onaylandı'?'#10b981':(d.durum==='Reddedildi'?'#ef4444':'#f59e0b'); l.innerHTML += `<tr><td><div onclick="kopyala('${d.discord_id}')" class="discord-link"><i class="fab fa-discord"></i> ${d.discord_id}</div></td><td>${d.ic_isim}</td><td style="color:${renk}; font-weight:bold;">${d.durum}</td><td><small>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</small></td><td><button onclick="detayAc('${k}')" class="btn btn-blue"><i class="fas fa-eye"></i></button><button onclick="onayla('${k}')" class="btn btn-green"><i class="fas fa-check"></i></button><button onclick="reddet('${k}')" class="btn btn-red"><i class="fas fa-times"></i></button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark"><i class="fas fa-trash"></i></button></td></tr>`; }); document.getElementById('statToplam').innerText = t; document.getElementById('statBekleyen').innerText = b; document.getElementById('statOnay').innerText = o; document.getElementById('statRed').innerText = r; }); }
 
-    function yasakla() { const i = document.getElementById('yasakliID').value; const s = document.getElementById('yasakSebep').value; if(i) { database.ref('blacklist').push({ discord_id: i, sebep: s }); logKaydet("Yasak", i+" yasaklandı."); SFX.error.play(); alert("Yasaklandı"); document.getElementById('yasakliID').value = ""; } }
+    function yasakla() { const i = document.getElementById('yasakliID').value.trim(); const s = document.getElementById('yasakSebep').value.trim(); if(i) { database.ref('blacklist').push({ discord_id: i, sebep: s }); logKaydet("Yasak", i+" yasaklandı."); SFX.error.play(); alert("Yasaklandı"); document.getElementById('yasakliID').value = ""; } }
     function blacklistGetir() { database.ref('blacklist').on('value', s => { const l = document.getElementById('blacklistListesi'); l.innerHTML=""; s.forEach(c => l.innerHTML += `<tr><td>${c.val().discord_id}</td><td>${c.val().sebep}</td><td><button onclick="dbSil('blacklist/${c.key}')" class="btn btn-red">Sil</button></td></tr>`); }); }
     function excelIndir() { SFX.success.play(); let h = document.getElementById("basvuruListesi").outerHTML; let b = new Blob(["\ufeff", "<table>"+h+"</table>"], { type: "application/vnd.ms-excel" }); let u = URL.createObjectURL(b); let a = document.createElement("a"); a.href = u; a.download = "liste.xls"; a.click(); }
 
@@ -286,7 +274,99 @@
     function tabloAra(i, t) { let v = document.getElementById(i).value.toLowerCase(); document.querySelectorAll('#'+t+' tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(v) ? '' : 'none'); }
     function webhookKaydet() { localStorage.setItem('discordWebhook', document.getElementById('webhookUrl').value); SFX.success.play(); }
     function tabDegistir(i, e) { SFX.click.play(); document.querySelectorAll('.tab-content').forEach(d=>d.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(i).classList.add('active'); e.classList.add('active-tab'); }
-    function detayAc(k) { SFX.click.play(); const d = basvuruVerileri[k]; let h = ""; if(d.cevaplar) { for(let [x,y] of Object.entries(d.cevaplar)) h+=`<div><b>${x}:</b> ${y}</div><hr>`; } document.getElementById('modalIcerik').innerHTML=h; document.getElementById('detayModal').style.display='block'; }
+    
+    // --- DETAY AÇMA VE NOT SİSTEMİ ---
+    function detayAc(k) {
+        SFX.click.play();
+        aktifBasvuruKey = k; // Aktif başvuruyu hafızaya al
+        const d = basvuruVerileri[k];
+        
+        // İçerik Oluşturma
+        let h = "";
+        if(d.cevaplar) { for(let [x,y] of Object.entries(d.cevaplar)) h+=`<div><b style="color:#3b82f6;">${x}:</b><br>${y}</div><hr style="border:0; border-top:1px solid #eee; margin:10px 0;">`; } 
+        document.getElementById('modalIcerik').innerHTML = h;
+        
+        // Notları Getir
+        const notListesi = document.getElementById('noteList');
+        notListesi.innerHTML = "Yükleniyor...";
+        database.ref('basvurular/' + k + '/yonetici_notlari').on('value', snap => {
+            notListesi.innerHTML = "";
+            if(!snap.exists()) { notListesi.innerHTML = "Henüz not yok."; return; }
+            snap.forEach(c => {
+                const note = c.val();
+                let date = new Date(note.zaman).toLocaleString('tr-TR');
+                notListesi.innerHTML += `<div class="note-item"><div><span class="note-author">${note.yazan}</span>: ${note.mesaj}</div><small style="color:#999; font-size:0.7rem;">${date}</small></div>`;
+            });
+        });
+
+        document.getElementById('detayModal').style.display='block';
+    }
+
+    // --- NOT EKLEME ---
+    function notEkle() {
+        const txt = document.getElementById('newNote').value.trim();
+        if(txt && aktifBasvuruKey) {
+            database.ref('basvurular/' + aktifBasvuruKey + '/yonetici_notlari').push({
+                yazan: aktifKullanici,
+                mesaj: txt,
+                zaman: firebase.database.ServerValue.TIMESTAMP
+            });
+            document.getElementById('newNote').value = "";
+            SFX.success.play();
+        }
+    }
+
+    // --- PDF YAZDIRMA (DOSYA OLUŞTURMA) ---
+    function pdfYazdir() {
+        const d = basvuruVerileri[aktifBasvuruKey];
+        if(!d) return;
+        
+        // Yeni bir pencere aç ve içine HTML bas
+        let printWin = window.open('', '', 'width=800,height=900');
+        let html = `
+        <html><head><title>Personel Dosyası - ${d.ic_isim}</title>
+        <style>
+            body { font-family: 'Courier New', Courier, monospace; padding: 40px; }
+            .header { text-align: center; border-bottom: 2px solid black; padding-bottom: 20px; margin-bottom: 20px; }
+            .logo { width: 80px; }
+            h1 { margin: 10px 0 5px 0; font-size: 24px; text-transform: uppercase; }
+            .meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 30px; }
+            .section { margin-bottom: 20px; }
+            .label { font-weight: bold; text-decoration: underline; }
+            .content { margin-top: 5px; line-height: 1.5; }
+            .stamp { border: 2px solid red; color: red; display: inline-block; padding: 5px 10px; font-weight: bold; transform: rotate(-5deg); margin-top: 20px; }
+            @media print { .no-print { display: none; } }
+        </style>
+        </head><body>
+            <div class="header">
+                <h1>EMNİYET GENEL MÜDÜRLÜĞÜ</h1>
+                <h3>PERSONEL DAİRE BAŞKANLIĞI</h3>
+                <div>GİZLİ HİZMETE ÖZEL</div>
+            </div>
+            
+            <div class="meta">
+                <span>DOSYA NO: #${d.discord_id}</span>
+                <span>TARİH: ${new Date().toLocaleDateString('tr-TR')}</span>
+            </div>
+
+            <div class="section"><div class="label">KİMLİK BİLGİLERİ:</div><div class="content">İsim: ${d.ic_isim}<br>Yaş: ${d.ooc_yas}<br>Discord ID: ${d.discord_id}</div></div>
+            
+            <hr>
+            <h3>MÜLAKAT CEVAPLARI</h3>
+            ${Object.entries(d.cevaplar).map(([k,v]) => `<div class="section"><div class="label">${k.toUpperCase()}:</div><div class="content">${v}</div></div>`).join('')}
+            
+            <div class="stamp">
+                DURUM: ${d.durum.toUpperCase()}
+            </div>
+            
+            <script>window.print();<\/script>
+        </body></html>
+        `;
+        printWin.document.write(html);
+        printWin.document.close();
+        SFX.click.play();
+    }
+
     function modalKapat() { document.getElementById('detayModal').style.display='none'; }
     function dbSil(y) { if(confirm("Sil?")) { database.ref(y).remove(); logKaydet("Silme", y); SFX.error.play(); } }
 
