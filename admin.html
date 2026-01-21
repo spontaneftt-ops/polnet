@@ -7,16 +7,17 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; }
-        .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
+        .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; z-index: 2; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; position: relative; }
         
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #1f4068; color: white; }
         
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; font-size: 0.9rem; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
         .btn:hover { opacity: 0.8; }
-        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; }
+        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; } .btn-yellow { background: #f1c40f; color: #333; }
+        .discord-link { color: #5865F2; font-weight: bold; text-decoration: none; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         
         /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
@@ -24,7 +25,6 @@
         .modal-header { padding: 20px; background-color: #162447; color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
         .modal-body { padding: 30px; max-height: 60vh; overflow-y: auto; }
         .modal-footer { padding: 15px; background-color: #eee; text-align: right; border-radius: 0 0 10px 10px; }
-        
         .soru-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; font-size: 1.1rem; }
         .cevap-metni { color: #333; font-size: 1rem; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #ffd700; }
@@ -34,10 +34,32 @@
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; }
         .tab-content { display: none; } .tab-content.active { display: block; }
         .menu-item { padding: 15px; cursor: pointer; color: #ccc; } .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); border-radius: 5px; }
-
-        /* MÜDÜR'E ÖZEL WEBHOOK KUTUSU */
-        .webhook-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 0.8rem; display: none; /* Varsayılan Gizli */ }
+        .webhook-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 0.8rem; display: none; }
         .webhook-input { width: 100%; padding: 5px; margin-top: 5px; box-sizing: border-box; border: none; border-radius: 3px; }
+
+        /* --- TS3 TARZI SOHBET VE AKTİFLİK SİSTEMİ --- */
+        .ts3-container { display: flex; height: 75vh; gap: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        /* Sol: Aktif Kullanıcılar */
+        .ts3-sidebar { width: 250px; background: #2c3e50; color: white; padding: 10px; overflow-y: auto; border-right: 3px solid #162447; }
+        .ts3-header { font-size: 0.9rem; text-transform: uppercase; color: #95a5a6; margin-bottom: 10px; border-bottom: 1px solid #34495e; padding-bottom: 5px; }
+        .online-user { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 4px; font-size: 0.9rem; }
+        .online-user:hover { background: rgba(255,255,255,0.1); }
+        .status-dot { width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; } /* Offline Rengi */
+        .status-online { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; } /* Online Rengi */
+
+        /* Sağ: Sohbet Alanı */
+        .ts3-chat-area { flex: 1; display: flex; flex-direction: column; background: #ecf0f1; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 80%; padding: 10px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .msg-mine { align-self: flex-end; background: #3498db; color: white; border-bottom-right-radius: 0; }
+        .msg-other { align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 0; border: 1px solid #ddd; }
+        .msg-sender { font-size: 0.75rem; opacity: 0.8; margin-bottom: 3px; font-weight: bold; display: block; }
+        .msg-time { font-size: 0.7rem; opacity: 0.6; float: right; margin-left: 10px; margin-top: 5px; }
+        
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #ccc; display: flex; gap: 10px; }
+        .chat-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn-send { padding: 0 20px; background: #162447; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -70,10 +92,11 @@
         <h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2>
         <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div>
         <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div>
+        <div class="menu-item" onclick="tabDegistir('sohbetTab', this)">💬 Komuta Merkezi</div>
         
         <div id="webhookAyarKutusu" class="webhook-box">
             <label>Discord Webhook URL:</label>
-            <input type="password" id="webhookUrl" class="webhook-input" placeholder="https://discord.com/api/webhooks/..." onchange="webhookKaydet()">
+            <input type="password" id="webhookUrl" class="webhook-input" placeholder="Webhook URL..." onchange="webhookKaydet()">
         </div>
 
         <div class="menu-item" onclick="location.reload()" style="margin-top:auto; color:#e43f5a;">🚪 Çıkış</div>
@@ -100,6 +123,26 @@
                 <tbody id="yoneticiListesi"></tbody>
             </table>
         </div>
+
+        <div id="sohbetTab" class="tab-content">
+            <h2 style="color:#162447;">Komuta Kontrol & Sohbet</h2>
+            <div class="ts3-container">
+                <div class="ts3-sidebar">
+                    <div class="ts3-header">AKTİF PERSONEL</div>
+                    <div id="onlineUsersList">
+                        </div>
+                </div>
+                
+                <div class="ts3-chat-area">
+                    <div class="chat-messages" id="chatMessages">
+                        </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Mesajınızı yazın (Telsiz)..." onkeydown="enterBas(event)">
+                        <button onclick="mesajGonder()" class="btn-send">GÖNDER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -107,8 +150,8 @@
 <script>
     const yedekSozluk = {"discord_id": "Discord ID", "ic_isim": "IC İsim Soyisim", "ooc_yas": "OOC Yaş", "aktiflik": "Günlük Aktiflik", "karakter_hikaye": "Karakter Hikayesi", "deneyim": "FiveM Deneyimi"};
     let basvuruVerileri = {};
+    let aktifKullanici = ""; 
 
-    // Sayfa Yüklendiğinde Webhook'u Çek (Ama henüz gösterme)
     window.onload = function() {
         const kayitliWebhook = localStorage.getItem('discordWebhook');
         if(kayitliWebhook) document.getElementById('webhookUrl').value = kayitliWebhook;
@@ -123,43 +166,106 @@
         const kadi = document.getElementById('kadi').value.trim();
         const sifre = document.getElementById('sifre').value.trim();
         
-        // MÜDÜR GİRİŞİ (MASTER KEY)
+        // Müdür Master Key
         if (kadi === "Müdür" && sifre === "GökSancak1881") { 
-            panelAc(true); // true = Müdür olduğu için webhook kutusunu göster
+            basariliGiris("Müdür");
             database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => { 
                 if(!s.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); 
             }); 
             return; 
         }
 
-        // NORMAL PERSONEL GİRİŞİ
         database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => { 
             let ok = false; 
             snapshot.forEach(c => { if(c.val().sifre === sifre) ok = true; }); 
             if(ok) {
-                // Giriş yapan kişi Müdür mü veritabanından kontrol et (İsim kontrolü)
-                let isMudur = (kadi === 'Müdür');
-                panelAc(isMudur); 
+                basariliGiris(kadi);
             } else {
                 document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; 
             }
         });
     }
 
+    function basariliGiris(kullaniciAdi) {
+        aktifKullanici = kullaniciAdi;
+        let isMudur = (kullaniciAdi === 'Müdür');
+        
+        // Presence (Online Durumu) Ayarla
+        const userStatusRef = database.ref('status/' + kullaniciAdi);
+        userStatusRef.set({ state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP });
+        userStatusRef.onDisconnect().remove(); // Sayfa kapanınca sil
+
+        panelAc(isMudur);
+    }
+
     function panelAc(isMudur) { 
         document.getElementById('loginScreen').style.display = 'none'; 
         document.getElementById('adminPanel').style.display = 'flex'; 
         
-        // Sadece Müdür ise Webhook kutusunu göster
-        if(isMudur) {
-            document.getElementById('webhookAyarKutusu').style.display = 'block';
-        } else {
-            document.getElementById('webhookAyarKutusu').style.display = 'none';
-        }
+        if(isMudur) document.getElementById('webhookAyarKutusu').style.display = 'block';
+        else document.getElementById('webhookAyarKutusu').style.display = 'none';
 
         verileriGetir(); 
         yoneticileriGetir(); 
+        sohbetVeDurumBaslat();
     }
+
+    // --- SOHBET VE STATUS SİSTEMİ ---
+    function sohbetVeDurumBaslat() {
+        // 1. Online Kullanıcıları Listele
+        database.ref('status').on('value', snapshot => {
+            const listDiv = document.getElementById('onlineUsersList');
+            listDiv.innerHTML = "";
+            snapshot.forEach(child => {
+                let user = child.key;
+                // TS3 tarzı yeşil ışık
+                listDiv.innerHTML += `
+                <div class="online-user">
+                    <div class="status-dot status-online"></div>
+                    <strong>${user}</strong>
+                </div>`;
+            });
+        });
+
+        // 2. Mesajları Listele
+        database.ref('chat').limitToLast(50).on('child_added', snapshot => {
+            const data = snapshot.val();
+            const chatDiv = document.getElementById('chatMessages');
+            
+            let tip = (data.gonderen === aktifKullanici) ? 'msg-mine' : 'msg-other';
+            let zaman = new Date(data.zaman).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            chatDiv.innerHTML += `
+            <div class="message ${tip}">
+                <span class="msg-sender">${data.gonderen}</span>
+                ${data.mesaj}
+                <span class="msg-time">${zaman}</span>
+            </div>`;
+            
+            // Otomatik aşağı kaydır
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+            
+            // Telsiz Sesi Çal (Opsiyonel - Dosya varsa)
+            // let audio = new Audio('telsiz.mp3'); audio.play().catch(e=>{}); 
+        });
+    }
+
+    function mesajGonder() {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if(msg) {
+            database.ref('chat').push({
+                gonderen: aktifKullanici,
+                mesaj: msg,
+                zaman: firebase.database.ServerValue.TIMESTAMP
+            });
+            input.value = "";
+        }
+    }
+
+    function enterBas(e) { if(e.key === 'Enter') mesajGonder(); }
+
+    // --- STANDART FONKSİYONLAR ---
 
     function verileriGetir() {
         database.ref('basvurular').on('value', snapshot => {
@@ -172,7 +278,11 @@
                 
                 liste.innerHTML += `
                 <tr>
-                    <td>${data.discord_id}</td>
+                    <td>
+                        <div onclick="discordIslem('${data.discord_id}')" class="discord-link" title="Kopyala & Aç">
+                            <span style="font-size:1.2rem;">🆔</span> ${data.discord_id} 
+                        </div>
+                    </td>
                     <td>${data.ic_isim}</td>
                     <td style="color:${renk}; font-weight:bold;">${durumYazi}</td>
                     <td>
@@ -183,6 +293,12 @@
                     </td>
                 </tr>`;
             });
+        });
+    }
+
+    function discordIslem(id) {
+        navigator.clipboard.writeText(id).then(() => {
+            window.open(`https://discord.com/users/${id}`, '_blank');
         });
     }
 
@@ -203,33 +319,17 @@
 
     function discordLogGonder(key, durumMetni, renk, sebep = "") {
         const url = localStorage.getItem('discordWebhook');
-        if(!url) return; // Webhook yoksa gönderme
-        
+        if(!url) return; 
         const data = basvuruVerileri[key];
-        
         let fields = [
             { name: "👤 IC İsim", value: data.ic_isim, inline: true },
             { name: "🆔 Discord ID", value: `<@${data.discord_id}> (${data.discord_id})`, inline: true },
             { name: "🎂 OOC Yaş", value: data.ooc_yas, inline: true }
         ];
-
         if(sebep) fields.push({ name: "📝 Red Sebebi", value: sebep });
 
-        const payload = {
-            embeds: [{
-                title: `Başvuru Durumu: ${durumMetni}`,
-                color: renk,
-                fields: fields,
-                footer: { text: "EGM Yönetim Paneli" },
-                timestamp: new Date()
-            }]
-        };
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).catch(err => console.error(err));
+        const payload = { embeds: [{ title: `Başvuru Durumu: ${durumMetni}`, color: renk, fields: fields, footer: { text: "EGM Yönetim Paneli" }, timestamp: new Date() }] };
+        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(err => console.error(err));
     }
 
     function detayAc(key) {
@@ -244,9 +344,30 @@
         document.getElementById('modalIcerik').innerHTML = html; document.getElementById('detayModal').style.display = "block";
     }
     function modalKapat() { document.getElementById('detayModal').style.display = "none"; }
-    function yoneticileriGetir() { database.ref('yetkililer').on('value', s => { const l = document.getElementById('yoneticiListesi'); l.innerHTML = ""; s.forEach(c => { let sil = c.val().kadi === 'Müdür' ? '🔒' : `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`; l.innerHTML += `<tr><td>${c.val().kadi}</td><td>••••</td><td>${sil}</td></tr>`; }); }); }
+    
+    function yoneticileriGetir() { 
+        database.ref('yetkililer').on('value', s => { 
+            const l = document.getElementById('yoneticiListesi'); l.innerHTML = ""; 
+            s.forEach(c => { 
+                let data = c.val();
+                let isMudurAccount = (data.kadi === 'Müdür');
+                let silBtn = (aktifKullanici === "Müdür" && !isMudurAccount) ? `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>` : `🔒`;
+                let sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`;
+                l.innerHTML += `<tr><td>${data.kadi}</td><td>••••</td><td>${sifreBtn} ${silBtn}</td></tr>`; 
+            }); 
+        }); 
+    }
+    
+    function sifreDegistir(key, kadi) {
+        let yeniSifre = prompt(`"${kadi}" kullanıcısı için yeni şifreyi girin:`);
+        if(yeniSifre && yeniSifre.trim() !== "") {
+            database.ref('yetkililer/'+key).update({sifre: yeniSifre.trim()});
+            alert("Şifre başarıyla güncellendi!");
+        }
+    }
+
     function yetkiliEkle() { const k=document.getElementById('yeniKadi').value.trim(), s=document.getElementById('yeniSifre').value.trim(); if(k&&s) { database.ref('yetkililer').push({kadi:k, sifre:s}); alert("Eklendi."); } }
-    function dbSil(y) { if(confirm('Silinsin mi?')) database.ref(y).remove(); }
+    function dbSil(y) { if(confirm('Bu kaydı silmek istediğinize emin misiniz?')) database.ref(y).remove(); }
     function tabDegistir(id, el) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 </script>
 </body>
