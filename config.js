@@ -1,5 +1,3 @@
-// Firebase SDK'larını HTML içinde çağıracağız, burası sadece ayarlar.
-
 const firebaseConfig = {
     apiKey: "AIzaSyD4mXN8BZ3OMzl35vtEbNGA9BUuHPgoqQU",
     authDomain: "mit-sistemi.firebaseapp.com",
@@ -11,5 +9,7 @@ const firebaseConfig = {
 };
 
 // Uygulamayı Başlat
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const database = firebase.database();
