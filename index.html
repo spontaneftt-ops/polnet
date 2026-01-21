@@ -2,66 +2,96 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Polnet - Sorgulama</title>
-    <style>
-        body { background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; margin: 0; }
-        .card { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; width: 350px; }
-        input { padding: 12px; width: 90%; border-radius: 5px; border: none; margin-bottom: 15px; background: #333; color: white; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; }
-        .btn-green { background: #28a745; color: white; }
-        .btn-blue { background: #007bff; color: white; }
-        .btn-gray { background: #555; color: white; font-size: 0.8rem; }
-        #sonuc { margin-top: 20px; padding: 10px; display: none; border-radius: 5px; }
-    </style>
+    <title>EGM Personel Daire Başkanlığı</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #162447 100%); 
+            color: #fff; display: flex; justify-content: center; align-items: center; 
+            height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; 
+        }
+        .card { 
+            background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        /* Logo ayarı: egmm.png kullanılıyor */
+        .logo { width: 120px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3)); }
+        
+        h1 { color: #ffd700; font-size: 1.5rem; text-transform: uppercase; margin: 10px 0; }
+        
+        input { 
+            padding: 15px; width: 90%; border-radius: 5px; border: 1px solid #333; 
+            margin-bottom: 15px; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem;
+        }
+        .btn { 
+            padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; 
+            text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; width: 40%;
+        }
+        .btn-green { background: #28a745; color: white; width: 95%; font-size: 1.1rem; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-gray { background: #4b5563; color: white; }
+        
+        #sonuc { margin-top: 25px; padding: 20px; display: none; border-radius: 8px; background: rgba(0,0,0,0.4); }
+    </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>GölgeRP EGM Personel Daire</h1>
-    <p>Başvuru durumunu kontrol et</p>
+    <img src="egmm.png" class="logo" alt="EGM Logo">
     
-    <input type="text" id="sorguDiscordId" placeholder="Discord ID Giriniz">
-    <br>
-    <button onclick="sorgula()" class="btn btn-green">Sorgula</button>
+    <h1>Başvuru Sonuç Ekranı</h1>
+    <p style="color:#aaa; font-size:0.9rem;">Discord ID'nizi girerek durumunuzu sorgulayabilirsiniz.</p>
+    
+    <input type="text" id="sorguDiscordId" placeholder="Discord ID (Örn: 82736...)">
+    <button onclick="sorgula()" class="btn btn-green">DURUMU SORGULA</button>
     
     <div id="sonuc"></div>
     
-    <hr style="border-color: #333; margin: 20px 0;">
+    <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0;">
     <a href="apply.html" class="btn btn-blue">Başvuru Yap</a>
-    <br><br>
-    <a href="admin.html" class="btn btn-gray">Yetkili Paneli</a>
+    <a href="admin.html" class="btn btn-gray">Yönetim</a>
 </div>
 
 <script src="config.js"></script>
 <script>
     function sorgula() {
-        const id = document.getElementById('sorguDiscordId').value;
+        const id = document.getElementById('sorguDiscordId').value.trim();
         const sonucDiv = document.getElementById('sonuc');
 
         if(!id) { alert("Lütfen Discord ID girin!"); return; }
 
         sonucDiv.style.display = 'none';
         
-        // Veritabanında arama yap
         database.ref('basvurular').orderByChild('discord_id').equalTo(id).once('value', snapshot => {
             if (snapshot.exists()) {
-                // İlk bulunan kaydı al
                 const data = Object.values(snapshot.val())[0];
-                let renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
                 
-                sonucDiv.innerHTML = `<div style="border: 1px solid ${renk}; color: ${renk};">
-                    <h3>${data.durum}</h3>
-                    <p>${data.ic_isim}</p>
-                </div>`;
+                let mesaj = "";
+                let renk = "";
+
+                if (data.durum === 'Onaylandı') {
+                    mesaj = "BAŞVURUNUZ ONAYLANDI ✅";
+                    renk = "#28a745";
+                } else if (data.durum === 'Reddedildi') {
+                    mesaj = "BAŞVURUNUZ REDDEDİLDİ ❌";
+                    renk = "#dc3545";
+                } else {
+                    mesaj = "BAŞVURUNUZ DEĞERLENDİRİLİYOR ⏳";
+                    renk = "#ffc107";
+                }
+                
+                sonucDiv.innerHTML = `
+                    <h3 style="color:${renk}; margin:0;">${mesaj}</h3>
+                    <p style="margin-top:10px; font-size:0.9rem;">IC İsim: ${data.ic_isim}</p>
+                `;
                 sonucDiv.style.display = 'block';
             } else {
-                alert("Bu ID ile bir başvuru bulunamadı.");
+                alert("Sistemde bu ID ile kayıtlı bir başvuru bulunamadı.");
             }
         });
     }
 </script>
 </body>
 </html>
-
