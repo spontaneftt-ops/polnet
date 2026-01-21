@@ -2,35 +2,183 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Personel Başvuru</title>
+    <title>EGM Siber Başvuru Terminali</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { margin: 0; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        .card { width: 700px; height: 600px; background: rgba(22, 36, 71, 0.95); border-radius: 15px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        .logo { width: 110px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
-        .q-header { color:#ffd700; margin:0 0 10px 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
-        .q-text { font-size:1.1rem; color:#e0e0e0; max-width:90%; line-height: 1.5; margin-bottom: 15px; }
-        input, textarea { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 85%; border-radius: 5px; font-size: 1.1rem; transition: 0.3s; font-family: 'Segoe UI', sans-serif; }
-        input:focus, textarea:focus { border-color: #ffd700; outline: none; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+        /* --- TEMEL AYARLAR & ARKA PLAN --- */
+        body {
+            margin: 0;
+            background-color: #020a18; /* Çok koyu lacivert/siyah */
+            /* Siber ızgara ve ışık efektleri */
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 50% 0%, rgba(0, 100, 255, 0.3), transparent 70%);
+            background-size: 50px 50px, 50px 50px, 100% 100%;
+            color: #e0f7ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Rajdhani', sans-serif; /* Yeni teknolojik font */
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* Arka Plan Hareket Animasyonu (Cyber Grid) */
+        .cyber-grid-overlay {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 247, 255, 0.1) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 247, 255, 0.1) 2px, transparent 2px);
+            background-size: 100px 100px;
+            transform: rotateX(60deg);
+            animation: gridMove 15s linear infinite;
+            z-index: -1;
+            opacity: 0.4;
+        }
+        @keyframes gridMove {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(100px); }
+        }
+
+        /* --- ANA KART TASARIMI (GLASSMORPHISM) --- */
+        .card {
+            width: 700px;
+            height: 600px;
+            /* Buzlu cam efekti ve yarı saydamlık */
+            background: rgba(13, 30, 60, 0.65);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* Neon parlama efektleri */
+            box-shadow: 
+                0 0 30px rgba(0, 150, 255, 0.2),
+                inset 0 0 20px rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            overflow: hidden;
+        }
+        /* Kartın köşelerine teknolojik çizgiler ekler */
+        .card::before, .card::after {
+            content: ''; position: absolute; width: 50px; height: 50px;
+            border: 2px solid rgba(0, 255, 255, 0.5); z-index: 0;
+        }
+        .card::before { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }
+        .card::after { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 20px 0; }
+
+        .logo { 
+            width: 120px; height: auto; margin-bottom: 15px; 
+            filter: drop-shadow(0 0 15px rgba(0, 150, 255, 0.6)); /* Logoya mavi parlama */
+            position: relative; z-index: 2;
+        }
+        
+        /* --- SORU ALANI --- */
+        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; z-index: 2; }
+        
+        .q-header { 
+            color:#00f7ff; /* Neon turkuaz */
+            margin:0 0 15px 0; 
+            font-size: 1.6rem; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+        .q-text { 
+            font-size:1.2rem; color:#cceeff; max-width:90%; line-height: 1.6; margin-bottom: 25px; font-weight: 500;
+        }
+        
+        /* --- DİJİTAL GİRİŞ ALANLARI (INPUTS) --- */
+        input, textarea {
+            background: rgba(0, 10, 30, 0.5);
+            border: none;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3); /* Sadece alt çizgi */
+            color: #00f7ff;
+            padding: 15px 20px;
+            width: 85%;
+            border-radius: 5px 5px 0 0;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 1px;
+        }
+        input::placeholder, textarea::placeholder { color: rgba(0, 255, 255, 0.3); }
+        input:focus, textarea:focus {
+            outline: none;
+            background: rgba(0, 20, 40, 0.7);
+            border-bottom-color: #00f7ff; /* Odaklanınca parlayan çizgi */
+            box-shadow: 0 10px 20px -10px rgba(0, 255, 255, 0.3);
+        }
         textarea { height: 150px; resize: none; }
-        .footer { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .btn { padding: 12px 35px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
-        .btn-next { background: #e43f5a; color: white; } .btn-next:hover { background: #c0354a; }
-        .btn-back { background: transparent; color: #aaa; border: 1px solid #aaa; } .btn-back:hover { color: white; border-color: white; }
-        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 15px 15px 0 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: #ffd700; width: 0%; transition: width 0.4s ease; }
-        .step-count { position: absolute; top: 15px; right: 20px; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+        
+        /* --- BUTONLAR VE ALT BİLGİ --- */
+        .footer { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(0, 255, 255, 0.1); z-index: 2; }
+        
+        .btn { 
+            padding: 12px 40px; border: none; border-radius: 4px; cursor: pointer; 
+            font-weight: 700; font-size: 1rem; transition: 0.3s; font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase; letter-spacing: 1px; position: relative; overflow: hidden;
+        }
+        .btn-next { 
+            background: linear-gradient(45deg, #005bea, #00c6fb); /* Mavi/Turkuaz gradient */
+            color: white; 
+            box-shadow: 0 0 15px rgba(0, 198, 251, 0.4);
+        } 
+        .btn-next:hover { 
+            box-shadow: 0 0 25px rgba(0, 198, 251, 0.7);
+            transform: translateY(-2px);
+        }
+        /* Buton içi parlama efekti */
+        .btn-next::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg); transition: 0.5s; opacity: 0;
+        }
+        .btn-next:hover::after { left: 100%; opacity: 1; transition: 0.7s; }
+
+        .btn-back { background: transparent; color: #88aacc; border: 1px solid rgba(0, 255, 255, 0.2); } 
+        .btn-back:hover { color: #00f7ff; border-color: #00f7ff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
+        
+        /* --- PROGRESS BAR (ENERJİ ÇUBUĞU) --- */
+        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(0,0,0,0.5); overflow: hidden; z-index: 3; }
+        .progress-bar { 
+            height: 100%; 
+            background: linear-gradient(90deg, #005bea, #00f7ff); /* Enerji akışı rengi */
+            width: 0%; transition: width 0.4s ease; 
+            box-shadow: 0 0 15px rgba(0, 247, 255, 0.8);
+        }
+        .step-count { 
+            position: absolute; top: 20px; right: 25px; 
+            color: #00f7ff; font-weight: 700; font-size: 1rem; 
+            text-shadow: 0 0 5px rgba(0, 247, 255, 0.5);
+            z-index: 3;
+        }
     </style>
 </head>
 <body>
 
+<div class="cyber-grid-overlay"></div>
+
 <div class="card">
     <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
     <div class="step-count" id="stepCount">Giriş</div>
+    
     <img src="egmm.png" class="logo" alt="EGM Logo">
+    
     <div class="question-box" id="qBox"></div>
+    
     <div class="footer">
         <button class="btn btn-back" id="bBack" onclick="nav(-1)">GERİ</button>
         <button class="btn btn-next" id="bNext" onclick="nav(1)">BAŞLA</button>
@@ -39,72 +187,69 @@
 
 <script src="config.js"></script>
 <script>
+    // --- JAVASCRIPT KISMI ORİJİNAL HALİYLE BIRAKILMIŞTIR ---
     // --- 1. SABİT SORULAR (Herkese Sorulur) ---
     const sabitSorular = [
-        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz Emniyet Genel Müdürlüğü tarafından incelenecektir.<br>Sorular sistem tarafından 100 soruluk havuzdan <b>rastgele</b> seçilmiştir.'},
-        {id:'discord_id', t:'text', h:'KİMLİK', s:'Discord ID Giriniz:'},
-        {id:'ic_isim', t:'text', h:'KİMLİK', s:'Karakterinizin Adı ve Soyadı (IC):'},
-        {id:'ooc_yas', t:'number', h:'KİMLİK', s:'Gerçek Yaşınız (OOC):'},
-        {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Sunucuda günlük ortalama kaç saat aktif olabilirsiniz?'},
-        {id:'deneyim', t:'textarea', h:'DENEYİM', s:'Daha önce FiveM üzerinde polislik yaptınız mı? Yaptıysanız hangi rütbede?'},
-        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER', s:'Karakterinizin polis olma motivasyonu nedir? Kısa bir özgeçmiş yazınız.'}
+        {id:'i', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz Emniyet Genel Müdürlüğü veri tabanına işlenecektir.<br>Sorular sistem tarafından 100 soruluk havuzdan <b>rastgele</b> seçilmiştir.'},
+        {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
+        {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakterinizin Adı ve Soyadı (IC):'},
+        {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
+        {id:'aktiflik', t:'number', h:'AKTİFLİK DURUMU', s:'Sunucuda günlük ortalama kaç saat aktif olabilirsiniz?'},
+        {id:'deneyim', t:'textarea', h:'DENEYİM GEÇMİŞİ', s:'Daha önce FiveM üzerinde polislik yaptınız mı? Yaptıysanız hangi rütbede?'},
+        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakterinizin polis olma motivasyonu nedir? Kısa bir özgeçmiş yazınız.'}
     ];
 
     // --- 2. SORU HAVUZU (Buradan Rastgele 10 Tane Seçilecek) ---
-    // Burayı istediğin kadar artırabilirsin.
     const havuz = [
-        {id:'h1', t:'textarea', h:'KURAL', s:'Powergaming (PG) nedir? Örnek veriniz.'},
-        {id:'h2', t:'textarea', h:'KURAL', s:'Metagaming (MG) nedir? Rolde nasıl kaçınılmalıdır?'},
-        {id:'h3', t:'textarea', h:'KURAL', s:'RDM ve VDM kavramlarını açıklayınız.'},
-        {id:'h4', t:'textarea', h:'KURAL', s:'FearRP (Korku Rolü) bir polis için ne zaman geçerlidir?'},
-        {id:'h5', t:'textarea', h:'KURAL', s:'New Life Rule (NLR) nedir? Ölen polis olaya dönebilir mi?'},
-        {id:'h6', t:'textarea', h:'KURAL', s:'Mixing nedir? IC ve OOC kavramlarını karıştırmak ne demektir?'},
-        {id:'h7', t:'textarea', h:'KURAL', s:'Combat Log (CL) nedir? Yapan birini görürseniz ne yaparsınız?'},
-        {id:'h8', t:'textarea', h:'KURAL', s:'Retarded RP nedir? Neden yasaktır?'},
-        {id:'h9', t:'textarea', h:'KURAL', s:'Bunny Hopping nedir? Polis koşarken zıplar mı?'},
-        {id:'h10', t:'textarea', h:'KURAL', s:'Cop Baiting (Polis Kışkırtma) nedir?'},
+        {id:'h1', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Powergaming (PG) nedir? Örnek veriniz.'},
+        {id:'h2', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Metagaming (MG) nedir? Rolde nasıl kaçınılmalıdır?'},
+        {id:'h3', t:'textarea', h:'KURAL PROTOKOLÜ', s:'RDM ve VDM kavramlarını açıklayınız.'},
+        {id:'h4', t:'textarea', h:'KURAL PROTOKOLÜ', s:'FearRP (Korku Rolü) bir polis için ne zaman geçerlidir?'},
+        {id:'h5', t:'textarea', h:'KURAL PROTOKOLÜ', s:'New Life Rule (NLR) nedir? Ölen polis olaya dönebilir mi?'},
+        {id:'h6', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Mixing nedir? IC ve OOC kavramlarını karıştırmak ne demektir?'},
+        {id:'h7', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Combat Log (CL) nedir? Yapan birini görürseniz ne yaparsınız?'},
+        {id:'h8', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Retarded RP nedir? Neden yasaktır?'},
+        {id:'h9', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Bunny Hopping nedir? Polis koşarken zıplar mı?'},
+        {id:'h10', t:'textarea', h:'KURAL PROTOKOLÜ', s:'Cop Baiting (Polis Kışkırtma) nedir?'},
         
-        {id:'p1', t:'textarea', h:'PROSEDÜR', s:'10-20, 10-78 ve 10-99 kodlarının anlamları nelerdir?'},
-        {id:'p2', t:'textarea', h:'PROSEDÜR', s:'Miranda Hakları nelerdir? Şüpheliye ne zaman okunur?'},
-        {id:'p3', t:'textarea', h:'PROSEDÜR', s:'Üstünüz size mantıksız bir emir verirse ne yaparsınız?'},
-        {id:'p4', t:'textarea', h:'PROSEDÜR', s:'Öldürücü güç (Silah) kullanma yetkiniz hangi durumlarda vardır?'},
-        {id:'p5', t:'textarea', h:'PROSEDÜR', s:'Kelepçeleme prosedürü nasıldır? Önce kelepçe mi takılır, Miranda mı okunur?'},
-        {id:'p6', t:'textarea', h:'PROSEDÜR', s:'Telsiz konuşma adabı nasıl olmalıdır?'},
-        {id:'p7', t:'textarea', h:'PROSEDÜR', s:'Bir şüpheliyi araca bindirirken nelere dikkat etmelisiniz?'},
-        {id:'p8', t:'textarea', h:'PROSEDÜR', s:'Departman aracını kullanırken nelere dikkat edersiniz?'},
+        {id:'p1', t:'textarea', h:'OPERASYONEL PROSEDÜR', s:'10-20, 10-78 ve 10-99 kodlarının anlamları nelerdir?'},
+        {id:'p2', t:'textarea', h:'HUKUKİ PROSEDÜR', s:'Miranda Hakları nelerdir? Şüpheliye ne zaman okunur?'},
+        {id:'p3', t:'textarea', h:'HİYERARŞİ PROTOKOLÜ', s:'Üstünüz size mantıksız bir emir verirse ne yaparsınız?'},
+        {id:'p4', t:'textarea', h:'GÜÇ KULLANIMI', s:'Öldürücü güç (Silah) kullanma yetkiniz hangi durumlarda vardır?'},
+        {id:'p5', t:'textarea', h:'GÖZALTI PROSEDÜRÜ', s:'Kelepçeleme prosedürü nasıldır? Önce kelepçe mi takılır, Miranda mı okunur?'},
+        {id:'p6', t:'textarea', h:'İLETİŞİM PROTOKOLÜ', s:'Telsiz konuşma adabı nasıl olmalıdır?'},
+        {id:'p7', t:'textarea', h:'TRANSFER PROSEDÜRÜ', s:'Bir şüpheliyi araca bindirirken nelere dikkat etmelisiniz?'},
+        {id:'p8', t:'textarea', h:'ARAÇ KULLANIMI', s:'Departman aracını kullanırken nelere dikkat edersiniz?'},
         
-        {id:'s1', t:'textarea', h:'SENARYO', s:'Trafik kontrolünde durdurduğunuz araçtan inen 4 kişi size silah çekti. Ne yaparsınız?'},
-        {id:'s2', t:'textarea', h:'SENARYO', s:'Ortağınız çatışmada vuruldu ve yere düştü. Karşı ateş sürüyor. İlk hamleniz ne olur?'},
-        {id:'s3', t:'textarea', h:'SENARYO', s:'Gözaltına aldığınız kişi size rüşvet teklif etti. Rolsel tepkiniz ne olur?'},
-        {id:'s4', t:'textarea', h:'SENARYO', s:'Kovaladığınız şüpheli oyun hatası (bug) yüzünden havada uçmaya başladı. Ne yaparsınız?'},
-        {id:'s5', t:'textarea', h:'SENARYO', s:'Amiriniz sivil hayatta illegal bir grupla iş birliği yaparken gördünüz. IC ne yaparsınız?'},
-        {id:'s6', t:'textarea', h:'SENARYO', s:'Market soygununda rehine var ve müzakerecisiniz. İlk cümleniz ne olur?'},
-        {id:'s7', t:'textarea', h:'SENARYO', s:'Hastanede yaralı bir şüpheliyi sorgulamanız lazım ama doktor izin vermiyor. Ne yaparsınız?'},
-        {id:'s8', t:'textarea', h:'SENARYO', s:'Devriye sırasında sivil bir araç size kasten çarpıp kaçtı. Prosedür nedir?'},
-        {id:'s9', t:'textarea', h:'SENARYO', s:'Karakol önünde eylem yapan sivil halka nasıl müdahale edersiniz?'},
-        {id:'s10', t:'textarea', h:'SENARYO', s:'Bir ihbara gittiniz, olay yerinde 3 yaralı polis ve 5 silahlı şahıs var. Ne yaparsınız?'},
+        {id:'s1', t:'textarea', h:'SENARYO ANALİZİ', s:'Trafik kontrolünde durdurduğunuz araçtan inen 4 kişi size silah çekti. Ne yaparsınız?'},
+        {id:'s2', t:'textarea', h:'SENARYO ANALİZİ', s:'Ortağınız çatışmada vuruldu ve yere düştü. Karşı ateş sürüyor. İlk hamleniz ne olur?'},
+        {id:'s3', t:'textarea', h:'SENARYO ANALİZİ', s:'Gözaltına aldığınız kişi size rüşvet teklif etti. Rolsel tepkiniz ne olur?'},
+        {id:'s4', t:'textarea', h:'SENARYO ANALİZİ', s:'Kovaladığınız şüpheli oyun hatası (bug) yüzünden havada uçmaya başladı. Ne yaparsınız?'},
+        {id:'s5', t:'textarea', h:'SENARYO ANALİZİ', s:'Amiriniz sivil hayatta illegal bir grupla iş birliği yaparken gördünüz. IC ne yaparsınız?'},
+        {id:'s6', t:'textarea', h:'SENARYO ANALİZİ', s:'Market soygununda rehine var ve müzakerecisiniz. İlk cümleniz ne olur?'},
+        {id:'s7', t:'textarea', h:'SENARYO ANALİZİ', s:'Hastanede yaralı bir şüpheliyi sorgulamanız lazım ama doktor izin vermiyor. Ne yaparsınız?'},
+        {id:'s8', t:'textarea', h:'SENARYO ANALİZİ', s:'Devriye sırasında sivil bir araç size kasten çarpıp kaçtı. Prosedür nedir?'},
+        {id:'s9', t:'textarea', h:'SENARYO ANALİZİ', s:'Karakol önünde eylem yapan sivil halka nasıl müdahale edersiniz?'},
+        {id:'s10', t:'textarea', h:'SENARYO ANALİZİ', s:'Bir ihbara gittiniz, olay yerinde 3 yaralı polis ve 5 silahlı şahıs var. Ne yaparsınız?'},
         
-        {id:'e1', t:'textarea', h:'ETİK', s:'Agresif ve küfürbaz bir vatandaşı sakinleştirmek için nasıl konuşursunuz?'},
-        {id:'e2', t:'textarea', h:'ETİK', s:'Polis üniforması sizin için neyi temsil eder?'},
-        {id:'e3', t:'textarea', h:'ETİK', s:'Suçlu yakalamak mı önemlidir, sivil güvenliği mi? Neden?'},
-        {id:'e4', t:'textarea', h:'SON SÖZ', s:'Ekibimize neden sizi almalıyız?'}
+        {id:'e1', t:'textarea', h:'MESLEK ETİĞİ', s:'Agresif ve küfürbaz bir vatandaşı sakinleştirmek için nasıl konuşursunuz?'},
+        {id:'e2', t:'textarea', h:'MESLEK ETİĞİ', s:'Polis üniforması sizin için neyi temsil eder?'},
+        {id:'e3', t:'textarea', h:'MESLEK ETİĞİ', s:'Suçlu yakalamak mı önemlidir, sivil güvenliği mi? Neden?'},
+        {id:'e4', t:'textarea', h:'KAPANIŞ', s:'Ekibimize neden sizi almalıyız?'}
     ];
 
     // --- 3. KARIŞTIRMA VE SEÇME İŞLEMİ ---
     function sorulariHazirla() {
-        // Havuzu karıştır (Shuffle)
         const karisikHavuz = havuz.sort(() => 0.5 - Math.random());
-        // İlk 10 taneyi al
         const secilenSorular = karisikHavuz.slice(0, 10);
-        // Sabit sorularla birleştir
         return [...sabitSorular, ...secilenSorular];
     }
 
-    const q = sorulariHazirla(); // Artık 'q' değişkeni dinamik!
+    const q = sorulariHazirla();
     
     let idx = 0; 
     let ans = {};
-    let soruMetinleri = {}; // Admin paneli için soruları buraya kaydedeceğiz
+    let soruMetinleri = {};
 
     function render() {
         const item = q[idx];
@@ -113,7 +258,7 @@
         const bBack = document.getElementById('bBack');
         const count = document.getElementById('stepCount');
         
-        let inputHTML = item.t === 'info' ? "" : (item.t==='textarea' ? `<textarea id="inp" placeholder="Cevabınızı detaylı yazınız..."></textarea>` : `<input type="${item.t}" id="inp" placeholder="Cevabınız...">`);
+        let inputHTML = item.t === 'info' ? "" : (item.t==='textarea' ? `<textarea id="inp" placeholder="Cevabınızı detaylı bir şekilde sisteme giriniz..."></textarea>` : `<input type="${item.t}" id="inp" placeholder="Veri girişi...">`);
         
         box.innerHTML = `<div class="q-header">${item.h}</div><div class="q-text">${item.s}</div>${inputHTML}`;
         
@@ -123,18 +268,16 @@
         }
 
         bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
-        bNext.innerText = idx === 0 ? 'BAŞLA' : (idx === q.length-1 ? 'GÖNDER' : 'İLERİ');
+        bNext.innerText = idx === 0 ? 'BAŞLAT' : (idx === q.length-1 ? 'VERİLERİ GÖNDER' : 'İLERİ');
         document.getElementById('pBar').style.width = ((idx / (q.length-1)) * 100) + '%';
-        if(idx > 0) count.innerText = `${idx} / ${q.length - 1}`;
+        if(idx > 0) count.innerText = `ADIM: ${idx} / ${q.length - 1}`;
     }
 
     function nav(d) {
         if(d === 1 && idx > 0) {
             const val = document.getElementById('inp').value.trim();
-            if(!val) return alert('Lütfen bu soruyu boş bırakmayınız!');
+            if(!val) return alert('HATA: Bu alan boş bırakılamaz!');
             ans[q[idx].id] = val;
-            
-            // ÖNEMLİ: Sorunun metnini de kaydediyoruz ki Admin panelinde sözlüğe gerek kalmasın!
             soruMetinleri[q[idx].id] = q[idx].s;
         }
         if(d === 1 && idx === q.length-1) return send();
@@ -143,7 +286,7 @@
 
     function send() {
         const btn = document.getElementById('bNext');
-        btn.innerText = 'GÖNDERİLİYOR...'; btn.disabled = true;
+        btn.innerText = 'SİSTEME İŞLENİYOR...'; btn.disabled = true;
         
         const data = { 
             discord_id: ans.discord_id, 
@@ -152,16 +295,16 @@
             durum: 'Beklemede', 
             tarih: new Date().toISOString(), 
             cevaplar: ans,
-            soru_detaylari: soruMetinleri // <--- YENİ: Soru metinlerini de gönderiyoruz
+            soru_detaylari: soruMetinleri
         };
         
         database.ref('basvurular').push(data, (err) => {
-            if(err) { alert("Hata: " + err.message); btn.disabled = false; return; }
+            if(err) { alert("Sistem Hatası: " + err.message); btn.disabled = false; return; }
             document.querySelector('.card').innerHTML = `
-                <img src="egmm.png" class="logo" style="width:100px;">
-                <h1 style="color:#28a745; margin-top:20px;">BAŞVURU İLETİLDİ ✅</h1>
-                <p style="font-size:1.1rem; color:#eee;">Başvurunuz sisteme kaydedildi.<br>Sorular rastgele seçildiği için diğer adaylardan farklı olabilir.</p>
-                <button onclick="window.location.href='index.html'" class="btn" style="background:#007bff; color:white; margin-top:30px;">Ana Sayfaya Dön</button>
+                <img src="egmm.png" class="logo" style="width:100px; filter: drop-shadow(0 0 20px #00ff00);">
+                <h1 style="color:#00ff00; margin-top:20px; text-shadow: 0 0 15px #00ff00;">BAŞVURU İLETİLDİ ✅</h1>
+                <p style="font-size:1.2rem; color:#e0f7ff;">Verileriniz EGM siber sistemine başarıyla kaydedildi.<br>Sonuçları ana ekrandan takip edebilirsiniz.</p>
+                <button onclick="window.location.href='index.html'" class="btn btn-next" style="margin-top:30px;">TERMİNALİ KAPAT</button>
             `;
         });
     }
