@@ -2,57 +2,177 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Personel Başvuru</title>
+    <title>EGM Personel Alım Başvurusu</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        /* --- TÜRK POLİSİ TEMASI & MİNİMALİST TASARIM --- */
+        /* EGM & MİNİMALİST TEMA */
         :root {
-            --egm-lacivert: #1a2b45;
-            --egm-kirmizi: #c41e3a;
-            --egm-altin: #d4af37;
-            --yazi-rengi: #ffffff;
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            --egm-lacivert: #162447;
+            --egm-koyu: #1f4068;
+            --egm-kirmizi: #e43f5a;
+            --egm-altin: #ffd700;
+            --yazi: #ffffff;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', 'Roboto', sans-serif; overflow: hidden; color: var(--yazi-rengi); background: var(--bg-gradient); }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: var(--yazi); }
         
-        /* Scroll Yapısı */
         .container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
-        .section { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; box-sizing: border-box; }
+        .section { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 15%; box-sizing: border-box; position: relative; }
         
-        /* Tipografi ve Logo */
-        h2 { font-size: 2rem; color: var(--egm-kirmizi); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; font-weight: 500; }
-        p.question-text { font-size: 1.3rem; margin-bottom: 30px; max-width: 700px; line-height: 1.5; font-weight: 300; }
-        .egm-logo { width: 120px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        /* Çizgisel Minimal Tasarım */
+        h2 { font-size: 1.8rem; color: var(--egm-altin); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        p.soru-metni { font-size: 1.4rem; font-weight: 300; margin-bottom: 40px; line-height: 1.6; }
         
-        /* Minimalist Inputlar */
-        .minimal-input, .minimal-textarea {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid #3a506b; /* Pasif renk */
-            color: white;
-            padding: 15px;
-            font-size: 1.2rem;
-            width: 100%;
-            max-width: 500px;
-            transition: all 0.3s ease;
-            text-align: center;
-            border-radius: 0; /* Köşeleri düzleştir */
+        .minimal-input {
+            background: transparent; border: none; border-bottom: 2px solid rgba(255,255,255,0.2);
+            color: white; padding: 15px; font-size: 1.3rem; width: 100%; max-width: 600px;
+            text-align: center; transition: 0.3s;
         }
-        .minimal-textarea { height: 80px; resize: none; /* Textarea için ayar */ }
-        .minimal-input:focus, .minimal-textarea:focus { 
-            outline: none; 
-            border-bottom-color: var(--egm-altin); /* Aktif renk */
-            box-shadow: 0 5px 10px -5px rgba(212, 175, 55, 0.5);
+        .minimal-input:focus { outline: none; border-bottom-color: var(--egm-kirmizi); }
+        
+        /* Navigasyon Okları */
+        .scroll-btn {
+            position: absolute; bottom: 30px; font-size: 2rem; color: rgba(255,255,255,0.5); 
+            animation: bounce 2s infinite; cursor: pointer; text-decoration: none;
         }
-        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.4); }
 
-        /* Butonlar */
-        .btn-submit { padding: 15px 50px; font-size: 1.2rem; background-color: var(--egm-kirmizi); color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 30px; transition: background 0.3s; font-weight: bold; letter-spacing: 1px; }
-        .btn-submit:hover { background-color: #a01830; }
-        .nav-link { color: rgba(255,255,255,0.6); margin-top:20px; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; }
-        .nav-link:hover { color: white; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
-        /* İlerleme Göstergesi */
-        .scroll-hint { font
+        .btn-submit {
+            padding: 15px 60px; font-size: 1.2rem; background: var(--egm-kirmizi); color: white;
+            border: none; border-radius: 50px; cursor: pointer; margin-top: 30px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(228, 63, 90, 0.4); transition: 0.3s;
+        }
+        .btn-submit:hover { transform: scale(1.05); background: #c0354a; }
+        
+        /* İlerleme Çubuğu */
+        #progress { position: fixed; top: 0; left: 0; height: 5px; background: var(--egm-kirmizi); width: 0%; transition: 0.3s; z-index: 999; }
+    </style>
+</head>
+<body>
+
+<div id="progress"></div>
+<form id="basvuruFormu" class="container" onsubmit="event.preventDefault(); gonder();">
+    <div class="section">
+        <img src="https://upload.wikimedia.org/wikipedia/tr/a/a6/Emniyet_Genel_M%C3%BCd%C3%BCrl%C3%BC%C4%9F%C3%BC_logosu.png" alt="EGM Logo" width="100" style="margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">
+        <h2>T.C. Emniyet Genel Müdürlüğü</h2>
+        <p class="soru-metni">Personel Daire Başkanlığı Başvuru Sistemi<br><br>Başvurunuz titizlikle incelenecektir.<br>Soruları cevaplamak için aşağı kaydırın.</p>
+        <div class="scroll-btn">⬇</div>
+    </div>
+
+    <div id="soruAlani"></div>
+
+    <div class="section">
+        <h2>Başvuruyu Tamamla</h2>
+        <p class="soru-metni">Verdiğim bilgilerin doğruluğunu kabul ediyor, yalan beyan durumunda oluşacak idari yaptırımları onaylıyorum.</p>
+        <button type="submit" class="btn-submit">BAŞVURUYU GÖNDER</button>
+        <p id="msg" style="margin-top:20px; font-weight:bold;"></p>
+        <a href="index.html" style="color: #ccc; margin-top:20px; text-decoration: none;">Ana Sayfaya Dön</a>
+    </div>
+</form>
+
+<script src="config.js"></script>
+<script>
+    // --- 30 ADET MÜLAKAT SORUSU ---
+    const sorular = [
+        // KİŞİSEL BİLGİLER
+        { id: "discord_id", baslik: "Kimlik Doğrulama", soru: "Discord ID'nizi giriniz:", tip: "text" },
+        { id: "ic_isim", baslik: "Kimlik Bilgileri", soru: "Karakterinizin Adı ve Soyadı (IC):", tip: "text" },
+        { id: "ooc_yas", baslik: "Kişisel Bilgiler", soru: "Gerçek Yaşınız (OOC):", tip: "number" },
+        { id: "karakter_hikayesi", baslik: "Karakter Geçmişi", soru: "Kısaca karakterinizin hikayesinden ve neden polis olmak istediğinden bahsedin:", tip: "textarea" },
+        
+        // OOC KURALLAR (5 Soru)
+        { id: "soru_1", baslik: "OOC Kural Bilgisi", soru: "Soru 1: 'Powergaming' nedir? Bir örnek veriniz.", tip: "textarea" },
+        { id: "soru_2", baslik: "OOC Kural Bilgisi", soru: "Soru 2: 'Meta Gaming' kavramını polislik rolü üzerinden açıklayınız.", tip: "textarea" },
+        { id: "soru_3", baslik: "OOC Kural Bilgisi", soru: "Soru 3: Güvenli Bölge (Safezone) ihlali nedir? Karakol içi rol kuralları nelerdir?", tip: "textarea" },
+        { id: "soru_4", baslik: "OOC Kural Bilgisi", soru: "Soru 4: 'New Life Rule' (Yeni Hayat Kuralı) polis karakteri öldüğünde nasıl işler?", tip: "textarea" },
+        { id: "soru_5", baslik: "OOC Kural Bilgisi", soru: "Soru 5: Rol Paslamak (FearRP) bir polis memuru için ne zaman geçerlidir?", tip: "textarea" },
+
+        // POLİS PROSEDÜRLERİ & HİYERARŞİ (10 Soru)
+        { id: "soru_6", baslik: "Prosedür Bilgisi", soru: "Soru 6: Hiyerarşi sizin için ne ifade ediyor? Üstünüzün verdiği emri sorgular mısınız?", tip: "textarea" },
+        { id: "soru_7", baslik: "Prosedür Bilgisi", soru: "Soru 7: 'Miranda Hakları' nedir ve şüpheliye ne zaman okunmalıdır?", tip: "textarea" },
+        { id: "soru_8", baslik: "Prosedür Bilgisi", soru: "Soru 8: 10-20, 10-78 ve 10-99 kodlarının anlamları nelerdir?", tip: "textarea" },
+        { id: "soru_9", baslik: "Prosedür Bilgisi", soru: "Soru 9: Şüpheli bir aracı durdurduğunuzda (Traffic Stop) izlemeniz gereken ilk 3 adım nedir?", tip: "textarea" },
+        { id: "soru_10", baslik: "Prosedür Bilgisi", soru: "Soru 10: Telsiz disiplini nasıl olmalıdır? Kodu ne zaman kullanmalısınız?", tip: "textarea" },
+        { id: "soru_11", baslik: "Prosedür Bilgisi", soru: "Soru 11: Gözaltına alınan bir şahıs avukat talep ederse prosedür nedir?", tip: "textarea" },
+        { id: "soru_12", baslik: "Prosedür Bilgisi", soru: "Soru 12: Hangi durumlarda öldürücü güç (Silah) kullanma yetkiniz vardır?", tip: "textarea" },
+        { id: "soru_13", baslik: "Prosedür Bilgisi", soru: "Soru 13: Departman araçlarını kullanım kuralları nelerdir?", tip: "textarea" },
+        { id: "soru_14", baslik: "Prosedür Bilgisi", soru: "Soru 14: Bir memurun rüşvet aldığını fark ederseniz ne yaparsınız?", tip: "textarea" },
+        { id: "soru_15", baslik: "Prosedür Bilgisi", soru: "Soru 15: Sivillere karşı hitabetiniz nasıl olmalıdır?", tip: "textarea" },
+
+        // SENARYO SORULARI (11 Soru)
+        { id: "soru_16", baslik: "Senaryo Analizi", soru: "Soru 16: Devriye sırasında ortağınız vuruldu ve durum kritik. Telsizden ne anons geçersiniz ve ilk hamleniz ne olur?", tip: "textarea" },
+        { id: "soru_17", baslik: "Senaryo Analizi", soru: "Soru 17: Bir banka soygununda müzakereci sizsiniz. Soyguncular rehineyi öldürmekle tehdit ediyor. Tepkiniz ne olur?", tip: "textarea" },
+        { id: "soru_18", baslik: "Senaryo Analizi", soru: "Soru 18: Üst rütbeli bir amiriniz sivil hayatta illegal bir iş yaparken gördünüz. Rolsel tepkiniz ne olur?", tip: "textarea" },
+        { id: "soru_19", baslik: "Senaryo Analizi", soru: "Soru 19: Trafik kontrolünde durdurduğunuz araçtan inen 4 kişi size silah doğrulttu. Ne yaparsınız?", tip: "textarea" },
+        { id: "soru_20", baslik: "Senaryo Analizi", soru: "Soru 20: Karakolda nezarethanedeki bir şahıs size küfür ve hakaret ediyor. Tavrınız ne olur?", tip: "textarea" },
+        { id: "soru_21", baslik: "Senaryo Analizi", soru: "Soru 21: Kalabalık bir kavga ihbarına gittiniz, olay yerinde kaos var. İlk önceliğiniz nedir?", tip: "textarea" },
+        { id: "soru_22", baslik: "Senaryo Analizi", soru: "Soru 22: Kovaladığınız şüpheli 'Desync' veya 'Bug' yüzünden havada uçmaya başladı. Rolü bozar mısınız?", tip: "textarea" },
+        { id: "soru_23", baslik: "Senaryo Analizi", soru: "Soru 23: Hastanede yaralı bir şüpheliyi sorgulamanız gerekiyor. Doktorlar izin vermiyor. Ne yaparsınız?", tip: "textarea" },
+        { id: "soru_24", baslik: "Senaryo Analizi", soru: "Soru 24: Sivil kıyafetle gezerken bir suç işlendiğine şahit oldunuz. Müdahale eder misiniz?", tip: "textarea" },
+        { id: "soru_25", baslik: "Senaryo Analizi", soru: "Soru 25: Bir rehine kurtarma operasyonunda emre itaatsizlik edip kahramanlık yaparsanız sonuçları ne olur?", tip: "textarea" },
+        { id: "soru_26", baslik: "Yetenek", soru: "Soru 26: Stres altında karar verme yeteneğinize 10 üzerinden kaç verirsiniz?", tip: "number" },
+        { id: "soru_27", baslik: "Yetenek", soru: "Soru 27: Araç sürüş becerinize 10 üzerinden kaç verirsiniz?", tip: "number" },
+        { id: "soru_28", baslik: "Yetenek", soru: "Soru 28: Atıcılık (Aim) becerinize 10 üzerinden kaç verirsiniz?", tip: "number" },
+        { id: "soru_29", baslik: "Zaman", soru: "Soru 29: Günde kaç saat aktif olabilirsiniz?", tip: "text" },
+        { id: "soru_30", baslik: "Son", soru: "Soru 30: Eklemek istediğiniz veya sormak istediğiniz bir şey var mı?", tip: "textarea" }
+    ];
+
+    // Soruları HTML'e Basma
+    const soruAlani = document.getElementById('soruAlani');
+    sorular.forEach(item => {
+        let inputHTML = "";
+        if(item.tip === 'textarea') {
+            inputHTML = `<textarea name="${item.id}" class="minimal-input" style="height:100px; resize:none;" required></textarea>`;
+        } else {
+            inputHTML = `<input type="${item.tip}" name="${item.id}" class="minimal-input" required>`;
+        }
+
+        soruAlani.innerHTML += `
+        <div class="section">
+            <h2>${item.baslik}</h2>
+            <p class="soru-metni">${item.soru}</p>
+            ${inputHTML}
+        </div>`;
+    });
+
+    // Scroll Progress Bar
+    const container = document.querySelector('.container');
+    container.addEventListener('scroll', () => {
+        const scrolled = container.scrollTop;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        const width = (scrolled / maxScroll) * 100;
+        document.getElementById('progress').style.width = width + '%';
+    });
+
+    // Veri Gönderme
+    function gonder() {
+        const formInputs = document.querySelectorAll('.minimal-input');
+        let data = {
+            tarih: new Date().toISOString(),
+            durum: "Beklemede",
+            cevaplar: {}
+        };
+
+        // Ana alanları dışarı, diğerlerini 'cevaplar' içine al
+        formInputs.forEach(input => {
+            if(input.name === 'discord_id') data.discord_id = input.value;
+            else if(input.name === 'ic_isim') data.ic_isim = input.value;
+            else if(input.name === 'ooc_yas') data.ooc_yas = input.value;
+            else data.cevaplar[input.name] = input.value; // Mülakat cevapları
+        });
+
+        database.ref('basvurular').push(data, (error) => {
+            if (error) {
+                alert('Hata: ' + error.message);
+            } else {
+                document.getElementById('msg').innerText = "BAŞVURUNUZ EMNİYET SİSTEMİNE KAYDEDİLDİ!";
+                document.getElementById('msg').style.color = "#00ff00";
+                setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+            }
+        });
+    }
+</script>
+</body>
+</html>
