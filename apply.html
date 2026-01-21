@@ -6,250 +6,109 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        /* --- EGM TEMA & KART TASARIMI --- */
-        :root {
-            --egm-lacivert: #162447;
-            --egm-koyu: #0f172a;
-            --egm-kirmizi: #e43f5a;
-            --egm-altin: #ffd700;
-            --kart-bg: rgba(22, 36, 71, 0.95); /* Arkası hafif görünen koyu lacivert */
-        }
-
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            font-family: 'Segoe UI', 'Roboto', sans-serif; 
-            overflow: hidden; 
-            background: linear-gradient(135deg, #0f172a 0%, #1f4068 100%); 
-            display: flex; justify-content: center; align-items: center;
-        }
-
-        /* Arka Plan Deseni (Opsiyonel Polis Havası) */
-        body::before {
-            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 20px 20px; z-index: -1;
-        }
-
-        /* ORTA PENCERE (CARD) */
-        .card {
-            width: 600px;
-            min-height: 450px;
-            background: var(--kart-bg);
-            border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            padding: 40px;
-            text-align: center;
-            color: white;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-
-        /* Logo ve Başlık */
-        .header img { width: 100px; height: auto; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); margin-bottom: 15px; }
-        .header h2 { margin: 0; font-size: 1.5rem; color: var(--egm-altin); letter-spacing: 1px; text-transform: uppercase; }
-        .header p { color: #ccc; font-size: 0.9rem; margin-top: 5px; }
-
-        /* Soru Alanı */
-        .question-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 20px 0; }
-        .soru-baslik { font-size: 1.2rem; color: var(--egm-kirmizi); font-weight: bold; margin-bottom: 10px; }
-        .soru-metin { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; max-width: 90%; }
-
-        /* Inputlar */
-        input, textarea {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            width: 80%;
-            border-radius: 5px;
-            transition: 0.3s;
-            font-family: inherit;
-        }
-        textarea { height: 100px; resize: none; }
-        input:focus, textarea:focus { outline: none; border-color: var(--egm-altin); background: rgba(255,255,255,0.1); }
-
-        /* Butonlar */
-        .footer { display: flex; justify-content: space-between; margin-top: 20px; }
-        .btn {
-            padding: 10px 30px; border: none; border-radius: 5px; cursor: pointer;
-            font-size: 1rem; font-weight: bold; transition: 0.2s;
-        }
-        .btn-back { background: rgba(255,255,255,0.1); color: #ccc; }
-        .btn-back:hover { background: rgba(255,255,255,0.2); color: white; }
+        body { margin: 0; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        .card { width: 600px; height: 550px; background: rgba(22, 36, 71, 0.95); border-radius: 15px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
         
-        .btn-next { background: var(--egm-kirmizi); color: white; }
-        .btn-next:hover { background: #c0354a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(228, 63, 90, 0.3); }
-
-        /* Progress Bar */
-        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 15px 15px 0 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--egm-altin); width: 0%; transition: width 0.3s ease; }
-
-        /* Animasyonlar */
-        .fade-in { animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        /* LOGO AYARI: egmm.png dosyasını klasöre attığından emin ol */
+        .logo { width: 120px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        
+        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        input, textarea { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 85%; border-radius: 5px; font-size: 1.1rem; margin-top: 15px; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: #ffd700; outline: none; background: rgba(255,255,255,0.15); }
+        textarea { height: 120px; resize: none; }
+        
+        .footer { display: flex; justify-content: space-between; margin-top: auto; }
+        .btn { padding: 12px 35px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
+        .btn-next { background: #e43f5a; color: white; } .btn-next:hover { background: #c0354a; }
+        .btn-back { background: transparent; color: #aaa; border: 1px solid #aaa; } .btn-back:hover { color: white; border-color: white; }
+        
+        .progress-bar { position: absolute; top: 0; left: 0; height: 5px; background: #ffd700; width: 0%; transition: 0.3s; border-radius: 15px 15px 0 0; }
     </style>
 </head>
 <body>
 
-<div class="card fade-in">
-    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+<div class="card">
+    <div class="progress-bar" id="pBar"></div>
     
-    <div class="header">
-        <img src="https://upload.wikimedia.org/wikipedia/tr/a/a6/Emniyet_Genel_M%C3%BCd%C3%BCrl%C3%BC%C4%9F%C3%BC_logosu.png" alt="EGM Logo">
-        <h2>Personel Daire Başkanlığı</h2>
-        <p>Polis Memuru Alım Mülakatı</p>
-    </div>
-
-    <div class="question-area" id="soruKutusu">
-        </div>
-
+    <img src="egmm.png" class="logo" alt="EGM Logo">
+    
+    <div class="question-box" id="qBox"></div>
+    
     <div class="footer">
-        <button class="btn btn-back" id="btnGeri" onclick="adimDegistir(-1)" style="visibility: hidden;">Geri</button>
-        <button class="btn btn-next" id="btnIleri" onclick="adimDegistir(1)">BAŞLA</button>
+        <button class="btn btn-back" id="bBack" onclick="nav(-1)">GERİ</button>
+        <button class="btn btn-next" id="bNext" onclick="nav(1)">BAŞLA</button>
     </div>
 </div>
 
 <script src="config.js"></script>
 <script>
-    // --- SORULAR LİSTESİ ---
-    const sorular = [
-        { id: "intro", baslik: "HOŞ GELDİNİZ", soru: "Bu form, polis teşkilatına katılım için ön mülakat niteliğindedir. Tüm soruları ciddiyetle cevaplayınız.<br><br>Başlamaya hazır mısınız?", tip: "info" },
-        { id: "discord_id", baslik: "Kimlik Doğrulama", soru: "Discord ID'nizi giriniz:", tip: "text" },
-        { id: "ic_isim", baslik: "Kimlik Bilgileri", soru: "Karakterinizin Adı ve Soyadı (IC):", tip: "text" },
-        { id: "ooc_yas", baslik: "Kişisel Bilgiler", soru: "Gerçek Yaşınız (OOC):", tip: "number" },
-        { id: "karakter_hikayesi", baslik: "Karakter Geçmişi", soru: "Kısaca karakterinizin hikayesinden ve neden polis olmak istediğinden bahsedin:", tip: "textarea" },
-        
-        // OOC
-        { id: "soru_1", baslik: "Kural Bilgisi", soru: "'Powergaming' nedir? Bir örnek veriniz.", tip: "textarea" },
-        { id: "soru_2", baslik: "Kural Bilgisi", soru: "'Meta Gaming' kavramını polislik rolü üzerinden açıklayınız.", tip: "textarea" },
-        { id: "soru_3", baslik: "Kural Bilgisi", soru: "Güvenli Bölge (Safezone) ihlali nedir?", tip: "textarea" },
-        
-        // Prosedür
-        { id: "soru_8", baslik: "Telsiz Kodları", soru: "10-20 (Konum) ve 10-78 (Destek) kodlarını ne zaman kullanırsınız?", tip: "textarea" },
-        { id: "soru_9", baslik: "Trafik Kontrolü", soru: "Şüpheli bir aracı durdurduğunuzda (Traffic Stop) ilk yapmanız gereken nedir?", tip: "textarea" },
-        { id: "soru_12", baslik: "Güç Kullanımı", soru: "Hangi durumlarda silah kullanma (Lethal Force) yetkiniz vardır?", tip: "textarea" },
-        
-        // Senaryo
-        { id: "soru_16", baslik: "Senaryo", soru: "Devriyede ortağınız vuruldu. İlk tepkiniz ne olur?", tip: "textarea" },
-        { id: "soru_19", baslik: "Senaryo", soru: "Trafik kontrolünde araçtan inen 4 kişi size silah doğrulttu. Ne yaparsınız?", tip: "textarea" },
-        { id: "soru_29", baslik: "Aktiflik", soru: "Günde kaç saat sunucuda aktif olabilirsiniz?", tip: "number" },
-        { id: "soru_30", baslik: "Son", soru: "Eklemek istediğiniz bir şey var mı?", tip: "textarea" }
+    const q = [
+        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz titizlikle incelenecektir.<br>Yanlış bilgi vermek yasaklanma sebebidir.'},
+        {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
+        {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakter Adı ve Soyadı (IC):'},
+        {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
+        {id:'s1', t:'textarea', h:'MÜLAKAT - 1', s:'Neden polis olmak istiyorsunuz? Karakter hikayenizden bahsedin.'},
+        {id:'s2', t:'textarea', h:'MÜLAKAT - 2', s:'Powergaming ve Metagaming kavramlarını örnek vererek açıklayınız.'},
+        {id:'s3', t:'textarea', h:'MÜLAKAT - 3', s:'Devriye sırasında üst rütbeniz size sivili vurmanızı emrederse ne yaparsınız?'},
+        {id:'s4', t:'textarea', h:'MÜLAKAT - 4', s:'Trafik kontrolünde durdurduğunuz araçtan inen kişiler size silah çekerse tepkiniz ne olur?'},
+        {id:'s5', t:'number', h:'AKTİFLİK', s:'Sunucuda günde kaç saat aktif olabilirsiniz?'}
     ];
+    
+    let idx = 0; 
+    let ans = {};
 
-    let aktifSoruIndex = 0;
-    const cevaplar = {};
-
-    // İlk soruyu yükle
-    renderSoru();
-
-    function renderSoru() {
-        const kutu = document.getElementById('soruKutusu');
-        const soru = sorular[aktifSoruIndex];
-        const btnIleri = document.getElementById('btnIleri');
-        const btnGeri = document.getElementById('btnGeri');
-        const progressBar = document.getElementById('progressBar');
-
-        // Animasyon için class sıfırla
-        kutu.classList.remove('fade-in');
-        void kutu.offsetWidth; // Trigger reflow
-        kutu.classList.add('fade-in');
-
-        // Input tipine göre HTML oluştur
-        let inputHTML = "";
-        if (soru.tip === 'info') {
-            inputHTML = ""; // Giriş yok, sadece bilgi
-        } else if (soru.tip === 'textarea') {
-            inputHTML = `<textarea id="cevapInput" placeholder="Cevabınızı buraya yazın..." autofocus>${cevaplar[soru.id] || ''}</textarea>`;
-        } else {
-            inputHTML = `<input type="${soru.tip}" id="cevapInput" placeholder="Cevabınız..." value="${cevaplar[soru.id] || ''}" autofocus>`;
+    function render() {
+        const item = q[idx];
+        const box = document.getElementById('qBox');
+        const bNext = document.getElementById('bNext');
+        const bBack = document.getElementById('bBack');
+        
+        let inputHTML = item.t === 'info' ? '' : (item.t==='textarea' ? `<textarea id="inp"></textarea>` : `<input type="${item.t}" id="inp">`);
+        
+        box.innerHTML = `<h2 style="color:#ffd700; margin:0 0 10px 0;">${item.h}</h2><p style="font-size:1.1rem; color:#ddd; max-width:90%;">${item.s}</p>${inputHTML}`;
+        
+        if(item.t !== 'info' && document.getElementById('inp')) {
+            document.getElementById('inp').value = ans[item.id] || '';
+            document.getElementById('inp').focus();
         }
 
-        // İçeriği Bas
-        kutu.innerHTML = `
-            <div class="soru-baslik">${soru.baslik}</div>
-            <div class="soru-metin">${soru.soru}</div>
-            ${inputHTML}
-        `;
-
-        // Buton Yönetimi
-        btnGeri.style.visibility = aktifSoruIndex === 0 ? 'hidden' : 'visible';
-        
-        if (aktifSoruIndex === 0) btnIleri.innerText = "BAŞLA";
-        else if (aktifSoruIndex === sorular.length - 1) btnIleri.innerText = "BAŞVURUYU GÖNDER";
-        else btnIleri.innerText = "İLERİ";
-
-        // Progress Bar
-        const yuzde = ((aktifSoruIndex) / (sorular.length - 1)) * 100;
-        progressBar.style.width = yuzde + "%";
+        bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
+        bNext.innerText = idx === 0 ? 'BAŞLA' : (idx === q.length-1 ? 'GÖNDER' : 'İLERİ');
+        document.getElementById('pBar').style.width = ((idx / (q.length-1))*100) + '%';
     }
 
-    function adimDegistir(yon) {
-        const mevcutSoru = sorular[aktifSoruIndex];
+    function nav(d) {
+        if(d === 1 && idx > 0) {
+            const val = document.getElementById('inp').value.trim();
+            if(!val) return alert('Lütfen bu alanı boş bırakmayınız!');
+            ans[q[idx].id] = val;
+        }
         
-        // İLERİ GİDERKEN VERİ KAYDET & KONTROL ET
-        if (yon === 1 && mevcutSoru.tip !== 'info') {
-            const input = document.getElementById('cevapInput');
-            if (!input.value.trim()) {
-                alert("Lütfen bu soruyu boş bırakmayınız.");
-                return;
-            }
-            cevaplar[mevcutSoru.id] = input.value;
-        }
-
-        // SON ADIMDA MIYIZ? (GÖNDERME İŞLEMİ)
-        if (yon === 1 && aktifSoruIndex === sorular.length - 1) {
-            basvuruyuTamamla();
-            return;
-        }
-
-        aktifSoruIndex += yon;
-        renderSoru();
+        if(d === 1 && idx === q.length-1) return send();
+        
+        idx += d;
+        render();
     }
 
-    function basvuruyuTamamla() {
-        const btnIleri = document.getElementById('btnIleri');
-        btnIleri.innerText = "GÖNDERİLİYOR...";
-        btnIleri.disabled = true;
-
-        const data = {
-            discord_id: cevaplar.discord_id,
-            ic_isim: cevaplar.ic_isim,
-            ooc_yas: cevaplar.ooc_yas,
-            durum: "Beklemede",
-            tarih: new Date().toISOString(),
-            cevaplar: cevaplar
-        };
-
-        // Hassas verileri ana objeden temizle (sadece cevaplar içinde kalsın diye, ama admin panelinde kolay okunsun diye yukarıda ayırdım)
-        // Firebase'e yaz
-        database.ref('basvurular').push(data, (error) => {
-            if (error) {
-                alert('Hata: ' + error.message);
-                btnIleri.disabled = false;
-            } else {
-                document.querySelector('.card').innerHTML = `
-                    <div style="font-size:3rem;">✅</div>
-                    <h2 style="color:#28a745; margin-top:20px;">BAŞVURU ALINDI</h2>
-                    <p>Başvurunuz sisteme başarıyla kaydedildi.<br>Sonuçları Discord üzerinden takip edebilirsiniz.</p>
-                    <button onclick="window.location.href='index.html'" class="btn btn-back" style="margin-top:20px; color:white;">Ana Sayfaya Dön</button>
-                `;
-            }
+    function send() {
+        const btn = document.getElementById('bNext');
+        btn.innerText = 'GÖNDERİLİYOR...';
+        btn.disabled = true;
+        
+        const data = { discord_id: ans.discord_id, ic_isim: ans.ic_isim, ooc_yas: ans.ooc_yas, durum: 'Beklemede', tarih: new Date().toISOString(), cevaplar: ans };
+        
+        database.ref('basvurular').push(data, (err) => {
+            if(err) { alert("Hata: " + err.message); btn.disabled = false; return; }
+            document.querySelector('.card').innerHTML = `
+                <img src="egmm.png" class="logo" style="width:100px;">
+                <h1 style="color:#28a745; margin-top:20px;">BAŞVURU ALINDI ✅</h1>
+                <p style="font-size:1.1rem;">Başvurunuz sisteme kaydedildi.<br>Sonuçları ana sayfadan takip edebilirsiniz.</p>
+                <button onclick="window.location.href='index.html'" class="btn" style="background:#007bff; color:white; margin-top:30px;">Ana Sayfaya Dön</button>
+            `;
         });
     }
-
-    // Enter tuşu ile geçiş kolaylığı
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
-            adimDegistir(1);
-        }
-    });
+    
+    render();
 </script>
 </body>
 </html>
