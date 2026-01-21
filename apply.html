@@ -7,28 +7,35 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { margin: 0; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        .card { width: 600px; height: 550px; background: rgba(22, 36, 71, 0.95); border-radius: 15px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .card { width: 700px; height: 600px; background: rgba(22, 36, 71, 0.95); border-radius: 15px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
         
-        /* LOGO AYARI: egmm.png dosyasını klasöre attığından emin ol */
-        .logo { width: 120px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        .logo { width: 110px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
         
-        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        input, textarea { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 85%; border-radius: 5px; font-size: 1.1rem; margin-top: 15px; transition: 0.3s; }
-        input:focus, textarea:focus { border-color: #ffd700; outline: none; background: rgba(255,255,255,0.15); }
-        textarea { height: 120px; resize: none; }
+        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
+        /* Soru metni stili */
+        .q-header { color:#ffd700; margin:0 0 10px 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
+        .q-text { font-size:1.1rem; color:#e0e0e0; max-width:90%; line-height: 1.5; margin-bottom: 15px; }
         
-        .footer { display: flex; justify-content: space-between; margin-top: auto; }
+        /* Input stilleri */
+        input, textarea { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 85%; border-radius: 5px; font-size: 1.1rem; transition: 0.3s; font-family: 'Segoe UI', sans-serif; }
+        input:focus, textarea:focus { border-color: #ffd700; outline: none; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+        textarea { height: 150px; resize: none; }
+        
+        .footer { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
         .btn { padding: 12px 35px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
         .btn-next { background: #e43f5a; color: white; } .btn-next:hover { background: #c0354a; }
         .btn-back { background: transparent; color: #aaa; border: 1px solid #aaa; } .btn-back:hover { color: white; border-color: white; }
         
-        .progress-bar { position: absolute; top: 0; left: 0; height: 5px; background: #ffd700; width: 0%; transition: 0.3s; border-radius: 15px 15px 0 0; }
+        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 15px 15px 0 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: #ffd700; width: 0%; transition: width 0.4s ease; }
+        .step-count { position: absolute; top: 15px; right: 20px; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="progress-bar" id="pBar"></div>
+    <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
+    <div class="step-count" id="stepCount">1 / 25</div>
     
     <img src="egmm.png" class="logo" alt="EGM Logo">
     
@@ -42,16 +49,45 @@
 
 <script src="config.js"></script>
 <script>
+    // --- 25 ADET ÇEŞİTLENDİRİLMİŞ SORU LİSTESİ ---
     const q = [
-        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz titizlikle incelenecektir.<br>Yanlış bilgi vermek yasaklanma sebebidir.'},
+        // GİRİŞ
+        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz Emniyet Genel Müdürlüğü Personel Daire Başkanlığı tarafından incelenecektir.<br>Lütfen tüm soruları ciddiyetle ve rol kurallarına uygun cevaplayınız.'},
+        
+        // KİMLİK & OOC
         {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
-        {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakter Adı ve Soyadı (IC):'},
+        {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakterinizin Adı ve Soyadı (IC):'},
         {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
-        {id:'s1', t:'textarea', h:'MÜLAKAT - 1', s:'Neden polis olmak istiyorsunuz? Karakter hikayenizden bahsedin.'},
-        {id:'s2', t:'textarea', h:'MÜLAKAT - 2', s:'Powergaming ve Metagaming kavramlarını örnek vererek açıklayınız.'},
-        {id:'s3', t:'textarea', h:'MÜLAKAT - 3', s:'Devriye sırasında üst rütbeniz size sivili vurmanızı emrederse ne yaparsınız?'},
-        {id:'s4', t:'textarea', h:'MÜLAKAT - 4', s:'Trafik kontrolünde durdurduğunuz araçtan inen kişiler size silah çekerse tepkiniz ne olur?'},
-        {id:'s5', t:'number', h:'AKTİFLİK', s:'Sunucuda günde kaç saat aktif olabilirsiniz?'}
+        {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Sunucuda günlük ortalama kaç saat aktif olabilirsiniz?'},
+
+        // KARAKTER & HİKAYE
+        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakterinizin polis olma motivasyonu nedir? Kısa bir özgeçmiş yazınız.'},
+        {id:'deneyim', t:'textarea', h:'DENEYİM', s:'Daha önce FiveM üzerinde polislik yaptınız mı? Yaptıysanız hangi rütbede?'},
+
+        // SUNUCU KURALLARI (TERİMLER)
+        {id:'kural_pg', t:'textarea', h:'KURAL BİLGİSİ', s:'"Powergaming" (PG) nedir? Polis rolü üzerinden bir örnek veriniz.'},
+        {id:'kural_mg', t:'textarea', h:'KURAL BİLGİSİ', s:'"Metagaming" (MG) nedir? Neden yasaktır?'},
+        {id:'kural_rdm_vdm', t:'textarea', h:'KURAL BİLGİSİ', s:'RDM ve VDM kavramlarını kısaca açıklayınız.'},
+        {id:'kural_fearrp', t:'textarea', h:'KURAL BİLGİSİ', s:'"FearRP" (Korku Rolü) bir polis memuru için ne zaman geçerlidir? Örnek veriniz.'},
+        {id:'kural_nlr', t:'textarea', h:'KURAL BİLGİSİ', s:'"New Life Rule" (NLR) nedir? Ölen bir polis memuru olaya geri dönebilir mi?'},
+
+        // POLİS PROSEDÜRLERİ & TEKNİK
+        {id:'teknik_telsiz', t:'textarea', h:'TELSİZ DİSİPLİNİ', s:'Telsiz konuşmaları nasıl olmalıdır? "10-20" kodunun anlamı nedir?'},
+        {id:'teknik_hiyerarsi', t:'textarea', h:'HİYERARŞİ', s:'Üst rütbeli bir amiriniz size mantıksız gelen bir emir verirse tepkiniz ne olur?'},
+        {id:'teknik_miranda', t:'textarea', h:'HUKUKİ PROSEDÜR', s:'Gözaltına aldığınız şahsa "Miranda Hakları"nı ne zaman ve neden okumalısınız?'},
+        {id:'teknik_silah', t:'textarea', h:'GÜÇ KULLANIMI', s:'Hangi durumlarda öldürücü güç (Silah) kullanma yetkiniz vardır?'},
+
+        // SENARYO & DURUM ANALİZİ
+        {id:'senaryo_trafik', t:'textarea', h:'SENARYO - 1', s:'Rutin trafik kontrolünde (Traffic Stop) durdurduğunuz araçtan inen 4 kişi size uzun namlulu silah doğrulttu. Ne yaparsınız?'},
+        {id:'senaryo_yarali', t:'textarea', h:'SENARYO - 2', s:'Devriye arkadaşınız çatışmada vuruldu ve yere düştü. Karşı ateş devam ediyor. İlk hamleniz ne olur?'},
+        {id:'senaryo_ruşvet', t:'textarea', h:'SENARYO - 3', s:'Gözaltına aldığınız bir şahıs sizi serbest bırakmanız karşılığında yüksek miktarda para (Rüşvet) teklif etti. Rolsel tepkiniz ne olur?'},
+        {id:'senaryo_bug', t:'textarea', h:'SENARYO - 4', s:'Kovaladığınız şüpheli oyun hatası (bug) yüzünden havada uçmaya başladı veya görünmez oldu. Ne yaparsınız?'},
+        {id:'senaryo_emir', t:'textarea', h:'SENARYO - 5', s:'Amiriniz sivil hayatta illegal bir grupla iş birliği yaparken gördünüz. Bu durumu IC (Oyun içi) nasıl yönetirsiniz?'},
+        {id:'senaryo_rehine', t:'textarea', h:'SENARYO - 6', s:'Bir market soygununda soyguncular rehineyi öldürmekle tehdit ediyor ve siz müzakerecisiniz. İlk cümleniz ne olur?'},
+        
+        // ETİK & KAPANIŞ
+        {id:'etik_tutum', t:'textarea', h:'MESLEK ETİĞİ', s:'Sivil vatandaşlara karşı tutumunuz nasıl olmalıdır? Agresif bir vatandaşı nasıl sakinleştirirsiniz?'},
+        {id:'kapanis', t:'textarea', h:'SON SÖZ', s:'Ekibimize neden sizi almalıyız? Sizi diğer adaylardan ayıran özellik nedir?'}
     ];
     
     let idx = 0; 
@@ -62,28 +98,54 @@
         const box = document.getElementById('qBox');
         const bNext = document.getElementById('bNext');
         const bBack = document.getElementById('bBack');
+        const count = document.getElementById('stepCount');
         
-        let inputHTML = item.t === 'info' ? '' : (item.t==='textarea' ? `<textarea id="inp"></textarea>` : `<input type="${item.t}" id="inp">`);
+        // Input tipini belirle
+        let inputHTML = "";
+        if(item.t === 'info') {
+            inputHTML = "";
+        } else if(item.t === 'textarea') {
+            inputHTML = `<textarea id="inp" placeholder="Cevabınızı detaylı bir şekilde yazınız..."></textarea>`;
+        } else {
+            inputHTML = `<input type="${item.t}" id="inp" placeholder="Cevabınız...">`;
+        }
         
-        box.innerHTML = `<h2 style="color:#ffd700; margin:0 0 10px 0;">${item.h}</h2><p style="font-size:1.1rem; color:#ddd; max-width:90%;">${item.s}</p>${inputHTML}`;
+        // HTML'i bas
+        box.innerHTML = `
+            <div class="q-header">${item.h}</div>
+            <div class="q-text">${item.s}</div>
+            ${inputHTML}
+        `;
         
+        // Eski cevabı geri getir
         if(item.t !== 'info' && document.getElementById('inp')) {
             document.getElementById('inp').value = ans[item.id] || '';
-            document.getElementById('inp').focus();
+            // Otomatik odaklanma
+            setTimeout(() => document.getElementById('inp').focus(), 100);
         }
 
+        // Buton ve Sayaç Yönetimi
         bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
         bNext.innerText = idx === 0 ? 'BAŞLA' : (idx === q.length-1 ? 'GÖNDER' : 'İLERİ');
-        document.getElementById('pBar').style.width = ((idx / (q.length-1))*100) + '%';
+        
+        // Progress Bar
+        const progressPercent = ((idx) / (q.length-1)) * 100;
+        document.getElementById('pBar').style.width = progressPercent + '%';
+        
+        // Sayaç Yazısı
+        if(idx > 0) count.innerText = `${idx} / ${q.length - 1}`;
+        else count.innerText = "Giriş";
     }
 
     function nav(d) {
+        // İleri giderken boş kontrolü
         if(d === 1 && idx > 0) {
             const val = document.getElementById('inp').value.trim();
-            if(!val) return alert('Lütfen bu alanı boş bırakmayınız!');
+            if(!val) return alert('Lütfen bu soruyu boş bırakmayınız!');
             ans[q[idx].id] = val;
         }
         
+        // Gönderme aşaması
         if(d === 1 && idx === q.length-1) return send();
         
         idx += d;
@@ -95,19 +157,32 @@
         btn.innerText = 'GÖNDERİLİYOR...';
         btn.disabled = true;
         
-        const data = { discord_id: ans.discord_id, ic_isim: ans.ic_isim, ooc_yas: ans.ooc_yas, durum: 'Beklemede', tarih: new Date().toISOString(), cevaplar: ans };
+        const data = { 
+            discord_id: ans.discord_id, 
+            ic_isim: ans.ic_isim, 
+            ooc_yas: ans.ooc_yas, 
+            durum: 'Beklemede', 
+            tarih: new Date().toISOString(), 
+            cevaplar: ans 
+        };
         
         database.ref('basvurular').push(data, (err) => {
-            if(err) { alert("Hata: " + err.message); btn.disabled = false; return; }
+            if(err) { 
+                alert("Hata: " + err.message); 
+                btn.disabled = false; 
+                btn.innerText = 'TEKRAR DENE';
+                return; 
+            }
             document.querySelector('.card').innerHTML = `
                 <img src="egmm.png" class="logo" style="width:100px;">
-                <h1 style="color:#28a745; margin-top:20px;">BAŞVURU ALINDI ✅</h1>
-                <p style="font-size:1.1rem;">Başvurunuz sisteme kaydedildi.<br>Sonuçları ana sayfadan takip edebilirsiniz.</p>
+                <h1 style="color:#28a745; margin-top:20px;">BAŞVURU İLETİLDİ ✅</h1>
+                <p style="font-size:1.1rem; color:#eee;">Başvurunuz personel daire başkanlığı sistemine başarıyla kaydedildi.<br>Sonuçları Discord üzerinden veya ana sayfadan takip edebilirsiniz.</p>
                 <button onclick="window.location.href='index.html'" class="btn" style="background:#007bff; color:white; margin-top:30px;">Ana Sayfaya Dön</button>
             `;
         });
     }
     
+    // İlk render
     render();
 </script>
 </body>
