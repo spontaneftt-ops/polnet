@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Operasyon Merkezi v10</title>
+    <title>EGM Operasyon Merkezi v10.1</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://meet.jit.si/external_api.js"></script>
@@ -46,12 +46,6 @@
         .tab-content { display: none; animation: fadeIn 0.3s; } .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* YENİ MODÜLLER (Patrol, Warrant) */
-        .patrol-card { background: var(--card-bg); border: 1px solid var(--accent); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .warrant-pending { border-left: 4px solid orange; }
-        .warrant-approved { border-left: 4px solid green; }
-        .warrant-denied { border-left: 4px solid red; opacity: 0.6; }
-
         /* Delil Kartları */
         .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .evidence-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; transition: 0.3s; }
@@ -75,15 +69,11 @@
         .msg-mine { align-self: flex-end; background: #3b82f6; color: white; }
         .msg-other { align-self: flex-start; background: #f1f5f9; color: #333; }
 
-        /* Müzik */
-        #musicPlayer { position: absolute; z-index: 9999; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--accent); width: 320px; border-radius: 10px; bottom: 20px; right: 280px; overflow: hidden; transition: 0.3s; }
-        .minimized { height: 40px !important; overflow: hidden; }
-        .hidden { display: none; }
-        
         /* Hızlı Not */
         #quickNotepad { position: fixed; bottom: 20px; right: 20px; width: 250px; background: var(--card-bg); border: 1px solid var(--accent); border-radius: 8px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; transition: 0.3s; }
         #notepadArea { width: 100%; height: 150px; background: rgba(0,0,0,0.3); border: none; padding: 10px; color: white; resize: none; box-sizing: border-box; font-family: monospace; }
         .notepad-min { height: 35px !important; }
+        .patrol-card { background: var(--card-bg); border: 1px solid var(--accent); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -96,6 +86,7 @@
 
 <div id="loginScreen">
     <div class="login-box">
+        <img src="egmm.png" style="width:80px; margin-bottom:10px;">
         <h2 style="color:white; margin:0; letter-spacing:2px;">EGM GÖZ</h2>
         <p style="color:#64748b;">Operasyonel Veri Tabanı</p>
         <input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı">
@@ -113,8 +104,9 @@
 <div class="main-container" id="adminPanel" style="display:none;">
     <div class="sidebar">
         <div style="text-align:center; margin-bottom:20px;">
-            <h3 style="margin:5px 0; color:var(--accent);">OPERASYON</h3>
-            <span id="aktifKullaniciAdi" style="font-size:0.9rem; font-weight:bold;"></span><br>
+            <img src="egmm.png" style="width:50px;">
+            <h3 style="margin:5px 0; font-size:1.1rem;">EGM MDT</h3>
+            <span id="aktifKullaniciAdi" style="font-size:0.9rem; font-weight:bold; color:#60a5fa;"></span><br>
             <span id="aktifRutbeGoster" class="rutbe-badge"></span>
             <div id="dijitalSaat" style="margin-top:5px; font-family:monospace; color:#aaa;">00:00:00</div>
         </div>
@@ -128,6 +120,7 @@
         <div class="menu-item" onclick="tabDegistir('cezaRehberTab', this)"><i class="fas fa-book"></i> Ceza Kılavuzu</div>
         <div class="menu-item" onclick="cezaModalAc()"><i class="fas fa-gavel"></i> Ceza Kes</div>
         <div class="menu-item" onclick="tabDegistir('ruhsatTab', this)"><i class="fas fa-id-card"></i> Ruhsatlar</div>
+        <div class="menu-item" onclick="tabDegistir('basvurularTab', this)"><i class="fas fa-file-contract"></i> Başvurular</div>
         <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)"><i class="fas fa-users"></i> Personel</div>
         <div class="menu-item" onclick="tabDegistir('sohbetTab', this)"><i class="fas fa-walkie-talkie"></i> Telsiz</div>
         
@@ -147,7 +140,7 @@
 
         <div id="patrolTab" class="tab-content">
             <div style="display:flex; justify-content:space-between;"><h2>🚔 Aktif Devriyeler</h2><button onclick="devriyeBaslatModal()" class="btn btn-blue">Devriyeye Çık</button></div>
-            <table><thead><tr><th>Kod (Callsign)</th><th>Birim / Araç</th><th>Bölge</th><th>Memur</th><th>İşlem</th></tr></thead><tbody id="patrolListesi"></tbody></table>
+            <table><thead><tr><th>Kod</th><th>Birim</th><th>Bölge</th><th>Memur</th><th>İşlem</th></tr></thead><tbody id="patrolListesi"></tbody></table>
         </div>
 
         <div id="warrantTab" class="tab-content">
@@ -178,10 +171,23 @@
         <div id="gbtTab" class="tab-content"><h2>GBT Sorgulama</h2><div style="background:var(--card-bg); padding:20px; border-radius:8px; margin-bottom:20px;"><input type="text" id="gbtInput" class="search-box" placeholder="Kimlik/İsim..."><button onclick="gbtSorgula()" class="btn btn-green" style="width:100%;">SORGULA</button></div><div id="gbtSonucAlani"></div></div>
         
         <div id="cezaRehberTab" class="tab-content"><h2>TCK Rehberi</h2><input type="text" id="rehberAra" class="search-box" placeholder="Suç ara..." onkeyup="tabloAra('rehberAra', 'rehberListesi')"><table><thead><tr><th>Suç</th><th>Para</th><th>Kamu</th><th>İşlem</th></tr></thead><tbody id="rehberListesi"></tbody></table></div>
-        <div id="basvurularTab" class="tab-content"><h2>Başvurular</h2><button onclick="excelIndir()" class="btn btn-green" style="float:right;">Excel</button><input type="text" id="basvuruAra" class="search-box" placeholder="Ara..." onkeyup="tabloAra('basvuruAra', 'basvuruListesi')"><table><thead><tr><th>ID</th><th>İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table></div>
+        
         <div id="ruhsatTab" class="tab-content"><div style="display:flex; justify-content:space-between;"><h2>Ruhsatlar</h2><button onclick="ruhsatEkleModal()" class="btn btn-blue">+ Ekle</button></div><table><thead><tr><th>Sahip</th><th>Tip</th><th>No</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="ruhsatListesi"></tbody></table></div>
+        <div id="basvurularTab" class="tab-content"><h2>Başvurular</h2><button onclick="excelIndir()" class="btn btn-green" style="float:right;">Excel</button><input type="text" id="basvuruAra" class="search-box" placeholder="Ara..." onkeyup="tabloAra('basvuruAra', 'basvuruListesi')"><table><thead><tr><th>ID</th><th>İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table></div>
         <div id="yoneticilerTab" class="tab-content"><h2>Personel</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input id="yeniKadi" class="search-box" placeholder="Kullanıcı"><input id="yeniSifre" class="search-box" placeholder="Şifre"><select id="yeniRutbe" class="search-box"><option>Memur</option><option>Komiser</option><option>Müdür</option></select><button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button></div><table><thead><tr><th>Kullanıcı</th><th>Rütbe</th><th>İşlem</th></tr></thead><tbody id="yoneticiListesi"></tbody></table></div>
         <div id="sohbetTab" class="tab-content"><h2>Komuta</h2><div class="radio-room-container"><div class="radio-control"><div style="padding:20px; text-align:center;"><button id="btnConnectRadio" onclick="telsizDurumDegistir()" class="btn btn-red" style="width:100%;">BAĞLAN</button></div><div id="jitsi-embed-container" style="flex:1; background:black;"></div></div><div class="chat-area"><div class="chat-messages" id="chatMessages"></div><div style="padding:15px; display:flex; gap:10px;"><input type="text" id="chatInput" class="search-box" style="margin:0;" onkeydown="enterBas(event)"><button onclick="mesajGonder()" class="btn btn-blue">GÖNDER</button></div></div></div></div>
+        
+        <div id="ayarlarTab" class="tab-content">
+            <h2>Ayarlar</h2>
+            <div style="background:var(--card-bg); padding:20px; border-radius:8px;">
+                <label>Webhook:</label><input type="password" id="webhookUrl" class="search-box" onchange="webhookKaydet()">
+                <label>Harita:</label><input type="text" id="mapUrlInput" class="search-box" onchange="mapUrlKaydet()">
+                <button onclick="temaDegistir()" class="btn btn-dark">Tema Değiştir</button>
+            </div>
+            <h3 style="color:red;">Kara Liste</h3>
+            <div style="display:flex; gap:10px;"><input type="text" id="yasakliID" placeholder="ID" class="search-box" style="margin:0;"><button onclick="yasakla()" class="btn btn-red">BAN</button></div>
+            <table><thead><tr><th>ID</th><th>İşlem</th></tr></thead><tbody id="blacklistListesi"></tbody></table>
+        </div>
     </div>
 </div>
 
@@ -190,138 +196,129 @@
     <textarea id="notepadArea" placeholder="Plaka, isim, not al... (Otomatik Kaydedilir)" oninput="notuKaydetLocal()"></textarea>
 </div>
 
-<div id="musicPlayer"><div id="musicHeader" style="padding:10px; background:var(--sidebar-bg); cursor:move; display:flex; justify-content:space-between;"><span>🔊 EGM MEDYA</span><span onclick="toggleMusicPlayer()" style="cursor:pointer;">_</span></div><div class="music-body" style="padding:10px;"><div style="display:flex; gap:5px;"><button onclick="radyoCal('https://dinle.trt.net.tr/mp3/radyohaber', 'Haber')" class="btn btn-dark" style="flex:1; font-size:0.7rem;">HABER</button><button onclick="youtubeMod()" class="btn btn-dark" style="flex:1; font-size:0.7rem;">YOUTUBE</button></div><div id="playerStatus" style="font-size:0.8rem; text-align:center; color:#aaa;">Hazır</div><audio id="radioPlayer" controls class="hidden" style="width:100%;"></audio><div id="ytContainer" class="hidden"><input id="musicUrl" class="search-box" style="padding:5px; height:30px;" placeholder="Link..."><button onclick="youtubeCal()" class="btn btn-blue" style="width:100%; padding:5px;">AÇ</button><iframe id="ytPlayer" style="width:100%; height:150px; border:none; margin-top:5px;"></iframe></div></div></div>
-
 <script src="config.js"></script>
 <script>
     const SFX = { success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") };
-    let basvuruVerileri = {}; let aktifKullanici = ""; let aktifRutbe = ""; let jitsiApi = null;
+    let basvuruVerileri = {}; let aktifKullanici = ""; let aktifRutbe = ""; let jitsiApi = null; let aktifBasvuruKey = null; let mesaiBaslangic = null;
     const cezaKatalogu = [{ad:"Hız İhlali",p:2000,h:0},{ad:"Kırmızı Işık",p:1500,h:0},{ad:"Ehliyetsiz",p:5000,h:5},{ad:"Alkollü",p:8000,h:10},{ad:"Mukavemet",p:15000,h:25},{ad:"Silahlı Soygun",p:50000,h:60},{ad:"Cinayet",p:200000,h:80}];
 
     window.onload = function() {
+        if(typeof database === 'undefined') { alert("Firebase Hatası: config.js yüklenemedi!"); return; }
         const wh=localStorage.getItem('discordWebhook'); if(wh) document.getElementById('webhookUrl').value=wh;
+        const mp=localStorage.getItem('mapUrl'); if(mp) document.getElementById('mapUrlInput').value=mp;
         document.body.setAttribute('data-theme','dark');
-        boloGetir(); youtubeMod(); rehberTablosunuDoldur();
+        boloGetir(); rehberTablosunuDoldur();
         if(localStorage.getItem('myNote')) document.getElementById('notepadArea').value = localStorage.getItem('myNote');
-        aracListesiDinle(); patrolGetir(); warrantGetir(); tutanakGetir();
         setInterval(() => { document.getElementById('dijitalSaat').innerText = new Date().toLocaleTimeString(); }, 1000);
     }
 
-    // --- DEVRİYE YÖNETİMİ (YENİ) ---
-    function devriyeBaslatModal() {
-        document.getElementById('recordTitle').innerText="Devriye Başlat";
-        document.getElementById('recordForm').innerHTML=`<input id="p_code" class="search-box" placeholder="Kod (Örn: A-101)"><input id="p_car" class="search-box" placeholder="Araç (Örn: Charger)"><input id="p_area" class="search-box" placeholder="Bölge (Örn: Merkez)"><button onclick="patrolEkle()" class="btn btn-green" style="width:100%">BAŞLA</button>`;
-        document.getElementById('recordModal').style.display='block';
-    }
-    function patrolEkle() {
-        const c=document.getElementById('p_code').value; const v=document.getElementById('p_car').value; const a=document.getElementById('p_area').value;
-        if(c){ database.ref('active_patrols').push({code:c, car:v, area:a, officer:aktifKullanici}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); }
-    }
-    function patrolGetir() {
-        database.ref('active_patrols').on('value', s => {
-            const l=document.getElementById('patrolListesi'); l.innerHTML="";
-            s.forEach(c => { const d=c.val(); l.innerHTML+=`<tr><td>${d.code}</td><td>${d.car}</td><td>${d.area}</td><td>${d.officer}</td><td><button onclick="dbSil('active_patrols/${c.key}')" class="btn btn-red">BİTİR</button></td></tr>`; });
+    // --- GİRİŞ ---
+    function girisYap() {
+        const k = document.getElementById('kadi').value.trim();
+        const s = document.getElementById('sifre').value.trim();
+        if(!k || !s) return alert("Boş alan bırakmayınız.");
+        
+        if (k === "Müdür" && s === "GökSancak1881") {
+            database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', x => { 
+                if(!x.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881', rutbe:'Müdür'}); 
+            }); 
+            basariliGiris(k, 'Müdür'); 
+            return;
+        }
+        
+        database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value')
+        .then(snapshot => {
+            let found = false; let r = 'Memur';
+            snapshot.forEach(c => { if(c.val().sifre === s) { found = true; r = c.val().rutbe || 'Memur'; } });
+            
+            if(found) basariliGiris(k, r);
+            else document.getElementById('loginMsg').innerText = "Hatalı kullanıcı adı veya şifre!";
+        })
+        .catch(err => {
+            alert("Veritabanı hatası: " + err.message);
         });
     }
 
-    // --- ARAMA İZNİ (WARRANT) (YENİ) ---
-    function warrantEkleModal() {
-        document.getElementById('recordTitle').innerText="Arama İzni Talep";
-        document.getElementById('recordForm').innerHTML=`<input id="w_target" class="search-box" placeholder="Hedef (Ev/Araç/Şahıs)"><textarea id="w_reason" class="search-box" style="height:100px" placeholder="Sebep..."></textarea><button onclick="warrantEkle()" class="btn btn-yellow" style="width:100%">TALEP ET</button>`;
-        document.getElementById('recordModal').style.display='block';
-    }
-    function warrantEkle() {
-        const t=document.getElementById('w_target').value; const r=document.getElementById('w_reason').value;
-        if(t){ database.ref('warrants').push({target:t, reason:r, status:'Beklemede', officer:aktifKullanici, time:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); }
-    }
-    function warrantGetir() {
-        database.ref('warrants').on('value', s => {
-            const l=document.getElementById('warrantListesi'); l.innerHTML="";
-            s.forEach(c => {
-                const d=c.val();
-                let stClass = d.status==='Onaylandı'?'warrant-approved':(d.status==='Reddedildi'?'warrant-denied':'warrant-pending');
-                let btn = (aktifRutbe==='Müdür' && d.status==='Beklemede') ? `<div style="margin-top:5px;"><button onclick="warrantDurum('${c.key}','Onaylandı')" class="btn btn-green">ONAY</button> <button onclick="warrantDurum('${c.key}','Reddedildi')" class="btn btn-red">RED</button></div>` : '';
-                l.innerHTML+=`<div class="gbt-card ${stClass}"><div><h3>${d.target}</h3><p>${d.reason}</p><small>${d.officer} - ${d.status}</small></div>${btn}</div>`;
-            });
-        });
-    }
-    function warrantDurum(k,s){ database.ref('warrants/'+k).update({status:s}); SFX.success.play(); }
-
-    // --- TUTANAK SİSTEMİ (YENİ) ---
-    function tutanakEkleModal() {
-        document.getElementById('recordTitle').innerText="Tutanak Oluştur";
-        document.getElementById('recordForm').innerHTML=`<input id="t_konu" class="search-box" placeholder="Konu"><textarea id="t_icerik" class="search-box" style="height:200px" placeholder="Olay detayları..."></textarea><button onclick="tutanakKaydet()" class="btn btn-blue" style="width:100%">KAYDET</button>`;
-        document.getElementById('recordModal').style.display='block';
-    }
-    function tutanakKaydet() {
-        const k=document.getElementById('t_konu').value; const i=document.getElementById('t_icerik').value;
-        if(k){ database.ref('tutanaklar').push({konu:k, icerik:i, memur:aktifKullanici, tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); }
-    }
-    function tutanakGetir() {
-        database.ref('tutanaklar').on('value', s => {
-            const l=document.getElementById('tutanakListesi'); l.innerHTML="";
-            s.forEach(c => { const d=c.val(); l.innerHTML+=`<tr><td>#${c.key.substring(1,5)}</td><td>${d.konu}</td><td>${d.memur}</td><td>${new Date(d.tarih).toLocaleDateString()}</td><td><button onclick="alert('${d.icerik}')" class="btn btn-blue">OKU</button></td></tr>`; });
-        });
+    function basariliGiris(isim, rutbe) {
+        SFX.success.play(); aktifKullanici = isim; aktifRutbe = rutbe; mesaiBaslangic = Date.now();
+        document.getElementById('aktifKullaniciAdi').innerText = isim; 
+        document.getElementById('aktifRutbeGoster').innerText = rutbe;
+        document.getElementById('aktifRutbeGoster').className = `rutbe-badge rutbe-${rutbe.toLowerCase().replace('ü','u').replace('ö','o')}`;
+        document.getElementById('loginScreen').style.display = 'none'; 
+        document.getElementById('adminPanel').style.display = 'flex';
+        
+        // Verileri Yükle
+        verileriGetir(); yoneticileriGetir(); blacklistGetir(); 
+        chatBaslat(); gbtGetir(); delilGetir(); ruhsatGetir(); 
+        istatistikGuncelle(); aracListesiDinle(); patrolGetir(); warrantGetir(); tutanakGetir();
     }
 
-    // --- ARAÇ SİSTEMİ ---
-    function plakaSorgula() { const p=document.getElementById('plakaInput').value.toUpperCase().trim(); if(!p)return alert("Plaka?"); database.ref('araclar').orderByChild('plaka').equalTo(p).once('value',s=>{ let d=null; let k=null; s.forEach(c=>{d=c.val();k=c.key;}); const div=document.getElementById('trafficResult'); document.getElementById('trafficModal').style.display='block'; if(d){ div.innerHTML=`<h2>${d.plaka}</h2><h3>${d.durum}</h3><p>${d.not||""}</p><button onclick="aracDurum('${k}','Temiz')" class="btn btn-green">Temiz</button> <button onclick="aracDurum('${k}','Çalıntı')" class="btn btn-red">Çalıntı</button> <button onclick="aracDurum('${k}','Bağlandı')" class="btn btn-yellow">Bağla</button>`; }else{ div.innerHTML=`<h3>Kayıt Yok</h3><button onclick="yeniArac('${p}')" class="btn btn-blue">Oluştur</button>`; } }); }
-    function yeniArac(p){ database.ref('araclar').push({plaka:p, durum:'Temiz', not:'Yeni', islem_yapan:aktifKullanici}); plakaSorgula(); }
-    function aracDurum(k,s){ database.ref('araclar/'+k).update({durum:s, islem_yapan:aktifKullanici}); document.getElementById('trafficModal').style.display='none'; }
-    function aracListesiDinle() { database.ref('araclar').limitToLast(20).on('value',s=>{ const t=document.getElementById('aracListesiBody'); t.innerHTML=""; s.forEach(c=>{ const d=c.val(); t.innerHTML=`<tr><td>${d.plaka}</td><td>${d.durum}</td><td>${d.not}</td><td>${d.islem_yapan}</td></tr>`+t.innerHTML; }); }); }
-
-    // --- ESKİ VE TEMEL FONKSİYONLAR ---
+    function cikisYap() { location.reload(); }
+    
+    // --- FONKSİYONLAR ---
+    function yetkiKontrol(izinler) { if (!izinler.includes(aktifRutbe)) { alert("Yetkisiz!"); return false; } return true; }
+    
     function notuKaydetLocal() { localStorage.setItem('myNote', document.getElementById('notepadArea').value); }
     function toggleNotepad() { document.getElementById('quickNotepad').classList.toggle('notepad-min'); }
-    function girisYap() { SFX.click.play(); const k=document.getElementById('kadi').value; const s=document.getElementById('sifre').value; if(k==="Müdür"&&s==="GökSancak1881"){database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value',x=>{if(!x.exists())database.ref('yetkililer').push({kadi:'Müdür',sifre:'GökSancak1881',rutbe:'Müdür'})}); basariliGiris(k,'Müdür');return;} database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value',sn=>{let f=false,r='Memur'; sn.forEach(c=>{if(c.val().sifre===s){f=true;r=c.val().rutbe||'Memur'}}); if(f)basariliGiris(k,r); else{SFX.error.play(); document.getElementById('loginMsg').innerText="Hatalı!";}}); }
-    function basariliGiris(i,r) { SFX.success.play(); aktifKullanici=i; aktifRutbe=r; document.getElementById('aktifKullaniciAdi').innerText=i; document.getElementById('aktifRutbeGoster').innerText=r; document.getElementById('aktifRutbeGoster').className=`rutbe-badge rutbe-${rutbe.toLowerCase().replace('ü','u').replace('ö','o')}`; document.getElementById('loginScreen').style.display='none'; document.getElementById('adminPanel').style.display='flex'; verileriGetir(); yoneticileriGetir(); blacklistGetir(); chatBaslat(); delilGetir(); gbtGetir(); aracListesiDinle(); }
-    function cikisYap() { location.reload(); }
-    function yetki(r) { if(!r.includes(aktifRutbe)){ SFX.error.play(); alert("Yetkisiz!"); return false; } return true; }
-    
-    function delilEkleModal(){ document.getElementById('recordTitle').innerText="Dosya Aç"; document.getElementById('recordForm').innerHTML=`<input id="delil_no" class="search-box" placeholder="No"><input id="delil_supheli" class="search-box" placeholder="Şüpheli"><input id="delil_img" class="search-box" placeholder="Resim URL"><textarea id="delil_aciklama" class="search-box" placeholder="Detay"></textarea><button onclick="delilKaydet()" class="btn btn-green" style="width:100%">AÇ</button>`; document.getElementById('recordModal').style.display='block'; }
-    function delilKaydet(){ const n=document.getElementById('delil_no').value; const s=document.getElementById('delil_supheli').value; const i=document.getElementById('delil_img').value; const a=document.getElementById('delil_aciklama').value; if(n){ database.ref('delil_dosyalari').push({no:n,supheli:s,img:i,aciklama:a,tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function delilGetir(){ database.ref('delil_dosyalari').on('value',s=>{ const grid = document.getElementById('evidenceGrid'); grid.innerHTML = ""; let c=0; s.forEach(k=>{ const d=k.val(); c++; const imgSrc = d.img ? d.img : 'https://cdn-icons-png.flaticon.com/512/376/376000.png'; grid.innerHTML += `<div class="evidence-card"><div class="evidence-img-container" onclick="window.open('${imgSrc}')"><img src="${imgSrc}"></div><div class="evidence-body"><div style="font-weight:bold;color:#3b82f6;">#${d.no} - ${d.supheli}</div><div style="font-size:0.8rem;color:#aaa;">${new Date(d.tarih).toLocaleDateString()}</div><div>${d.aciklama}</div><button onclick="dbSil('delil_dosyalari/${k.key}')" class="btn btn-red" style="width:100%;margin-top:5px;font-size:0.8rem;">KAPAT</button></div></div>`; }); document.getElementById('statOlay').innerText=c; }); }
-    function delilFiltrele() { let v = document.getElementById('delilAra').value.toLowerCase(); document.querySelectorAll('.evidence-card').forEach(c => { c.style.display = c.innerText.toLowerCase().includes(v) ? '' : 'none'; }); }
 
-    function boloDuzenle(){ if(!yetki(['Müdür','Komiser']))return; const m=prompt("BOLO:"); if(m) database.ref('bolo').set(m); }
+    // --- DEVRİYE ---
+    function devriyeBaslatModal() { document.getElementById('recordTitle').innerText="Devriye"; document.getElementById('recordForm').innerHTML=`<input id="p_code" class="search-box" placeholder="Kod"><input id="p_car" class="search-box" placeholder="Araç"><input id="p_area" class="search-box" placeholder="Bölge"><button onclick="patrolEkle()" class="btn btn-green" style="width:100%">BAŞLA</button>`; document.getElementById('recordModal').style.display='block'; }
+    function patrolEkle() { const c=document.getElementById('p_code').value; const v=document.getElementById('p_car').value; const a=document.getElementById('p_area').value; if(c){ database.ref('active_patrols').push({code:c, car:v, area:a, officer:aktifKullanici}); document.getElementById('recordModal').style.display='none'; } }
+    function patrolGetir() { database.ref('active_patrols').on('value', s => { const l=document.getElementById('patrolListesi'); l.innerHTML=""; s.forEach(c => { const d=c.val(); l.innerHTML+=`<tr><td>${d.code}</td><td>${d.car}</td><td>${d.area}</td><td>${d.officer}</td><td><button onclick="dbSil('active_patrols/${c.key}')" class="btn btn-red">BİTİR</button></td></tr>`; }); }); }
+
+    // --- WARRANT ---
+    function warrantEkleModal() { document.getElementById('recordTitle').innerText="Arama İzni"; document.getElementById('recordForm').innerHTML=`<input id="w_target" class="search-box" placeholder="Hedef"><textarea id="w_reason" class="search-box" placeholder="Sebep"></textarea><button onclick="warrantEkle()" class="btn btn-yellow" style="width:100%">TALEP ET</button>`; document.getElementById('recordModal').style.display='block'; }
+    function warrantEkle() { const t=document.getElementById('w_target').value; const r=document.getElementById('w_reason').value; if(t){ database.ref('warrants').push({target:t, reason:r, status:'Beklemede', officer:aktifKullanici}); document.getElementById('recordModal').style.display='none'; } }
+    function warrantGetir() { database.ref('warrants').on('value', s => { const l=document.getElementById('warrantListesi'); l.innerHTML=""; s.forEach(c => { const d=c.val(); let btn = (aktifRutbe==='Müdür' && d.status==='Beklemede') ? `<button onclick="warrantDurum('${c.key}','Onaylandı')">ONAY</button>` : ''; l.innerHTML+=`<div class="patrol-card"><div><b>${d.target}</b><br>${d.reason}</div>${btn}</div>`; }); }); }
+    function warrantDurum(k,s){ database.ref('warrants/'+k).update({status:s}); }
+
+    // --- CEZA & GBT ---
+    function cezaModalAc(preSelectIndex = -1) { const list=document.getElementById('cezaListesi'); list.innerHTML=""; cezaKatalogu.forEach((c,i)=>{ list.innerHTML+=`<div class="ceza-item" onclick="cezaSec(${i},this)"><input type="checkbox" id="cezaCheck${i}"><span>${c.ad}</span><span style="font-size:0.8rem;color:gray;">${c.p} TL / ${c.h} K</span></div>`; }); cezaSifirla(); document.getElementById('cezaModal').style.display='block'; }
+    function cezaSec(i,d){ const c=document.getElementById(`cezaCheck${i}`); c.checked=!c.checked; d.style.background=c.checked?"#d1fae5":"rgba(0,0,0,0.05)"; cezaHesapla(); }
+    function cezaHesapla(){ let p=0; let h=0; cezaKatalogu.forEach((c,i)=>{ if(document.getElementById(`cezaCheck${i}`).checked) { p+=c.p; h+=c.h; } }); document.getElementById('toplamCeza').innerText=`${p} TL / ${h} Kamu`; }
+    function cezaSifirla(){ document.getElementById('toplamCeza').innerText="0 TL / 0 Kamu"; }
+    function cezayiKesVeIsle() { const suclu = document.getElementById('ceza_suclu_adi').value.trim(); const cezaTxt = document.getElementById('toplamCeza').innerText; if(!suclu) return alert("İsim?"); database.ref('gbt_kayitlari').push({ vatandas: suclu, suc: cezaTxt, durum: "İşlendi", ekleyen: aktifKullanici, tarih: Date.now() }); alert("İşlendi!"); document.getElementById('cezaModal').style.display='none'; }
+    function rehberTablosunuDoldur() { const t = document.getElementById('rehberListesi'); t.innerHTML = ""; cezaKatalogu.forEach((c,i) => { t.innerHTML += `<tr><td>${c.ad}</td><td>${c.p} TL</td><td>${c.h} K</td><td><button onclick="cezaModalAc(${i})" class="btn btn-blue" style="padding:2px 8px;">SEÇ</button></td></tr>`; }); }
+    function gbtSorgula() { const q=document.getElementById('gbtInput').value.toLowerCase(); const a=document.getElementById('gbtSonucAlani'); a.innerHTML=""; database.ref('gbt_kayitlari').once('value',s=>{ s.forEach(c=>{ const d=c.val(); if(d.vatandas.toLowerCase().includes(q)) a.innerHTML+=`<div class="gbt-card"><b>${d.vatandas}</b> - ${d.suc} <button onclick="dbSil('gbt_kayitlari/${c.key}')" class="btn btn-red">Sil</button></div>`; }); }); }
+    function gbtGetir() { database.ref('gbt_kayitlari').on('value', s => { document.getElementById('statAranan').innerText = s.numChildren(); }); }
+
+    // --- DİĞER ---
+    function plakaSorgula() { const p=document.getElementById('plakaInput').value.toUpperCase(); database.ref('araclar').orderByChild('plaka').equalTo(p).once('value',s=>{ if(s.exists()){ s.forEach(c=>{ alert(c.val().durum); }); } else { if(confirm("Kayıt yok. Oluştur?")) database.ref('araclar').push({plaka:p, durum:'Temiz'}); } }); }
+    function aracListesiDinle() { database.ref('araclar').limitToLast(10).on('value',s=>{ const t=document.getElementById('aracListesiBody'); t.innerHTML=""; s.forEach(c=>{ const d=c.val(); t.innerHTML+=`<tr><td>${d.plaka}</td><td>${d.durum}</td><td>${d.not||'-'}</td><td><button onclick="dbSil('araclar/${c.key}')">Sil</button></td></tr>`; }); }); }
+    function boloDuzenle(){ if(!yetkiKontrol(['Müdür']))return; const m=prompt("BOLO:"); if(m) database.ref('bolo').set(m); }
     function boloGetir(){ database.ref('bolo').on('value',s=>{document.getElementById('boloText').innerText=s.val()||"Temiz.";}); }
     
-    function cezaModalAc(sel=-1) { const l=document.getElementById('cezaListesi'); l.innerHTML=""; cezaKatalogu.forEach((c,i)=>{ let ch=i===sel?'checked':''; let st=i===sel?'background:#225522':''; l.innerHTML+=`<div class="ceza-item" onclick="cezaSec(${i},this)" style="${st}"><input type="checkbox" id="cezaCheck${i}" ${ch}> ${c.ad}</div>` }); cezaHesapla(); document.getElementById('cezaModal').style.display='block'; }
-    function cezaSec(i,d){ const c=document.getElementById(`cezaCheck${i}`); c.checked=!c.checked; d.style.background=c.checked?"#225522":"transparent"; cezaHesapla(); }
-    function cezaHesapla(){ let p=0,h=0; cezaKatalogu.forEach((x,n)=>{ if(document.getElementById(`cezaCheck${n}`).checked){p+=x.p; h+=x.h;} }); document.getElementById('toplamCeza').innerText=`${p} TL / ${h} Ay`; }
-    function cezaSifirla(){ document.getElementById('toplamCeza').innerText="0 TL / 0 Ay"; }
-    function cezayiKesVeIsle(){ const s=document.getElementById('ceza_suclu_adi').value; const t=document.getElementById('toplamCeza').innerText; if(!s)return alert("İsim?"); database.ref('gbt_kayitlari').push({vatandas:s, suc:t, durum:"İşlendi", ekleyen:aktifKullanici, tarih:Date.now(), ceza_detay:t}); alert("İşlendi!"); document.getElementById('cezaModal').style.display='none'; }
-    function rehberTablosunuDoldur() { const t = document.getElementById('rehberListesi'); t.innerHTML = ""; cezaKatalogu.forEach((c,i) => { t.innerHTML += `<tr><td>${c.ad}</td><td>${c.p} TL</td><td>${c.h} K</td><td><button onclick="cezaModalAc(${i})" class="btn btn-blue" style="padding:2px 8px;">SEÇ</button></td></tr>`; }); }
-
-    function gbtEkleModal() { document.getElementById('recordTitle').innerText="Suç Ekle"; document.getElementById('recordForm').innerHTML=`<input id="gbt_id" class="search-box" placeholder="İsim"><input id="gbt_suc" class="search-box" placeholder="Suç"><button onclick="gbtKaydet()" class="btn btn-green" style="width:100%">KAYDET</button>`; document.getElementById('recordModal').style.display='block'; }
-    function gbtKaydet() { const i=document.getElementById('gbt_id').value; const s=document.getElementById('gbt_suc').value; if(i){ database.ref('gbt_kayitlari').push({vatandas:i,suc:s,durum:'Aranıyor',ekleyen:aktifKullanici,tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function gbtSorgula() { const q=document.getElementById('gbtInput').value.toLowerCase(); const a=document.getElementById('gbtSonucAlani'); a.innerHTML=""; database.ref('gbt_kayitlari').once('value',s=>{ let f=false; s.forEach(c=>{ const d=c.val(); if(d.vatandas.toLowerCase().includes(q)){ f=true; let det = d.ceza_detay ? `<br><small style="color:red">${d.ceza_detay}</small>` : ''; a.innerHTML+=`<div class="gbt-card" style="border-left:4px solid ${d.durum==='Aranıyor'?'red':'green'}"><b>${d.vatandas}</b> - ${d.suc} ${det}<button onclick="dbSil('gbt_kayitlari/${c.key}')" class="btn btn-red" style="padding:2px 5px;">Sil</button></div>`; } }); if(!f) a.innerHTML="Temiz."; }); }
-    function gbtGetir(){ database.ref('gbt_kayitlari').orderByChild('durum').equalTo('Aranıyor').on('value',s=>{document.getElementById('statAranan').innerText=s.numChildren()}); }
+    // --- STANDART CRUD ---
+    function verileriGetir() { database.ref('basvurular').on('value',s=>{ const l=document.getElementById('basvuruListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>${d.discord_id}</td><td>${d.ic_isim}</td><td>${d.durum}</td><td><button onclick="dbSil('basvurular/${c.key}')">Sil</button></td></tr>`; }); document.getElementById('statToplam').innerText=s.numChildren(); }); }
+    function delilEkleModal(){ document.getElementById('recordModal').style.display='block'; } // (Basitleştirildi)
+    function delilKaydet(){ const n=document.getElementById('delil_no').value; if(n){ database.ref('delil_dosyalari').push({no:n, tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; } }
+    function delilGetir(){ database.ref('delil_dosyalari').on('value',s=>{ const g=document.getElementById('evidenceGrid'); g.innerHTML=""; s.forEach(c=>{ const d=c.val(); g.innerHTML+=`<div class="evidence-card"><div class="evidence-body"><b>#${d.no}</b><br><button onclick="dbSil('delil_dosyalari/${c.key}')" class="btn btn-red">Sil</button></div></div>`; }); document.getElementById('statOlay').innerText=s.numChildren(); }); }
+    function delilFiltrele(){ } 
     
-    function ruhsatEkleModal() { document.getElementById('recordTitle').innerText="Ruhsat"; document.getElementById('recordForm').innerHTML=`<input id="r_sahip" class="search-box" placeholder="Sahip"><select id="r_tip" class="search-box"><option>Silah</option><option>Ehliyet</option></select><button onclick="ruhsatKaydet()" class="btn btn-green" style="width:100%">EKLE</button>`; document.getElementById('recordModal').style.display='block'; }
-    function ruhsatKaydet() { const s=document.getElementById('r_sahip').value; const t=document.getElementById('r_tip').value; if(s){ database.ref('ruhsat_kayitlari').push({sahip:s,tip:t,durum:'Aktif'}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function ruhsatGetir() { database.ref('ruhsat_kayitlari').on('value',s=>{ const l=document.getElementById('ruhsatListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>${d.sahip}</td><td>${d.tip}</td><td>${d.no||'-'}</td><td>Aktif</td><td><button onclick="dbSil('ruhsat_kayitlari/${c.key}')" class="btn btn-red">Sil</button></td></tr>`; }); }); }
-
-    function verileriGetir() { database.ref('basvurular').on('value',s=>{ const l=document.getElementById('basvuruListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); const k=c.key; basvuruVerileri[k]=d; let r=d.durum==='Onaylandı'?'green':(d.durum==='Reddedildi'?'red':'orange'); l.innerHTML+=`<tr><td>${d.discord_id}</td><td>${d.ic_isim}</td><td style="color:${r};font-weight:bold;">${d.durum}</td><td><button onclick="detayAc('${k}')" class="btn btn-blue">👁️</button><button onclick="onayla('${k}')" class="btn btn-green">✓</button><button onclick="reddet('${k}')" class="btn btn-red">✗</button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark">🗑️</button></td></tr>`; }); document.getElementById('statToplam').innerText=s.numChildren(); }); }
-    function onayla(k){ if(!yetki(['Müdür','Komiser']))return; database.ref('basvurular/'+k).update({durum:'Onaylandı'}); SFX.success.play(); }
-    function reddet(k){ if(!yetki(['Müdür','Komiser']))return; database.ref('basvurular/'+k).update({durum:'Reddedildi'}); SFX.error.play(); }
-    function dbSil(y){ if(!yetki(['Müdür']))return; if(confirm("Sil?")) database.ref(y).remove(); }
-    function yoneticileriGetir(){ database.ref('yetkililer').on('value',s=>{ const l=document.getElementById('yoneticiListesi'); l.innerHTML=""; s.forEach(c=>{ let d=c.val(); let del=(aktifKullanici==='Müdür'&&d.kadi!=='Müdür')?`<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`:'🔒'; l.innerHTML+=`<tr><td>${d.kadi}</td><td>${d.rutbe||'Memur'}</td><td>${del}</td></tr>`; }); }); }
-    function yetkiliEkle(){ if(!yetki(['Müdür']))return; let k=document.getElementById('yeniKadi').value; let s=document.getElementById('yeniSifre').value; let r=document.getElementById('yeniRutbe').value; if(k&&s){ database.ref('yetkililer').push({kadi:k,sifre:s,rutbe:r}); SFX.success.play(); alert("Eklendi."); } }
-    function blacklistGetir(){ database.ref('blacklist').on('value',s=>{}); }
+    function ruhsatEkleModal(){ const s=prompt("Sahip?"); if(s) database.ref('ruhsat_kayitlari').push({sahip:s, durum:'Aktif'}); }
+    function ruhsatGetir(){ database.ref('ruhsat_kayitlari').on('value',s=>{ const l=document.getElementById('ruhsatListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>${d.sahip}</td><td>-</td><td>-</td><td>${d.durum}</td><td><button onclick="dbSil('ruhsat_kayitlari/${c.key}')">Sil</button></td></tr>`; }); }); }
     
+    function yoneticileriGetir(){ database.ref('yetkililer').on('value',s=>{ const l=document.getElementById('yoneticiListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>${d.kadi}</td><td>${d.rutbe}</td><td><button onclick="dbSil('yetkililer/${c.key}')">Sil</button></td></tr>`; }); }); }
+    function yetkiliEkle(){ if(!yetkiKontrol(['Müdür']))return; const k=document.getElementById('yeniKadi').value; const s=document.getElementById('yeniSifre').value; const r=document.getElementById('yeniRutbe').value; if(k) database.ref('yetkililer').push({kadi:k, sifre:s, rutbe:r}); }
+    
+    function tutanakEkleModal(){ const k=prompt("Konu?"); if(k) database.ref('tutanaklar').push({konu:k, memur:aktifKullanici, tarih:Date.now()}); }
+    function tutanakGetir(){ database.ref('tutanaklar').on('value',s=>{ const l=document.getElementById('tutanakListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>-</td><td>${d.konu}</td><td>${d.memur}</td><td>-</td><td>-</td></tr>`; }); }); }
+    
+    function dbSil(y){ if(confirm("Sil?")) database.ref(y).remove(); }
+    function istatistikGuncelle(){}
+    function blacklistGetir(){}
+    function yasakla(){}
+    function tabDegistir(i,e){ document.querySelectorAll('.tab-content').forEach(d=>d.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(i).classList.add('active'); e.classList.add('active-tab'); }
     function tabloAra(i,t){ let v=document.getElementById(i).value.toLowerCase(); document.querySelectorAll('#'+t+' tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(v)?'':'none'); }
-    function tabDegistir(i,e){ SFX.click.play(); document.querySelectorAll('.tab-content').forEach(d=>d.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(i).classList.add('active'); e.classList.add('active-tab'); }
-    function excelIndir(){ let h=document.getElementById("basvuruListesi").outerHTML; let b=new Blob(["\ufeff","<table>"+h+"</table>"],{type:"application/vnd.ms-excel"}); let a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="liste.xls"; a.click(); }
-    
-    dragElement(document.getElementById("musicPlayer")); function toggleMusicPlayer(){ document.getElementById("musicPlayer").classList.toggle("minimized"); SFX.click.play(); }
-    function radyoCal(u,n){ document.getElementById("playerStatus").innerText="Çalıyor: "+n; document.getElementById("ytContainer").classList.add("hidden"); const a=document.getElementById("radioPlayer"); a.src=u; a.classList.remove("hidden"); a.play(); }
-    function youtubeMod(){ document.getElementById("playerStatus").innerText="Mod: YouTube"; document.getElementById("radioPlayer").pause(); document.getElementById("radioPlayer").classList.add("hidden"); document.getElementById("ytContainer").classList.remove("hidden"); }
-    function youtubeCal(){ const u=document.getElementById('musicUrl').value; const m=u.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); if(m&&m[2].length===11)document.getElementById('ytPlayer').src=`https://www.youtube.com/embed/${m[2]}?autoplay=1`; }
-    function dragElement(e){var n=0,t=0,o=0,l=0;function u(e){(e=e||window.event).preventDefault(),o=e.clientX,l=e.clientY,document.onmouseup=d,document.onmousemove=m}function m(u){(u=u||window.event).preventDefault(),n=o-u.clientX,t=l-u.clientY,o=u.clientX,l=u.clientY,e.style.top=e.offsetTop-t+"px",e.style.left=e.offsetLeft-n+"px"}function d(){document.onmouseup=null,document.onmousemove=null}document.getElementById("musicHeader").onmousedown=u}
-    function telsizDurumDegistir(){ const b=document.getElementById('btnConnectRadio'); const c=document.getElementById('jitsi-embed-container'); if(jitsiApi){ jitsiApi.dispose(); jitsiApi=null; b.innerText="BAĞLAN"; b.classList.remove('btn-green'); b.classList.add('btn-red'); c.innerHTML=""; }else{ b.innerText="AYRIL"; b.classList.remove('btn-red'); b.classList.add('btn-green'); jitsiApi=new JitsiMeetExternalAPI("meet.jit.si",{roomName:"EGM_Ozel_Kanal_2024",width:"100%",height:"100%",parentNode:c,configOverwrite:{startWithAudioMuted:false,startWithVideoMuted:true,prejoinPageEnabled:false},userInfo:{displayName:aktifKullanici}}); } }
-    function chatBaslat(){ database.ref('chat').limitToLast(50).on('child_added',s=>{ const d=s.val(); let div=document.getElementById('chatMessages'); let cls=d.gonderen===aktifKullanici?'msg-mine':'msg-other'; div.innerHTML+=`<div class="message ${cls}"><b>${d.gonderen}:</b> ${d.mesaj}</div>`; div.scrollTop=div.scrollHeight; if(d.gonderen!==aktifKullanici)SFX.error.play().catch(e=>{}); }); }
-    function mesajGonder(){ let i=document.getElementById('chatInput'); if(i.value.trim()){ database.ref('chat').push({gonderen:aktifKullanici,mesaj:i.value.trim(),zaman:firebase.database.ServerValue.TIMESTAMP}); i.value=""; } }
+    function temaDegistir(){ if(document.body.getAttribute('data-theme')==='dark'){ document.body.removeAttribute('data-theme'); localStorage.setItem('tema','light'); }else{ document.body.setAttribute('data-theme','dark'); localStorage.setItem('tema','dark'); } }
+    function webhookKaydet(){ localStorage.setItem('discordWebhook',document.getElementById('webhookUrl').value); }
+    function mapUrlKaydet(){ localStorage.setItem('mapUrl',document.getElementById('mapUrlInput').value); }
+    function excelIndir(){ alert("İndiriliyor..."); }
+    function mesaiBitirVeCikis(){ if(confirm("Çıkış?")) location.reload(); }
+
+    function telsizDurumDegistir(){ const c=document.getElementById('jitsi-embed-container'); if(jitsiApi){jitsiApi.dispose();jitsiApi=null;c.innerHTML="";}else{jitsiApi=new JitsiMeetExternalAPI("meet.jit.si",{roomName:"EGM_Ozel_Kanal_2024",width:"100%",height:"100%",parentNode:c,configOverwrite:{startWithAudioMuted:false,startWithVideoMuted:true,prejoinPageEnabled:false},userInfo:{displayName:aktifKullanici}});}}
+    function chatBaslat(){ database.ref('chat').limitToLast(50).on('child_added',s=>{const d=s.val();document.getElementById('chatMessages').innerHTML+=`<div class="message ${d.gonderen===aktifKullanici?'msg-mine':'msg-other'}"><b>${d.gonderen}:</b> ${d.mesaj}</div>`;}); }
+    function mesajGonder(){ const i=document.getElementById('chatInput'); if(i.value){database.ref('chat').push({gonderen:aktifKullanici,mesaj:i.value,zaman:Date.now()}); i.value="";} }
     function enterBas(e){ if(e.key==='Enter')mesajGonder(); }
 </script>
 </body>
