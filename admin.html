@@ -2,378 +2,331 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Operasyon Merkezi v7</title>
+    <title>EGM Operasyon Merkezi v9</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://meet.jit.si/external_api.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root { --bg-color: #f0f2f5; --text-color: #333; --sidebar-bg: #162447; --sidebar-text: white; --card-bg: white; --table-header: #1f4068; --accent: #3b82f6; }
-        [data-theme="dark"] { --bg-color: #0f172a; --text-color: #e2e8f0; --sidebar-bg: #020617; --sidebar-text: #94a3b8; --card-bg: #1e293b; --table-header: #334155; --accent: #60a5fa; }
+        :root { --bg-color: #0f172a; --text-color: #e2e8f0; --sidebar-bg: #020617; --sidebar-text: #94a3b8; --card-bg: #1e293b; --table-header: #334155; --accent: #3b82f6; --alert-color: #ef4444; }
         
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; flex-direction: column; }
         
-        /* BOLO ŞERİDİ */
+        /* BOLO */
         .bolo-ticker { background: #ef4444; color: white; padding: 5px; font-weight: bold; white-space: nowrap; overflow: hidden; position: relative; z-index: 10; font-size: 0.9rem; display: flex; align-items: center; }
-        .bolo-content { display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite; }
+        .bolo-content { display: inline-block; padding-left: 100%; animation: ticker 25s linear infinite; }
         @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         
         .main-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 20px; z-index: 2; box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 20px; z-index: 2; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
         .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
         
         .menu-item { padding: 12px 15px; cursor: pointer; color: inherit; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.2s; font-size: 0.95rem; }
         .menu-item:hover, .active-tab { background: rgba(255,255,255,0.1); color: #fff; transform: translateX(5px); border-left: 4px solid var(--accent); }
         
         .stats-container { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-left: 5px solid #007bff; }
+        .stat-card { flex: 1; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: space-between; border-left: 5px solid #007bff; }
         
-        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background: var(--table-header); color: white; }
         
-        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
-        .btn-green { background: #10b981; color: white; } .btn-red { background: #ef4444; color: white; } .btn-blue { background: #3b82f6; color: white; } .btn-dark { background: #374151; color: white; }
-        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; background: var(--card-bg); color: var(--text-color); box-sizing: border-box; }
-
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
+        .btn-red { background: #ef4444; } .btn-green { background: #10b981; } .btn-blue { background: #3b82f6; } .btn-dark { background: #334155; } .btn-yellow { background: #f59e0b; color: #000; }
         
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-bg); margin: 2% auto; padding: 0; width: 70%; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #444; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; box-sizing: border-box; }
+
+        /* Login & Modal */
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: #1e293b; padding: 40px; border-radius: 15px; width: 350px; text-align: center; border: 1px solid #334155; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #444; border-radius: 6px; background: #0f172a; color: white; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-bg); margin: 2% auto; padding: 0; width: 70%; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; border: 1px solid rgba(255,255,255,0.1); }
         .tab-content { display: none; animation: fadeIn 0.3s; } .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
+
+        /* TRAFİK SİSTEMİ (YENİ) */
+        .plate-card { background: var(--card-bg); border: 2px solid #444; border-radius: 10px; padding: 20px; text-align: center; position: relative; max-width: 300px; margin: 0 auto 20px auto; }
+        .plate-text { font-family: 'Courier New', monospace; font-size: 2.5rem; font-weight: bold; background: white; color: black; padding: 5px 20px; border: 2px solid black; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
+        .plate-status { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .status-clean { color: #10b981; } .status-stolen { color: #ef4444; animation: flash 1s infinite; } .status-impounded { color: #f59e0b; }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* HIZLI NOT DEFTERİ (YENİ) */
+        #quickNotepad { position: fixed; bottom: 20px; right: 20px; width: 250px; background: var(--card-bg); border: 1px solid var(--accent); border-radius: 8px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; transition: 0.3s; }
+        #notepadHeader { background: var(--accent); padding: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; justify-content: space-between; }
+        #notepadArea { width: 100%; height: 150px; background: rgba(0,0,0,0.3); border: none; padding: 10px; color: white; resize: none; box-sizing: border-box; font-family: monospace; }
+        .notepad-min { height: 35px !important; }
+
+        /* Delil Kartları */
+        .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .evidence-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; transition: 0.3s; }
+        .evidence-img-container { width: 100%; height: 150px; background: #000; overflow: hidden; cursor: pointer; }
+        .evidence-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .evidence-body { padding: 15px; }
+
+        /* GBT & Ceza */
+        .gbt-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .ceza-list { max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ceza-item { padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .ceza-item:hover { background: rgba(255,255,255,0.05); }
+        .rutbe-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: #334155; }
+
+        /* Telsiz */
         .radio-room-container { display: flex; height: 70vh; gap: 20px; }
         .radio-control { width: 300px; background: var(--sidebar-bg); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-area { flex: 1; background: var(--card-bg); border-radius: 10px; display: flex; flex-direction: column; border: 1px solid #ddd; }
+        .chat-area { flex: 1; background: var(--card-bg); border-radius: 10px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1); }
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .message { padding: 10px; border-radius: 8px; max-width: 80%; font-size: 0.9rem; }
         .msg-mine { align-self: flex-end; background: #3b82f6; color: white; }
         .msg-other { align-self: flex-start; background: #f1f5f9; color: #333; }
 
-        #musicPlayer { position: absolute; z-index: 9999; background: rgba(22, 36, 71, 0.95); backdrop-filter: blur(10px); border: 1px solid #00f7ff; width: 320px; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 247, 255, 0.3); bottom: 20px; right: 20px; overflow: hidden; transition: height 0.3s; }
-        #musicHeader { padding: 10px; cursor: move; background: linear-gradient(90deg, #1f4068, #162447); color: #00f7ff; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 1px solid #00f7ff; }
-        .music-body { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
-        .minimized { height: 40px !important; overflow: hidden; }
+        /* Müzik */
+        #musicPlayer { position: absolute; z-index: 9999; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--accent); width: 320px; border-radius: 10px; bottom: 20px; right: 280px; overflow: hidden; transition: 0.3s; }
         .hidden { display: none; }
-        
-        .rutbe-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-        .rutbe-mudur { background: #ef4444; color: white; } .rutbe-komiser { background: #f59e0b; color: white; } .rutbe-memur { background: #3b82f6; color: white; }
-
-        .gbt-card { background: var(--card-bg); border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .aranma-var { border-left: 5px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
-        .aranma-yok { border-left: 5px solid #10b981; }
-        .evidence-img { width: 100px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .evidence-img:hover { transform: scale(1.5); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-
-        /* Ceza Sistemi */
-        .ceza-list { max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ceza-item { padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition:0.2s; }
-        .ceza-item:hover { background: rgba(0,0,0,0.1); }
-        .ceza-item input { margin-right: 10px; transform: scale(1.2); }
-        .ceza-sonuc { margin-top: 20px; padding: 15px; background: #162447; color: white; border-radius: 8px; text-align: center; }
-        .ceza-rehber-row:hover { background-color: rgba(59, 130, 246, 0.1) !important; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="bolo-ticker" id="boloTicker">
-    <div style="background:black; padding:0 20px; z-index:11;">🚨 BOLO (ACİL):</div>
+    <div style="background:rgba(0,0,0,0.5); padding:0 20px; z-index:11;">🚨 BOLO:</div>
     <div class="bolo-content" id="boloText">Sistem aktif.</div>
-    <div style="position:absolute; right:10px; z-index:11;"><button onclick="boloDuzenle()" class="btn btn-dark" style="padding:2px 5px; font-size:0.7rem;">DÜZENLE</button></div>
+    <div style="position:absolute; right:10px; z-index:11;"><button onclick="boloDuzenle()" class="btn btn-dark" style="padding:2px 5px; font-size:0.7rem;">GÜNCELLE</button></div>
 </div>
 
-<div class="main-container">
-    <div id="loginScreen">
-        <div class="login-box">
-            <img src="egmm.png" style="width:80px; margin-bottom:10px;">
-            <h2 style="color:#1e293b; margin:0;">GÜVENLİK GİRİŞİ</h2>
-            <input type="text" id="kadi" class="login-input" style="width:100%; padding:10px; margin:5px 0;" placeholder="Kullanıcı Adı">
-            <input type="password" id="sifre" class="login-input" style="width:100%; padding:10px; margin:5px 0;" placeholder="Şifre">
-            <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px;">Giriş Yap</button>
-            <p id="loginMsg" style="color:red; margin-top:10px;"></p>
-        </div>
+<div id="loginScreen">
+    <div class="login-box">
+        <h2 style="color:white; margin:0; letter-spacing:2px;">EGM GÖZ</h2>
+        <p style="color:#64748b;">Operasyonel Veri Tabanı</p>
+        <input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı">
+        <input type="password" id="sifre" class="login-input" placeholder="Şifre">
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px;">SİSTEME GİR</button>
+        <p id="loginMsg" style="color:red; margin-top:10px;"></p>
     </div>
+</div>
 
-    <div id="recordModal" class="modal"><div class="modal-content" style="width:50%;"><div style="padding:20px; background:var(--sidebar-bg); color:white; display:flex; justify-content:space-between;"><h3 style="margin:0" id="recordTitle">Kayıt Ekle</h3><span onclick="document.getElementById('recordModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span></div><div id="recordForm" style="padding:30px;"></div></div></div>
-    
-    <div id="cezaModal" class="modal">
-        <div class="modal-content" style="width:60%;">
-            <div style="padding:20px; background:var(--sidebar-bg); color:white; display:flex; justify-content:space-between;"><h3 style="margin:0">⚖️ Ceza İşlemi</h3><span onclick="document.getElementById('cezaModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span></div>
-            <div style="padding:20px;">
-                <input type="text" id="ceza_suclu_adi" class="search-box" placeholder="Suçlu Adı / ID Giriniz..." style="border:2px solid #ef4444;">
-                <div class="ceza-list" id="cezaListesi"></div>
-                <div class="ceza-sonuc"><h2 id="toplamCeza">0 TL / 0 Kamu</h2><p>Toplam Ceza</p></div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button onclick="cezaSifirla()" class="btn btn-dark" style="flex:1;">SIFIRLA</button>
-                    <button onclick="cezayiKesVeIsle()" class="btn btn-red" style="flex:2;">CEZAYI KES VE GBT'YE İŞLE</button>
-                </div>
-            </div>
+<div id="trafficModal" class="modal">
+    <div class="modal-content" style="width:50%;">
+        <div style="padding:20px; background:var(--sidebar-bg); display:flex; justify-content:space-between;">
+            <h3 style="margin:0">🚔 Araç Sorgu & İşlem</h3>
+            <span onclick="document.getElementById('trafficModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span>
         </div>
-    </div>
-
-    <div id="detayModal" class="modal">
-        <div class="modal-content">
-            <div style="padding:20px; background:var(--sidebar-bg); color:white; display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0" id="modalBaslik">Detay</h3>
-                <div><button onclick="pdfYazdir()" class="btn btn-green">PDF</button><span onclick="document.getElementById('detayModal').style.display='none'" style="cursor:pointer; font-size:1.5rem; margin-left:15px;">&times;</span></div>
-            </div>
-            <div style="padding:30px; overflow-y:auto; flex:1; display:flex; gap:20px;">
-                <div style="flex:2;" id="modalIcerik"></div>
-                <div style="flex:1; border-left:1px solid rgba(0,0,0,0.1); padding-left:20px;">
-                    <h4 style="margin-top:0;">📋 Notlar</h4>
-                    <div id="noteList" style="height:150px; overflow-y:auto;"></div>
-                    <textarea id="newNote" style="width:100%; height:60px; margin-top:5px;" placeholder="Not..."></textarea>
-                    <button onclick="notEkle()" class="btn btn-blue" style="width:100%; margin-top:5px;">Kaydet</button>
+        <div style="padding:30px; text-align:center;">
+            <div id="trafficResult">
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="musicPlayer">
-        <div id="musicHeader"><span><i class="fas fa-broadcast-tower"></i> EGM MEDYA</span><div style="cursor:pointer;" onclick="toggleMusicPlayer()">_</div></div>
-        <div class="music-body">
-            <div style="display:flex; gap:5px;"><button class="btn btn-dark" style="flex:1; font-size:0.7rem;" onclick="radyoCal('https://dinle.trt.net.tr/mp3/radyohaber', 'TRT Haber')">📡 HABER</button><button class="btn btn-dark" style="flex:1; font-size:0.7rem;" onclick="youtubeMod()">📺 YOUTUBE</button></div>
-            <div id="playerStatus" style="color:white; font-size:0.8rem; text-align:center;">Hazır</div>
-            <audio id="radioPlayer" controls class="hidden" style="width:100%;"></audio>
-            <div id="ytContainer" class="hidden">
-                <input type="text" id="musicUrl" style="width:100%;" placeholder="Link...">
-                <button onclick="youtubeCal()" class="btn btn-blue" style="width:100%;">AÇ</button>
-                <iframe id="ytPlayer" style="height:150px; margin-top:5px; width:100%;" src="" frameborder="0" allow="autoplay"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminPanel" style="display:none; width:100%;">
-        <div class="sidebar">
-            <div style="text-align:center; margin-bottom:20px;">
-                <img src="egmm.png" style="width:50px;">
-                <h3 style="margin:5px 0; font-size:1.1rem;">EGM MDT</h3>
-                <span id="aktifKullaniciAdi" style="font-size:0.9rem; font-weight:bold; color:#60a5fa;"></span><br>
-                <span id="aktifRutbeGoster" class="rutbe-badge"></span>
-            </div>
-            <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-home"></i> Özet</div>
-            <div class="menu-item" onclick="tabDegistir('cezaRehberTab', this)"><i class="fas fa-book"></i> Suç & Ceza Kılavuzu</div>
-            <div class="menu-item" onclick="tabDegistir('basvurularTab', this)"><i class="fas fa-file-alt"></i> Başvurular</div>
-            <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-search"></i> GBT Sorgu</div>
-            <div class="menu-item" onclick="cezaModalAc()"><i class="fas fa-calculator"></i> Ceza Kes</div>
-            <div class="menu-item" onclick="tabDegistir('delilTab', this)"><i class="fas fa-fingerprint"></i> Kanıt Odası</div>
-            <div class="menu-item" onclick="tabDegistir('ruhsatTab', this)"><i class="fas fa-id-card"></i> Ruhsat & Plaka</div>
-            <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)"><i class="fas fa-users-cog"></i> Personel</div>
-            <div class="menu-item" onclick="tabDegistir('sohbetTab', this)"><i class="fas fa-headset"></i> Komuta</div>
-            <div class="menu-item" onclick="tabDegistir('ayarlarTab', this)"><i class="fas fa-cog"></i> Ayarlar</div>
-            <div style="margin-top:auto;"><button onclick="mesaiBitirVeCikis()" class="btn btn-red" style="width:100%;">ÇIKIŞ</button></div>
-        </div>
-
-        <div class="content">
-            <div id="dashboardTab" class="tab-content active">
-                <h2 style="margin-bottom:20px;">Genel Durum</h2>
-                <div class="stats-container">
-                    <div class="stat-card" style="border-color:#3b82f6;"><div class="stat-info"><h3 id="statToplam">0</h3><p>Başvuru</p></div><i class="fas fa-folder fa-2x"></i></div>
-                    <div class="stat-card" style="border-color:#f59e0b;"><div class="stat-info"><h3 id="statAranan">0</h3><p>Aranan</p></div><i class="fas fa-user-clock fa-2x"></i></div>
-                    <div class="stat-card" style="border-color:#ef4444;"><div class="stat-info"><h3 id="statOlay">0</h3><p>Açık Dosya</p></div><i class="fas fa-file-contract fa-2x"></i></div>
-                </div>
-            </div>
-
-            <div id="cezaRehberTab" class="tab-content">
-                <h2>Türk Ceza Kanunu (TCK) Rehberi</h2>
-                <input type="text" id="rehberAra" class="search-box" placeholder="Suç ara..." onkeyup="tabloAra('rehberAra', 'rehberListesi')">
-                <table>
-                    <thead><tr><th>Suç Adı</th><th>Para Cezası</th><th>Kamu/Hapis</th><th>İşlem</th></tr></thead>
-                    <tbody id="rehberListesi"></tbody>
-                </table>
-            </div>
-
-            <div id="basvurularTab" class="tab-content">
-                <div style="display:flex; justify-content:space-between;"><h2>Başvurular</h2><button onclick="excelIndir()" class="btn btn-green">Excel</button></div>
-                <input type="text" id="basvuruAra" class="search-box" placeholder="🔍 Ara..." onkeyup="tabloAra('basvuruAra', 'basvuruListesi')">
-                <table><thead><tr><th>ID</th><th>İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table>
-            </div>
-
-            <div id="gbtTab" class="tab-content">
-                <div style="display:flex; justify-content:space-between;"><h2>GBT SORGULAMA</h2> <button onclick="gbtEkleModal()" class="btn btn-blue">+ Kayıt</button></div>
-                <div style="background:var(--card-bg); padding:20px; border-radius:8px; margin-bottom:20px;">
-                    <input type="text" id="gbtInput" class="search-box" placeholder="TC Kimlik (ID) veya İsim..." style="margin:0;">
-                    <button onclick="gbtSorgula()" class="btn btn-green" style="margin-top:10px; width:100%;">SORGULA</button>
-                </div>
-                <div id="gbtSonucAlani"></div>
-            </div>
-
-            <div id="delilTab" class="tab-content">
-                <div style="display:flex; justify-content:space-between;"><h2>KANIT ODASI</h2> <button onclick="delilEkleModal()" class="btn btn-blue">+ Dosya</button></div>
-                <input type="text" id="delilAra" class="search-box" placeholder="Ara..." onkeyup="tabloAra('delilAra', 'delilListesi')">
-                <table><thead><tr><th>No</th><th>Şüpheli</th><th>Kanıt</th><th>Açıklama</th><th>İşlem</th></tr></thead><tbody id="delilListesi"></tbody></table>
-            </div>
-
-            <div id="ruhsatTab" class="tab-content">
-                <div style="display:flex; justify-content:space-between;"><h2>RUHSAT</h2> <button onclick="ruhsatEkleModal()" class="btn btn-blue">+ Ekle</button></div>
-                <input type="text" id="ruhsatAra" class="search-box" placeholder="Ara..." onkeyup="tabloAra('ruhsatAra', 'ruhsatListesi')">
-                <table><thead><tr><th>Sahip</th><th>Tip</th><th>Belge No</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="ruhsatListesi"></tbody></table>
-            </div>
-
-            <div id="yoneticilerTab" class="tab-content">
-                <h2>Personel</h2>
-                <div style="background:var(--card-bg); padding:15px; margin-bottom:20px; border-radius:8px;">
-                    <div style="display:flex; gap:10px;"><input type="text" id="yeniKadi" placeholder="Kullanıcı" style="flex:1; border:1px solid #ccc;"><input type="password" id="yeniSifre" placeholder="Şifre" style="flex:1; border:1px solid #ccc;"><select id="yeniRutbe"><option value="Memur">Memur</option><option value="Komiser">Komiser</option><option value="Müdür">Müdür</option></select><button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button></div>
-                </div>
-                <table><thead><tr><th>Kullanıcı</th><th>Rütbe</th><th>İşlem</th></tr></thead><tbody id="yoneticiListesi"></tbody></table>
-            </div>
-
-            <div id="ayarlarTab" class="tab-content">
-                <h2>Ayarlar</h2>
-                <div style="background:var(--card-bg); padding:20px; border-radius:8px;">
-                    <label>Webhook:</label><input type="password" id="webhookUrl" class="search-box" onchange="webhookKaydet()">
-                    <label>Harita:</label><input type="text" id="mapUrlInput" class="search-box" onchange="mapUrlKaydet()">
-                    <button onclick="temaDegistir()" class="btn btn-dark">Tema</button>
-                    <div id="noMapMsg" style="margin-top:10px;">Harita: <a href="#" onclick="window.open(document.getElementById('mapUrlInput').value)">Aç</a></div>
-                </div>
-                <h3 style="color:red;">Kara Liste</h3>
-                <div style="display:flex; gap:10px;"><input type="text" id="yasakliID" placeholder="ID" class="search-box" style="margin:0;"><button onclick="yasakla()" class="btn btn-red">BAN</button></div>
-                <table><thead><tr><th>ID</th><th>İşlem</th></tr></thead><tbody id="blacklistListesi"></tbody></table>
-            </div>
-
-            <div id="sohbetTab" class="tab-content">
-                <h2>Komuta Kontrol</h2>
-                <div class="radio-room-container">
-                    <div class="radio-control"><div style="padding:15px; text-align:center; color:#94a3b8; background:rgba(0,0,0,0.2);">TELSİZ</div><div style="padding:20px; text-align:center;"><button id="btnConnectRadio" onclick="telsizDurumDegistir()" class="btn btn-red" style="width:100%;">BAĞLAN</button></div><div id="jitsi-embed-container" style="flex:1; background:black;"></div></div>
-                    <div class="chat-area"><div style="padding:15px; border-bottom:1px solid #ddd;">Yazılı Kanal</div><div class="chat-messages" id="chatMessages"></div><div style="padding:15px; display:flex; gap:10px;"><input type="text" id="chatInput" class="chat-input" placeholder="Mesaj..." style="flex:1;" onkeydown="enterBas(event)"><button onclick="mesajGonder()" class="btn btn-blue">GÖNDER</button></div></div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
+<div id="recordModal" class="modal"><div class="modal-content" style="width:50%;"><div style="padding:20px; background:var(--sidebar-bg); display:flex; justify-content:space-between;"><h3 style="margin:0">📁 Kanıt Dosyası</h3><span onclick="document.getElementById('recordModal').style.display='none'" style="cursor:pointer; font-size:1.5rem;">&times;</span></div><div style="padding:30px;"><input id="delil_no" class="search-box" placeholder="Dosya No"><input id="delil_supheli" class="search-box" placeholder="Şüpheli"><input id="delil_img" class="search-box" placeholder="Görsel URL"><textarea id="delil_aciklama" class="search-box" style="height:100px;" placeholder="Detay..."></textarea><button onclick="delilKaydet()" class="btn btn-green" style="width:100%">OLUŞTUR</button></div></div></div>
+
+<div class="main-container" id="adminPanel" style="display:none;">
+    <div class="sidebar">
+        <div style="text-align:center; margin-bottom:20px;">
+            <h3 style="margin:5px 0; color:var(--accent);">OPERASYON</h3>
+            <span id="aktifKullaniciAdi" style="font-size:0.9rem; font-weight:bold;"></span><br>
+            <span id="aktifRutbeGoster" class="rutbe-badge"></span>
+        </div>
+        <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-chart-line"></i> Özet</div>
+        <div class="menu-item" onclick="tabDegistir('trafficTab', this)"><i class="fas fa-car"></i> Trafik & Araç</div>
+        <div class="menu-item" onclick="tabDegistir('delilTab', this)"><i class="fas fa-folder-open"></i> Delil & Kanıt</div>
+        <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-search"></i> GBT Sorgu</div>
+        <div class="menu-item" onclick="tabDegistir('cezaRehberTab', this)"><i class="fas fa-book"></i> Ceza Kılavuzu</div>
+        <div class="menu-item" onclick="cezaModalAc()"><i class="fas fa-gavel"></i> Ceza Kes</div>
+        <div class="menu-item" onclick="tabDegistir('basvurularTab', this)"><i class="fas fa-file-contract"></i> Başvurular</div>
+        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)"><i class="fas fa-users"></i> Personel</div>
+        <div class="menu-item" onclick="tabDegistir('sohbetTab', this)"><i class="fas fa-walkie-talkie"></i> Telsiz</div>
+        
+        <div style="margin-top:auto;">
+            <button onclick="cikisYap()" class="btn btn-red" style="width:100%;">ÇIKIŞ</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="dashboardTab" class="tab-content active">
+            <div class="stats-container">
+                <div class="stat-card"><h3 id="statToplam">0</h3><p>Başvuru</p></div>
+                <div class="stat-card"><h3 id="statAranan">0</h3><p>Aranan</p></div>
+                <div class="stat-card"><h3 id="statOlay">0</h3><p>Dosya</p></div>
+            </div>
+        </div>
+
+        <div id="trafficTab" class="tab-content">
+            <h2>🚔 Trafik Şube & Çalıntı Araç</h2>
+            <div style="background:var(--card-bg); padding:20px; border-radius:8px; margin-bottom:20px; display:flex; gap:10px;">
+                <input type="text" id="plakaInput" class="search-box" placeholder="PLAKA GİRİNİZ (Örn: 34 ABC 12)" style="margin:0; text-transform:uppercase; font-family:monospace; font-size:1.2rem; text-align:center;">
+                <button onclick="plakaSorgula()" class="btn btn-green" style="width:150px;">SORGULA</button>
+            </div>
+            
+            <h3 style="margin-top:30px;">Son İşlem Yapılan Araçlar</h3>
+            <table id="aracListesiTablo">
+                <thead><tr><th>Plaka</th><th>Durum</th><th>Not</th><th>İşlemi Yapan</th></tr></thead>
+                <tbody id="aracListesiBody"></tbody>
+            </table>
+        </div>
+
+        <div id="delilTab" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>📁 Delil & Kanıt</h2><button onclick="delilEkleModal()" class="btn btn-blue">+ YENİ DOSYA</button></div>
+            <input type="text" id="delilAra" class="search-box" placeholder="Ara..." onkeyup="delilFiltrele()">
+            <div class="evidence-grid" id="evidenceGrid"></div>
+        </div>
+
+        <div id="gbtTab" class="tab-content"><h2>GBT Sorgulama</h2><div style="background:var(--card-bg); padding:20px; border-radius:8px; margin-bottom:20px;"><input type="text" id="gbtInput" class="search-box" placeholder="Kimlik/İsim..."><button onclick="gbtSorgula()" class="btn btn-green" style="width:100%;">SORGULA</button></div><div id="gbtSonucAlani"></div></div>
+        
+        <div id="cezaRehberTab" class="tab-content"><h2>TCK Rehberi</h2><input type="text" id="rehberAra" class="search-box" placeholder="Suç ara..." onkeyup="tabloAra('rehberAra', 'rehberListesi')"><table><thead><tr><th>Suç</th><th>Para</th><th>Kamu</th><th>İşlem</th></tr></thead><tbody id="rehberListesi"></tbody></table></div>
+        <div id="basvurularTab" class="tab-content"><h2>Başvurular</h2><button onclick="excelIndir()" class="btn btn-green" style="float:right;">Excel</button><input type="text" id="basvuruAra" class="search-box" placeholder="Ara..." onkeyup="tabloAra('basvuruAra', 'basvuruListesi')"><table><thead><tr><th>ID</th><th>İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table></div>
+        <div id="yoneticilerTab" class="tab-content"><h2>Personel</h2><div style="display:flex; gap:10px; margin-bottom:10px;"><input id="yeniKadi" class="search-box" placeholder="Kullanıcı"><input id="yeniSifre" class="search-box" placeholder="Şifre"><select id="yeniRutbe" class="search-box"><option>Memur</option><option>Komiser</option><option>Müdür</option></select><button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button></div><table><thead><tr><th>Kullanıcı</th><th>Rütbe</th><th>İşlem</th></tr></thead><tbody id="yoneticiListesi"></tbody></table></div>
+        <div id="sohbetTab" class="tab-content"><h2>Komuta</h2><div class="radio-room-container"><div class="radio-control"><div style="padding:20px; text-align:center;"><button id="btnConnectRadio" onclick="telsizDurumDegistir()" class="btn btn-red" style="width:100%;">BAĞLAN</button></div><div id="jitsi-embed-container" style="flex:1; background:black;"></div></div><div class="chat-area"><div class="chat-messages" id="chatMessages"></div><div style="padding:15px; display:flex; gap:10px;"><input type="text" id="chatInput" class="search-box" style="margin:0;" onkeydown="enterBas(event)"><button onclick="mesajGonder()" class="btn btn-blue">GÖNDER</button></div></div></div></div>
+    </div>
+</div>
+
+<div id="quickNotepad">
+    <div id="notepadHeader" onclick="toggleNotepad()">📝 Hızlı Not <span id="noteToggleIcon">_</span></div>
+    <textarea id="notepadArea" placeholder="Plaka, isim, not al... (Otomatik Kaydedilir)" oninput="notuKaydetLocal()"></textarea>
+</div>
+
+<div id="cezaModal" class="modal"><div class="modal-content" style="width:60%;"><div style="padding:20px; display:flex; justify-content:space-between;"><h3>⚖️ CEZA SİSTEMİ</h3><span onclick="document.getElementById('cezaModal').style.display='none'" style="cursor:pointer;">X</span></div><div style="padding:20px;"><input id="ceza_suclu_adi" class="search-box" placeholder="Suçlu Adı..."><div id="cezaListesi" class="ceza-list"></div><h2 id="toplamCeza" style="text-align:center; margin:20px 0;">0 TL</h2><button onclick="cezayiKesVeIsle()" class="btn btn-red" style="width:100%;">GBT'YE İŞLE</button></div></div></div>
+<div id="detayModal" class="modal"><div class="modal-content"><div style="padding:20px; display:flex; justify-content:space-between;"><h3>Detay</h3><span onclick="document.getElementById('detayModal').style.display='none'" style="cursor:pointer;">X</span></div><div style="padding:30px;" id="modalIcerik"></div></div></div>
+
+<div id="musicPlayer"><div id="musicHeader" style="padding:10px; background:var(--sidebar-bg); cursor:move; display:flex; justify-content:space-between;"><span>🔊 EGM MEDYA</span><span onclick="toggleMusicPlayer()" style="cursor:pointer;">_</span></div><div class="music-body" style="padding:10px;"><div style="display:flex; gap:5px;"><button onclick="radyoCal('https://dinle.trt.net.tr/mp3/radyohaber', 'Haber')" class="btn btn-dark" style="flex:1; font-size:0.7rem;">HABER</button><button onclick="youtubeMod()" class="btn btn-dark" style="flex:1; font-size:0.7rem;">YOUTUBE</button></div><div id="playerStatus" style="font-size:0.8rem; text-align:center; color:#aaa;">Hazır</div><audio id="radioPlayer" controls class="hidden" style="width:100%;"></audio><div id="ytContainer" class="hidden"><input id="musicUrl" class="search-box" style="padding:5px; height:30px;" placeholder="Link..."><button onclick="youtubeCal()" class="btn btn-blue" style="width:100%; padding:5px;">AÇ</button><iframe id="ytPlayer" style="width:100%; height:150px; border:none; margin-top:5px;"></iframe></div></div></div>
 
 <script src="config.js"></script>
 <script>
     const SFX = { success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") };
-    SFX.success.volume = 0.5; SFX.error.volume = 0.5; SFX.alert.volume = 0.4; SFX.click.volume = 0.2;
-
-    let basvuruVerileri = {}; let aktifKullanici = ""; let aktifRutbe = ""; let jitsiApi = null; let aktifBasvuruKey = null; let mesaiBaslangic = null;
-
-    // --- CEZA KATALOĞU (LİMİTLER: MAX 200K / 80 KAMU) ---
-    const cezaKatalogu = [
-        {ad: "Hız Sınırı İhlali", para: 2000, hapis: 0},
-        {ad: "Kırmızı Işık İhlali", para: 1500, hapis: 0},
-        {ad: "Hatalı Park", para: 500, hapis: 0},
-        {ad: "Ehliyetsiz Araç Kullanımı", para: 5000, hapis: 5},
-        {ad: "Alkollü Araç Kullanımı", para: 8000, hapis: 10},
-        {ad: "Kamu Düzenini Bozma", para: 3000, hapis: 15},
-        {ad: "Polise Mukavemet", para: 15000, hapis: 25},
-        {ad: "Tehdit / Hakaret", para: 5000, hapis: 10},
-        {ad: "Hırsızlık (Basit)", para: 10000, hapis: 20},
-        {ad: "Gasp / Yağma", para: 25000, hapis: 40},
-        {ad: "Yaralama (Silahlı)", para: 40000, hapis: 50},
-        {ad: "Uyuşturucu Satışı", para: 80000, hapis: 60},
-        {ad: "Banka Soygunu", para: 150000, hapis: 75},
-        {ad: "Cinayet / Terör", para: 200000, hapis: 80}
-    ];
+    let basvuruVerileri = {}; let aktifKullanici = ""; let aktifRutbe = ""; let jitsiApi = null;
+    const cezaKatalogu = [{ad:"Hız İhlali",p:2000,h:0},{ad:"Kırmızı Işık",p:1500,h:0},{ad:"Ehliyetsiz",p:5000,h:5},{ad:"Alkollü",p:8000,h:10},{ad:"Mukavemet",p:15000,h:25},{ad:"Silahlı Soygun",p:50000,h:60},{ad:"Cinayet",p:200000,h:80}];
 
     window.onload = function() {
         const wh=localStorage.getItem('discordWebhook'); if(wh) document.getElementById('webhookUrl').value=wh;
-        const mp=localStorage.getItem('mapUrl'); if(mp) document.getElementById('mapUrlInput').value=mp;
-        if(localStorage.getItem('tema')==='dark') document.body.setAttribute('data-theme','dark');
+        document.body.setAttribute('data-theme','dark');
         boloGetir(); youtubeMod(); rehberTablosunuDoldur();
+        
+        // Not Defterini Yükle
+        if(localStorage.getItem('myNote')) document.getElementById('notepadArea').value = localStorage.getItem('myNote');
+        
+        // Araç Listesini Dinle
+        aracListesiDinle();
     }
 
-    // --- REHBER TABLOSU VE İŞLEMLERİ ---
-    function rehberTablosunuDoldur() {
-        const tbody = document.getElementById('rehberListesi');
-        tbody.innerHTML = "";
-        cezaKatalogu.forEach((suç, index) => {
-            tbody.innerHTML += `
-            <tr class="ceza-rehber-row">
-                <td><b>${suç.ad}</b></td>
-                <td>${suç.para.toLocaleString()} TL</td>
-                <td>${suç.hapis} Kamu</td>
-                <td><button onclick="cezaModalAc(${index})" class="btn btn-blue" style="padding:4px 8px; font-size:0.8rem;">SEÇ</button></td>
-            </tr>`;
+    // --- TRAFİK & ARAÇ SİSTEMİ (YENİ) ---
+    function plakaSorgula() {
+        const plaka = document.getElementById('plakaInput').value.toUpperCase().trim();
+        if(!plaka) return alert("Plaka giriniz!");
+        
+        database.ref('araclar').orderByChild('plaka').equalTo(plaka).once('value', snapshot => {
+            let aracData = null; let key = null;
+            snapshot.forEach(c => { aracData = c.val(); key = c.key; });
+            
+            const sonucDiv = document.getElementById('trafficResult');
+            document.getElementById('trafficModal').style.display = 'block';
+            
+            if(aracData) {
+                let renkClass = aracData.durum === 'Çalıntı' ? 'status-stolen' : (aracData.durum === 'Bağlandı' ? 'status-impounded' : 'status-clean');
+                sonucDiv.innerHTML = `
+                    <div class="plate-card">
+                        <div class="plate-text">${aracData.plaka}</div>
+                        <div class="plate-status ${renkClass}">${aracData.durum.toUpperCase()}</div>
+                        <p>${aracData.not || "Ekstra not yok."}</p>
+                    </div>
+                    <div style="display:flex; gap:10px; justify-content:center;">
+                        <button onclick="aracDurumGuncelle('${key}', 'Temiz')" class="btn btn-green">TEMİZE ÇIKAR</button>
+                        <button onclick="aracDurumGuncelle('${key}', 'Çalıntı')" class="btn btn-red">ÇALINTI</button>
+                        <button onclick="aracDurumGuncelle('${key}', 'Bağlandı')" class="btn btn-yellow">BAĞLA (YEDİEMİN)</button>
+                    </div>
+                `;
+            } else {
+                sonucDiv.innerHTML = `
+                    <h3>Kayıt Bulunamadı</h3>
+                    <p>${plaka} plakalı araç sistemde yok. Yeni kayıt oluşturulsun mu?</p>
+                    <button onclick="yeniAracKaydet('${plaka}')" class="btn btn-blue">KAYIT OLUŞTUR</button>
+                `;
+            }
         });
     }
 
-    // --- CEZA SİSTEMİ ---
-    function cezaModalAc(preSelectIndex = -1) {
-        const list=document.getElementById('cezaListesi'); list.innerHTML="";
-        cezaKatalogu.forEach((c,i)=>{ 
-            let checked = (i === preSelectIndex) ? 'checked' : '';
-            let style = (i === preSelectIndex) ? 'background:#d1fae5;' : 'background:rgba(0,0,0,0.05);';
-            list.innerHTML+=`<div class="ceza-item" style="${style}" onclick="cezaSec(${i},this)"><input type="checkbox" id="cezaCheck${i}" ${checked}><span>${c.ad}</span><span style="font-size:0.8rem;color:gray;">${c.para} TL / ${c.hapis} K</span></div>`; 
+    function yeniAracKaydet(plaka) {
+        database.ref('araclar').push({
+            plaka: plaka, durum: 'Temiz', not: 'Sisteme yeni eklendi.', islem_yapan: aktifKullanici, zaman: Date.now()
         });
-        cezaHesapla(); document.getElementById('cezaModal').style.display='block';
+        plakaSorgula(); // Ekranı yenile
     }
-    function cezaSec(i,d){ const c=document.getElementById(`cezaCheck${i}`); c.checked=!c.checked; d.style.background=c.checked?"#d1fae5":"rgba(0,0,0,0.05)"; cezaHesapla(); }
-    function cezaHesapla(){ let p=0; let h=0; cezaKatalogu.forEach((c,i)=>{ if(document.getElementById(`cezaCheck${i}`).checked){p+=c.para; h+=c.hapis;} }); document.getElementById('toplamCeza').innerText=`${p.toLocaleString()} TL / ${h} Kamu`; }
-    function cezaSifirla(){ document.querySelectorAll('.ceza-item input').forEach(i=>i.checked=false); document.querySelectorAll('.ceza-item').forEach(d=>d.style.background="rgba(0,0,0,0.05)"); document.getElementById('toplamCeza').innerText="0 TL / 0 Kamu"; }
+
+    function aracDurumGuncelle(key, durum) {
+        database.ref('araclar/' + key).update({
+            durum: durum, islem_yapan: aktifKullanici, zaman: Date.now()
+        });
+        alert(`Araç durumu güncellendi: ${durum}`);
+        document.getElementById('trafficModal').style.display = 'none';
+        plakaSorgula(); // Ekranı yenilemek için tekrar sorgula
+    }
+
+    function aracListesiDinle() {
+        database.ref('araclar').limitToLast(20).on('value', s => {
+            const t = document.getElementById('aracListesiBody'); t.innerHTML = "";
+            s.forEach(c => {
+                const d = c.val();
+                let renk = d.durum === 'Çalıntı' ? 'red' : (d.durum === 'Bağlandı' ? 'orange' : 'green');
+                t.innerHTML = `<tr><td><b>${d.plaka}</b></td><td style="color:${renk}; font-weight:bold;">${d.durum}</td><td>${d.not}</td><td>${d.islem_yapan}</td></tr>` + t.innerHTML;
+            });
+        });
+    }
+
+    // --- NOT DEFTERİ (YENİ) ---
+    function notuKaydetLocal() { localStorage.setItem('myNote', document.getElementById('notepadArea').value); }
+    function toggleNotepad() { 
+        const p = document.getElementById('quickNotepad'); 
+        p.classList.toggle('notepad-min');
+        document.getElementById('noteToggleIcon').innerText = p.classList.contains('notepad-min') ? '□' : '_';
+    }
+
+    // --- ESKİ FONKSİYONLAR ---
+    function girisYap() { SFX.click.play(); const k=document.getElementById('kadi').value; const s=document.getElementById('sifre').value; if(k==="Müdür"&&s==="GökSancak1881"){database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value',x=>{if(!x.exists())database.ref('yetkililer').push({kadi:'Müdür',sifre:'GökSancak1881',rutbe:'Müdür'})}); basariliGiris(k,'Müdür');return;} database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value',sn=>{let f=false,r='Memur'; sn.forEach(c=>{if(c.val().sifre===s){f=true;r=c.val().rutbe||'Memur'}}); if(f)basariliGiris(k,r); else{SFX.error.play(); document.getElementById('loginMsg').innerText="Hatalı!";}}); }
+    function basariliGiris(i,r) { SFX.success.play(); aktifKullanici=i; aktifRutbe=r; document.getElementById('aktifKullaniciAdi').innerText=i; document.getElementById('aktifRutbeGoster').innerText=r; document.getElementById('aktifRutbeGoster').className=`rutbe-badge rutbe-${rutbe.toLowerCase().replace('ü','u').replace('ö','o')}`; document.getElementById('loginScreen').style.display='none'; document.getElementById('adminPanel').style.display='flex'; verileriGetir(); yoneticileriGetir(); blacklistGetir(); chatBaslat(); delilGetir(); gbtGetir(); }
+    function cikisYap() { location.reload(); }
+    function yetki(r) { if(!r.includes(aktifRutbe)){ SFX.error.play(); alert("Yetkisiz!"); return false; } return true; }
     
-    function cezayiKesVeIsle() {
-        const suclu = document.getElementById('ceza_suclu_adi').value.trim();
-        const cezaTxt = document.getElementById('toplamCeza').innerText;
-        if(!suclu) return alert("Suçlu adı giriniz.");
-        let suclar = []; cezaKatalogu.forEach((c,i)=>{ if(document.getElementById(`cezaCheck${i}`).checked) suclar.push(c.ad); });
-        if(suclar.length === 0) return alert("Suç seçilmedi.");
-        database.ref('gbt_kayitlari').push({ vatandas: suclu, suc: suclar.join(", "), durum: "İşlendi", ekleyen: aktifKullanici, tarih: Date.now(), ceza_detay: cezaTxt });
-        logKaydet("Ceza Kesildi", `${suclu}: ${cezaTxt}`);
-        alert("Ceza Kesildi!"); document.getElementById('cezaModal').style.display='none';
-    }
+    function delilEkleModal(){ document.getElementById('recordModal').style.display='block'; }
+    function delilKaydet(){ const n=document.getElementById('delil_no').value; const s=document.getElementById('delil_supheli').value; const i=document.getElementById('delil_img').value; const a=document.getElementById('delil_aciklama').value; if(n){ database.ref('delil_dosyalari').push({no:n,supheli:s,img:i,aciklama:a,tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
+    function delilGetir(){ database.ref('delil_dosyalari').on('value',s=>{ const grid = document.getElementById('evidenceGrid'); grid.innerHTML = ""; let c=0; s.forEach(k=>{ const d=k.val(); c++; const imgSrc = d.img ? d.img : 'https://cdn-icons-png.flaticon.com/512/376/376000.png'; grid.innerHTML += `<div class="evidence-card"><div class="evidence-img-container" onclick="window.open('${imgSrc}')"><img src="${imgSrc}"></div><div class="evidence-body"><div style="font-weight:bold;color:#3b82f6;">#${d.no} - ${d.supheli}</div><div style="font-size:0.8rem;color:#aaa;">${new Date(d.tarih).toLocaleDateString()}</div><div>${d.aciklama}</div><button onclick="dbSil('delil_dosyalari/${k.key}')" class="btn btn-red" style="width:100%;margin-top:5px;font-size:0.8rem;">KAPAT</button></div></div>`; }); document.getElementById('statOlay').innerText=c; }); }
+    function delilFiltrele() { let v = document.getElementById('delilAra').value.toLowerCase(); document.querySelectorAll('.evidence-card').forEach(c => { c.style.display = c.innerText.toLowerCase().includes(v) ? '' : 'none'; }); }
 
-    // --- BOLO ---
-    function boloDuzenle(){ if(!yetkiKontrol(['Müdür','Komiser']))return; const m=prompt("BOLO:"); if(m) database.ref('bolo').set(m); }
+    function boloDuzenle(){ if(!yetki(['Müdür','Komiser']))return; const m=prompt("BOLO:"); if(m) database.ref('bolo').set(m); }
     function boloGetir(){ database.ref('bolo').on('value',s=>{document.getElementById('boloText').innerText=s.val()||"Temiz.";}); }
+    
+    function cezaModalAc(sel=-1) { const l=document.getElementById('cezaListesi'); l.innerHTML=""; cezaKatalogu.forEach((c,i)=>{ let ch=i===sel?'checked':''; let st=i===sel?'background:#225522':''; l.innerHTML+=`<div class="ceza-item" onclick="cezaSec(${i},this)" style="${st}"><input type="checkbox" id="cezaCheck${i}" ${ch}> ${c.ad}</div>` }); cezaHesapla(); document.getElementById('cezaModal').style.display='block'; }
+    function cezaSec(i,d){ const c=document.getElementById(`cezaCheck${i}`); c.checked=!c.checked; d.style.background=c.checked?"#225522":"transparent"; cezaHesapla(); }
+    function cezaHesapla(){ let p=0,h=0; cezaKatalogu.forEach((x,n)=>{ if(document.getElementById(`cezaCheck${n}`).checked){p+=x.p; h+=x.h;} }); document.getElementById('toplamCeza').innerText=`${p} TL / ${h} Ay`; }
+    function cezaSifirla(){ document.getElementById('toplamCeza').innerText="0 TL / 0 Ay"; }
+    function cezayiKesVeIsle(){ const s=document.getElementById('ceza_suclu_adi').value; const t=document.getElementById('toplamCeza').innerText; if(!s)return alert("İsim?"); database.ref('gbt_kayitlari').push({vatandas:s, suc:t, durum:"İşlendi", ekleyen:aktifKullanici, tarih:Date.now(), ceza_detay:t}); alert("İşlendi!"); document.getElementById('cezaModal').style.display='none'; }
+    function rehberTablosunuDoldur() { const t = document.getElementById('rehberListesi'); t.innerHTML = ""; cezaKatalogu.forEach((c,i) => { t.innerHTML += `<tr><td>${c.ad}</td><td>${c.p} TL</td><td>${c.h} K</td><td><button onclick="cezaModalAc(${i})" class="btn btn-blue" style="padding:2px 8px;">SEÇ</button></td></tr>`; }); }
 
-    // --- TEMEL ---
-    function girisYap() { SFX.click.play(); const k=document.getElementById('kadi').value.trim(); const s=document.getElementById('sifre').value.trim(); if(k==="Müdür"&&s==="GökSancak1881"){ database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value',x=>{if(!x.exists())database.ref('yetkililer').push({kadi:'Müdür',sifre:'GökSancak1881',rutbe:'Müdür'});}); basariliGiris(k,'Müdür'); return; } database.ref('yetkililer').orderByChild('kadi').equalTo(k).once('value',sn=>{ let f=false; let r='Memur'; sn.forEach(c=>{if(c.val().sifre===s){f=true;r=c.val().rutbe||'Memur';}}); if(f) basariliGiris(k,r); else {SFX.error.play(); document.getElementById('loginMsg').innerText="Hatalı!";} }); }
-    function basariliGiris(isim, rutbe) { SFX.success.play(); aktifKullanici=isim; aktifRutbe=rutbe; mesaiBaslangic=Date.now(); document.getElementById('aktifKullaniciAdi').innerText=isim; document.getElementById('aktifRutbeGoster').innerText=rutbe; document.getElementById('aktifRutbeGoster').className=`rutbe-badge rutbe-${rutbe.toLowerCase().replace('ü','u').replace('ö','o')}`; document.getElementById('loginScreen').style.display='none'; document.getElementById('adminPanel').style.display='flex'; logKaydet("Giriş",`${isim} (${rutbe})`); verileriGetir(); yoneticileriGetir(); blacklistGetir(); mesaileriGetir(); chatBaslat(); gbtGetir(); delilGetir(); ruhsatGetir(); istatistikGuncelle(); }
-    function mesaiBitirVeCikis() { if(confirm("Çıkış?")){ const b=Date.now(); const s=Math.floor((b-mesaiBaslangic)/60000); database.ref('mesai').push({personel:aktifKullanici,giris:mesaiBaslangic,cikis:b,sure:s}); location.reload(); } }
-    function yetkiKontrol(i){ if(!i.includes(aktifRutbe)){ SFX.error.play(); alert("Yetkisiz!"); return false; } return true; }
+    function gbtEkleModal() { /* Manuel GBT Ekleme Gerekirse */ }
+    function gbtSorgula() { const q=document.getElementById('gbtInput').value.toLowerCase(); const a=document.getElementById('gbtSonucAlani'); a.innerHTML=""; database.ref('gbt_kayitlari').once('value',s=>{ let f=false; s.forEach(c=>{ const d=c.val(); if(d.vatandas.toLowerCase().includes(q)){ f=true; let det = d.ceza_detay ? `<br><small style="color:red">${d.ceza_detay}</small>`:''; a.innerHTML+=`<div class="gbt-card" style="border-left:4px solid ${d.durum==='Aranıyor'?'red':'green'}"><b>${d.vatandas}</b> - ${d.suc} ${det}<button onclick="dbSil('gbt_kayitlari/${c.key}')" class="btn btn-red" style="padding:2px 5px;">Sil</button></div>`; } }); if(!f) a.innerHTML="Temiz."; }); }
+    function gbtGetir(){ database.ref('gbt_kayitlari').orderByChild('durum').equalTo('Aranıyor').on('value',s=>{document.getElementById('statAranan').innerText=s.numChildren()}); }
 
-    function gbtEkleModal() { document.getElementById('recordTitle').innerText="Suç Kaydı"; document.getElementById('recordForm').innerHTML=`<input id="gbt_id" placeholder="ID/İsim" class="search-box"><input id="gbt_suc" placeholder="Suç" class="search-box"><select id="gbt_durum" class="search-box"><option value="Temiz">Temiz</option><option value="Aranıyor">ARANIYOR</option><option value="Tutuklu">Tutuklu</option></select><button onclick="gbtKaydet()" class="btn btn-green" style="width:100%">KAYDET</button>`; document.getElementById('recordModal').style.display='block'; }
-    function gbtKaydet() { const i=document.getElementById('gbt_id').value; const s=document.getElementById('gbt_suc').value; const d=document.getElementById('gbt_durum').value; if(i&&s){ database.ref('gbt_kayitlari').push({vatandas:i,suc:s,durum:d,ekleyen:aktifKullanici,tarih:Date.now()}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function gbtSorgula() { const q=document.getElementById('gbtInput').value.toLowerCase(); const a=document.getElementById('gbtSonucAlani'); a.innerHTML="Aranıyor..."; database.ref('gbt_kayitlari').once('value',s=>{ a.innerHTML=""; let b=false; s.forEach(c=>{ const d=c.val(); if(d.vatandas.toLowerCase().includes(q)){ b=true; let st=d.durum==='Aranıyor'?'aranma-var':'aranma-yok'; let detay = d.ceza_detay ? `<br><small style="color:red;">Ceza: ${d.ceza_detay}</small>` : ''; a.innerHTML+=`<div class="gbt-card ${st}"><div><h3>${d.vatandas}</h3><p>${d.suc}${detay}</p><small>${new Date(d.tarih).toLocaleDateString()}</small></div><h2 style="color:${d.durum==='Aranıyor'?'red':'green'}">${d.durum}</h2><button onclick="dbSil('gbt_kayitlari/${c.key}')" class="btn btn-red">Sil</button></div>`; } }); if(!b) a.innerHTML="<p>Temiz.</p>"; else SFX.alert.play(); }); }
-    function gbtGetir(){}
-
-    function delilEkleModal(){ document.getElementById('recordTitle').innerText="Dosya Aç"; document.getElementById('recordForm').innerHTML=`<input id="delil_no" placeholder="Olay No" class="search-box"><input id="delil_supheli" placeholder="Şüpheli" class="search-box"><input id="delil_img" placeholder="Resim Linki" class="search-box"><textarea id="delil_aciklama" class="search-box" style="height:100px" placeholder="Detay"></textarea><button onclick="delilKaydet()" class="btn btn-green" style="width:100%">AÇ</button>`; document.getElementById('recordModal').style.display='block'; }
-    function delilKaydet(){ const n=document.getElementById('delil_no').value; const s=document.getElementById('delil_supheli').value; const i=document.getElementById('delil_img').value; const a=document.getElementById('delil_aciklama').value; if(n){ database.ref('delil_dosyalari').push({no:n,supheli:s,img:i,aciklama:a}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function delilGetir(){ database.ref('delil_dosyalari').on('value',s=>{ const l=document.getElementById('delilListesi'); l.innerHTML=""; let c=0; s.forEach(k=>{ const d=k.val(); c++; l.innerHTML+=`<tr><td>${d.no}</td><td>${d.supheli}</td><td>${d.img?`<a href="${d.img}" target="_blank"><img src="${d.img}" class="evidence-img"></a>`:'Yok'}</td><td>${d.aciklama}</td><td><button onclick="dbSil('delil_dosyalari/${k.key}')" class="btn btn-red">Arşiv</button></td></tr>`; }); document.getElementById('statOlay').innerText=c; }); }
-
-    function ruhsatEkleModal(){ document.getElementById('recordTitle').innerText="Ruhsat"; document.getElementById('recordForm').innerHTML=`<input id="ruhsat_sahip" placeholder="Sahip" class="search-box"><select id="ruhsat_tip" class="search-box"><option value="Silah">Silah</option><option value="Ehliyet">Ehliyet</option><option value="Plaka">Plaka</option></select><input id="ruhsat_no" placeholder="No" class="search-box"><button onclick="ruhsatKaydet()" class="btn btn-green" style="width:100%">OLUŞTUR</button>`; document.getElementById('recordModal').style.display='block'; }
-    function ruhsatKaydet(){ const s=document.getElementById('ruhsat_sahip').value; const t=document.getElementById('ruhsat_tip').value; const n=document.getElementById('ruhsat_no').value; if(s){ database.ref('ruhsat_kayitlari').push({sahip:s,tip:t,no:n,durum:'Aktif'}); document.getElementById('recordModal').style.display='none'; SFX.success.play(); } }
-    function ruhsatGetir(){ database.ref('ruhsat_kayitlari').on('value',s=>{ const l=document.getElementById('ruhsatListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); l.innerHTML+=`<tr><td>${d.sahip}</td><td>${d.tip}</td><td>${d.no}</td><td><span style="color:green">Aktif</span></td><td><button onclick="dbSil('ruhsat_kayitlari/${c.key}')" class="btn btn-red">İptal</button></td></tr>`; }); }); }
-
-    function istatistikGuncelle() { database.ref('gbt_kayitlari').orderByChild('durum').equalTo('Aranıyor').on('value',s=>{document.getElementById('statAranan').innerText=s.numChildren();}); database.ref('basvurular').on('value',s=>{document.getElementById('statToplam').innerText=s.numChildren();}); }
-    function onayla(k){ if(!yetkiKontrol(['Müdür','Komiser']))return; if(confirm("Onay?")){ database.ref('basvurular/'+k).update({durum:'Onaylandı'}); logKaydet("Onay",basvuruVerileri[k].discord_id); SFX.success.play(); } }
-    function reddet(k){ if(!yetkiKontrol(['Müdür','Komiser']))return; let s=prompt("Sebep?"); if(s){ database.ref('basvurular/'+k).update({durum:'Reddedildi',red_sebebi:s}); logKaydet("Red",s); SFX.error.play(); } }
-    function dbSil(y){ if(!yetkiKontrol(['Müdür']))return; if(confirm("Sil?")){ database.ref(y).remove(); logKaydet("Silme",y); SFX.error.play(); } }
-    function logKaydet(i,d){ database.ref('logs').push({zaman:firebase.database.ServerValue.TIMESTAMP,yonetici:aktifKullanici,islem:i,detay:d}); }
-    function loglariGetir() { database.ref('logs').limitToLast(50).on('value', s => { const l = document.getElementById('logListesi'); l.innerHTML = ""; let a = []; s.forEach(c => a.push(c.val())); a.reverse().forEach(log => { let t = new Date(log.zaman).toLocaleString('tr-TR'); l.innerHTML += `<tr><td><small>${t}</small></td><td><b>${log.yonetici}</b></td><td>${log.islem}</td><td>${log.detay}</td></tr>`; }); }); }
-    function mesaileriGetir() { database.ref('mesai').limitToLast(50).on('value', s => { const l = document.getElementById('mesaiListesi'); l.innerHTML = ""; let a = []; s.forEach(c => a.push(c.val())); a.reverse().forEach(m => { l.innerHTML += `<tr><td>${m.personel}</td><td>${new Date(m.giris).toLocaleTimeString()}</td><td>${new Date(m.cikis).toLocaleTimeString()}</td><td>${m.sure} Dk</td></tr>`; }); }); }
-    function verileriGetir() { database.ref('basvurular').on('value',s=>{ const l=document.getElementById('basvuruListesi'); l.innerHTML=""; basvuruVerileri={}; s.forEach(c=>{ const d=c.val(); const k=c.key; basvuruVerileri[k]=d; let r=d.durum==='Onaylandı'?'green':(d.durum==='Reddedildi'?'red':'orange'); l.innerHTML+=`<tr><td>${d.discord_id}</td><td>${d.ic_isim}</td><td style="color:${r};font-weight:bold;">${d.durum}</td><td><button onclick="detayAc('${k}')" class="btn btn-blue">👁️</button><button onclick="onayla('${k}')" class="btn btn-green">✓</button><button onclick="reddet('${k}')" class="btn btn-red">✗</button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark">🗑️</button></td></tr>`; }); }); }
-    function detayAc(k){ SFX.click.play(); aktifBasvuruKey=k; const d=basvuruVerileri[k]; let h=""; if(d.cevaplar){ for(let [x,y] of Object.entries(d.cevaplar)) h+=`<div><b>${x}:</b><br>${y}</div><hr style="margin:5px 0;border-color:#eee;">`; } document.getElementById('modalIcerik').innerHTML=h; const nl=document.getElementById('noteList'); nl.innerHTML="Yükleniyor..."; database.ref('basvurular/'+k+'/yonetici_notlari').on('value',s=>{ nl.innerHTML=""; if(!s.exists())return; s.forEach(c=>{ let n=c.val(); nl.innerHTML+=`<div style="border-bottom:1px solid #eee;padding:5px;"><b style="color:#3b82f6;">${n.yazan}:</b> ${n.mesaj}</div>`; }); }); document.getElementById('detayModal').style.display='block'; }
-    function notEkle(){ const t=document.getElementById('newNote').value.trim(); if(t&&aktifBasvuruKey){ database.ref('basvurular/'+aktifBasvuruKey+'/yonetici_notlari').push({yazan:aktifKullanici,mesaj:t}); document.getElementById('newNote').value=""; } }
-    function pdfYazdir(){ const d=basvuruVerileri[aktifBasvuruKey]; let w=window.open('','','width=800,height=900'); w.document.write(`<html><head><title>${d.ic_isim}</title><style>body{font-family:monospace;padding:40px;}h1{text-align:center;border-bottom:2px solid black;}</style></head><body><h1>EGM DOSYA</h1><p><b>ID:</b> ${d.discord_id}</p><p><b>İSİM:</b> ${d.ic_isim}</p><p><b>DURUM:</b> ${d.durum}</p><hr>${document.getElementById('modalIcerik').innerHTML}<script>window.print()<\/script></body></html>`); w.document.close(); }
+    function verileriGetir() { database.ref('basvurular').on('value',s=>{ const l=document.getElementById('basvuruListesi'); l.innerHTML=""; s.forEach(c=>{ const d=c.val(); const k=c.key; l.innerHTML+=`<tr><td>${d.discord_id}</td><td>${d.ic_isim}</td><td>${d.durum}</td><td><button onclick="onayla('${k}')" class="btn btn-green">✓</button><button onclick="reddet('${k}')" class="btn btn-red">✗</button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark">🗑️</button></td></tr>`; }); document.getElementById('statToplam').innerText=s.numChildren(); }); }
+    function onayla(k){ if(!yetki(['Müdür','Komiser']))return; database.ref('basvurular/'+k).update({durum:'Onaylandı'}); SFX.success.play(); }
+    function reddet(k){ if(!yetki(['Müdür','Komiser']))return; database.ref('basvurular/'+k).update({durum:'Reddedildi'}); SFX.error.play(); }
+    function dbSil(y){ if(!yetki(['Müdür']))return; if(confirm("Sil?")) database.ref(y).remove(); }
+    
     function yoneticileriGetir(){ database.ref('yetkililer').on('value',s=>{ const l=document.getElementById('yoneticiListesi'); l.innerHTML=""; s.forEach(c=>{ let d=c.val(); let del=(aktifKullanici==='Müdür'&&d.kadi!=='Müdür')?`<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`:'🔒'; l.innerHTML+=`<tr><td>${d.kadi}</td><td>${d.rutbe||'Memur'}</td><td>${del}</td></tr>`; }); }); }
-    function yetkiliEkle(){ if(!yetkiKontrol(['Müdür']))return; let k=document.getElementById('yeniKadi').value; let s=document.getElementById('yeniSifre').value; let r=document.getElementById('yeniRutbe').value; if(k&&s){ database.ref('yetkililer').push({kadi:k,sifre:s,rutbe:r}); SFX.success.play(); alert("Eklendi."); } }
-    function yasakla(){ const i=document.getElementById('yasakliID').value.trim(); if(i){ database.ref('blacklist').push({discord_id:i}); alert("Yasaklandı"); } }
-    function blacklistGetir(){ database.ref('blacklist').on('value',s=>{ const l=document.getElementById('blacklistListesi'); l.innerHTML=""; s.forEach(c=>l.innerHTML+=`<tr><td>${c.val().discord_id}</td><td><button onclick="dbSil('blacklist/${c.key}')" class="btn btn-red">Sil</button></td></tr>`); }); }
+    function yetkiliEkle(){ if(!yetki(['Müdür']))return; let k=document.getElementById('yeniKadi').value; let s=document.getElementById('yeniSifre').value; let r=document.getElementById('yeniRutbe').value; if(k&&s){ database.ref('yetkililer').push({kadi:k,sifre:s,rutbe:r}); SFX.success.play(); alert("Eklendi."); } }
+    function blacklistGetir(){ database.ref('blacklist').on('value',s=>{}); }
     
     function tabloAra(i,t){ let v=document.getElementById(i).value.toLowerCase(); document.querySelectorAll('#'+t+' tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(v)?'':'none'); }
-    function webhookKaydet(){ localStorage.setItem('discordWebhook',document.getElementById('webhookUrl').value); }
-    function mapUrlKaydet(){ localStorage.setItem('mapUrl',document.getElementById('mapUrlInput').value); location.reload(); }
-    function temaDegistir(){ if(document.body.getAttribute('data-theme')==='dark'){ document.body.removeAttribute('data-theme'); localStorage.setItem('tema','light'); }else{ document.body.setAttribute('data-theme','dark'); localStorage.setItem('tema','dark'); } }
     function tabDegistir(i,e){ SFX.click.play(); document.querySelectorAll('.tab-content').forEach(d=>d.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(i).classList.add('active'); e.classList.add('active-tab'); }
     function excelIndir(){ let h=document.getElementById("basvuruListesi").outerHTML; let b=new Blob(["\ufeff","<table>"+h+"</table>"],{type:"application/vnd.ms-excel"}); let a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="liste.xls"; a.click(); }
     
     dragElement(document.getElementById("musicPlayer")); function toggleMusicPlayer(){ document.getElementById("musicPlayer").classList.toggle("minimized"); SFX.click.play(); }
-    function radyoCal(u,n){ document.getElementById("playerStatus").innerText="Çalıyor: "+n; document.getElementById("ytContainer").classList.add("hidden"); const a=document.getElementById("radioPlayer"); a.src=u; a.classList.remove("hidden"); a.play().catch(e=>alert("Hata")); }
+    function radyoCal(u,n){ document.getElementById("playerStatus").innerText="Çalıyor: "+n; document.getElementById("ytContainer").classList.add("hidden"); const a=document.getElementById("radioPlayer"); a.src=u; a.classList.remove("hidden"); a.play(); }
     function youtubeMod(){ document.getElementById("playerStatus").innerText="Mod: YouTube"; document.getElementById("radioPlayer").pause(); document.getElementById("radioPlayer").classList.add("hidden"); document.getElementById("ytContainer").classList.remove("hidden"); }
-    function youtubeCal(){ const u=document.getElementById('musicUrl').value; const m=u.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); if(m&&m[2].length===11) document.getElementById('ytPlayer').src=`https://www.youtube.com/embed/${m[2]}?autoplay=1`; else alert("Link Hatalı"); }
+    function youtubeCal(){ const u=document.getElementById('musicUrl').value; const m=u.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); if(m&&m[2].length===11)document.getElementById('ytPlayer').src=`https://www.youtube.com/embed/${m[2]}?autoplay=1`; }
     function dragElement(e){var n=0,t=0,o=0,l=0;function u(e){(e=e||window.event).preventDefault(),o=e.clientX,l=e.clientY,document.onmouseup=d,document.onmousemove=m}function m(u){(u=u||window.event).preventDefault(),n=o-u.clientX,t=l-u.clientY,o=u.clientX,l=u.clientY,e.style.top=e.offsetTop-t+"px",e.style.left=e.offsetLeft-n+"px"}function d(){document.onmouseup=null,document.onmousemove=null}document.getElementById("musicHeader").onmousedown=u}
     function telsizDurumDegistir(){ const b=document.getElementById('btnConnectRadio'); const c=document.getElementById('jitsi-embed-container'); if(jitsiApi){ jitsiApi.dispose(); jitsiApi=null; b.innerText="BAĞLAN"; b.classList.remove('btn-green'); b.classList.add('btn-red'); c.innerHTML=""; }else{ b.innerText="AYRIL"; b.classList.remove('btn-red'); b.classList.add('btn-green'); jitsiApi=new JitsiMeetExternalAPI("meet.jit.si",{roomName:"EGM_Ozel_Kanal_2024",width:"100%",height:"100%",parentNode:c,configOverwrite:{startWithAudioMuted:false,startWithVideoMuted:true,prejoinPageEnabled:false},userInfo:{displayName:aktifKullanici}}); } }
-    function chatBaslat(){ database.ref('chat').limitToLast(50).on('child_added',s=>{ const d=s.val(); let div=document.getElementById('chatMessages'); let cls=d.gonderen===aktifKullanici?'msg-mine':'msg-other'; div.innerHTML+=`<div class="message ${cls}"><b>${d.gonderen}:</b> ${d.mesaj}</div>`; div.scrollTop=div.scrollHeight; if(d.gonderen!==aktifKullanici)SFX.alert.play().catch(e=>{}); }); }
+    function chatBaslat(){ database.ref('chat').limitToLast(50).on('child_added',s=>{ const d=s.val(); let div=document.getElementById('chatMessages'); let cls=d.gonderen===aktifKullanici?'msg-mine':'msg-other'; div.innerHTML+=`<div class="message ${cls}"><b>${d.gonderen}:</b> ${d.mesaj}</div>`; div.scrollTop=div.scrollHeight; if(d.gonderen!==aktifKullanici)SFX.error.play().catch(e=>{}); }); }
     function mesajGonder(){ let i=document.getElementById('chatInput'); if(i.value.trim()){ database.ref('chat').push({gonderen:aktifKullanici,mesaj:i.value.trim(),zaman:firebase.database.ServerValue.TIMESTAMP}); i.value=""; } }
     function enterBas(e){ if(e.key==='Enter')mesajGonder(); }
-    function dcLog(k, t, c, s="") { const u = localStorage.getItem('discordWebhook'); if(!u) return; const d = basvuruVerileri[k]; fetch(u, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({embeds:[{title:t, color:c, fields:[{name:"İsim", value:d.ic_isim},{name:"ID", value:d.discord_id},{name:"Not", value:s||"-"}]}]})}); }
 </script>
 </body>
 </html>
