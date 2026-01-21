@@ -239,7 +239,7 @@
         sohbetVeDurumBaslat();
     }
 
-    // --- SESLİ SOHBET (JITSI) ---
+    // --- JITSI (DÜZELTİLDİ: PREJOIN SAYFASI KAPATILDI) ---
     function sesliSohbeteBaglan() {
         const btn = document.getElementById('btnVoice');
         const panel = document.getElementById('voicePanel');
@@ -255,12 +255,22 @@
             btn.innerText = "AYRIL"; txt.innerText = "TELSİZ AKTİF";
             panel.classList.add('active');
             container.classList.add('open');
+
             const domain = "meet.jit.si";
             const options = {
                 roomName: "EGM-Polnet-Yonetim-Odasi-Gizli-82736",
-                width: "100%", height: 250, parentNode: document.querySelector('#jitsi-container'),
-                configOverwrite: { startWithAudioMuted: false, startWithVideoMuted: true },
-                interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'tileview', 'hangup'], SHOW_JITSI_WATERMARK: false },
+                width: "100%", height: 250, 
+                parentNode: document.querySelector('#jitsi-container'),
+                // BURASI ÖNEMLİ: BEKLEME ODASINI (PREJOIN) KAPATIYORUZ
+                configOverwrite: { 
+                    startWithAudioMuted: false, 
+                    startWithVideoMuted: true,
+                    prejoinPageEnabled: false 
+                },
+                interfaceConfigOverwrite: { 
+                    TOOLBAR_BUTTONS: ['microphone', 'camera', 'tileview', 'hangup'], 
+                    SHOW_JITSI_WATERMARK: false 
+                },
                 userInfo: { displayName: aktifKullanici }
             };
             jitsiApi = new JitsiMeetExternalAPI(domain, options);
@@ -277,10 +287,7 @@
         const bar = document.getElementById('micLevelBar');
         
         try {
-            // Mikrofon izni iste
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            // 1. Görsel Bar İçin (AudioContext)
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const analyser = audioContext.createAnalyser();
             const microphone = audioContext.createMediaStreamSource(stream);
@@ -289,25 +296,19 @@
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
 
-            // Ses Seviyesini Çizdir
             const drawMeter = () => {
-                if(btn.innerText !== "KAYDEDİLİYOR...") return; // Test bitince dur
+                if(btn.innerText !== "KAYDEDİLİYOR...") return; 
                 requestAnimationFrame(drawMeter);
                 analyser.getByteFrequencyData(dataArray);
-                let sum = 0;
-                for(let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
+                let sum = 0; for(let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
                 let average = sum / bufferLength;
-                let percent = Math.min(100, average * 2); // Hassasiyet
-                bar.style.width = percent + "%";
+                bar.style.width = Math.min(100, average * 2) + "%";
             };
 
-            // 2. Kayıt İçin (MediaRecorder)
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+            mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
 
             mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
@@ -315,44 +316,27 @@
                 const audio = new Audio(audioUrl);
                 
                 msg.innerText = "🔊 Kayıt Dinletiliyor...";
-                bar.style.width = "100%"; // Oynatırken bar dolu görünsün
-                bar.style.background = "#3498db";
-                
+                bar.style.width = "100%"; bar.style.background = "#3498db";
                 audio.play();
                 
                 audio.onended = () => {
                     msg.innerText = "✅ Test Tamamlandı";
-                    btn.classList.remove('recording');
-                    btn.innerText = "🎤 TEKRAR TEST ET";
-                    btn.disabled = false;
-                    bar.style.width = "0%";
-                    bar.style.background = "linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c)";
-                    
-                    // Streami kapat (Jitsi ile çakışmasın)
+                    btn.classList.remove('recording'); btn.innerText = "🎤 TEKRAR TEST ET"; btn.disabled = false;
+                    bar.style.width = "0%"; bar.style.background = "linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c)";
                     stream.getTracks().forEach(track => track.stop());
                 };
             };
 
-            // Testi Başlat
             mediaRecorder.start();
-            btn.innerText = "KAYDEDİLİYOR...";
-            btn.classList.add('recording');
-            btn.disabled = true;
+            btn.innerText = "KAYDEDİLİYOR..."; btn.classList.add('recording'); btn.disabled = true;
             msg.innerText = "🎤 Konuşun (3 saniye)...";
             drawMeter();
 
-            // 3 Saniye Sonra Durdur ve Oynat
-            setTimeout(() => {
-                mediaRecorder.stop();
-            }, 3000);
+            setTimeout(() => { mediaRecorder.stop(); }, 3000);
 
-        } catch (err) {
-            console.error(err);
-            alert("Mikrofon hatası! Lütfen tarayıcı izinlerini kontrol edin.");
-        }
+        } catch (err) { console.error(err); alert("Mikrofon hatası! İzinleri kontrol edin."); }
     }
 
-    // --- SOHBET VE DURUM ---
     function sohbetVeDurumBaslat() {
         database.ref('status').on('value', snapshot => {
             const listDiv = document.getElementById('onlineUsersList'); listDiv.innerHTML = "";
@@ -414,25 +398,10 @@
                 let data = c.val();
                 let isTargetMudur = (data.kadi === 'Müdür');
                 let isCurrentMudur = (aktifKullanici === 'Müdür');
-                
                 let silBtn = "";
-                if(isCurrentMudur && !isTargetMudur) {
-                    silBtn = `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`;
-                } else {
-                    silBtn = `<span style="color:#aaa; font-size:0.8rem;">🔒</span>`;
-                }
-
+                if(isCurrentMudur && !isTargetMudur) { silBtn = `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`; } else { silBtn = `<span style="color:#aaa; font-size:0.8rem;">🔒</span>`; }
                 let sifreBtn = "";
-                if (isCurrentMudur) {
-                    sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`;
-                } else {
-                    if (data.kadi === aktifKullanici) {
-                        sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`;
-                    } else {
-                        sifreBtn = `<span style="color:#aaa; font-size:0.8rem;">🚫</span>`;
-                    }
-                }
-
+                if (isCurrentMudur) { sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`; } else { if (data.kadi === aktifKullanici) { sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`; } else { sifreBtn = `<span style="color:#aaa; font-size:0.8rem;">🚫</span>`; } }
                 l.innerHTML += `<tr><td>${data.kadi}</td><td>••••</td><td>${sifreBtn} ${silBtn}</td></tr>`; 
             }); 
         }); 
