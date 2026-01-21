@@ -2,84 +2,57 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>LSPD Başvuru Formu</title>
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; background: #1a1a1a; }
-        .container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
-        .section { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(45deg, #0f2027, #203a43, #2c5364); }
-        input { padding: 15px; font-size: 1.2rem; border-radius: 5px; border: none; width: 300px; margin-top: 20px; }
-        button { padding: 15px 40px; font-size: 1.2rem; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
-        button:hover { background-color: #0056b3; }
-        h2 { font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-    </style>
+    <title>EGM Personel Başvuru</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-</head>
-<body>
-
-<div class="container" id="mainContainer">
-    <div class="section">
-        <h2>LSPD Başvuru Sistemi</h2>
-        <p>Soruları cevaplamak için aşağı kaydırın.</p>
-        <div style="font-size:3rem; margin-top:20px;">⬇️</div>
-    </div>
-
-    <div class="section">
-        <h2>Discord ID'niz</h2>
-        <input type="text" id="discord_id" placeholder="Örn: 123456789">
-    </div>
-
-    <div class="section">
-        <h2>Karakter Adı Soyadı (IC)</h2>
-        <input type="text" id="ic_isim" placeholder="Örn: John Doe">
-    </div>
-
-    <div class="section">
-        <h2>Gerçek Yaşınız (OOC)</h2>
-        <input type="number" id="ooc_yas" placeholder="Yaşınız">
-    </div>
-
-    <div class="section">
-        <h2>Onaylıyor musun?</h2>
-        <p>Yalan beyanda bulunmak yasaklanma sebebidir.</p>
-        <button onclick="basvuruGonder()">Başvuruyu Tamamla</button>
-        <p id="msg" style="margin-top:20px; font-weight:bold;"></p>
-        <a href="index.html" style="color: #ccc; margin-top:20px;">Ana Sayfaya Dön</a>
-    </div>
-</div>
-
-<script src="config.js"></script>
-<script>
-    function basvuruGonder() {
-        const discord_id = document.getElementById('discord_id').value;
-        const ic_isim = document.getElementById('ic_isim').value;
-        const ooc_yas = document.getElementById('ooc_yas').value;
-
-        if (!discord_id || !ic_isim || !ooc_yas) {
-            alert("Lütfen tüm alanları doldurun!");
-            return;
+    <style>
+        /* --- TÜRK POLİSİ TEMASI & MİNİMALİST TASARIM --- */
+        :root {
+            --egm-lacivert: #1a2b45;
+            --egm-kirmizi: #c41e3a;
+            --egm-altin: #d4af37;
+            --yazi-rengi: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
         }
 
-        // Firebase'e veri ekle
-        const yeniBasvuru = database.ref('basvurular').push();
-        yeniBasvuru.set({
-            discord_id: discord_id,
-            ic_isim: ic_isim,
-            ooc_yas: ooc_yas,
-            durum: 'Beklemede',
-            tarih: new Date().toISOString()
-        }, (error) => {
-            if (error) {
-                alert('Hata oluştu: ' + error.message);
-            } else {
-                document.getElementById('msg').innerText = "Başvurunuz başarıyla alındı!";
-                document.getElementById('msg').style.color = "#00ff00";
-                // 2 saniye sonra ana sayfaya at
-                setTimeout(() => { window.location.href = 'index.html'; }, 2000);
-            }
-        });
-    }
-</script>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', 'Roboto', sans-serif; overflow: hidden; color: var(--yazi-rengi); background: var(--bg-gradient); }
+        
+        /* Scroll Yapısı */
+        .container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+        .section { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; box-sizing: border-box; }
+        
+        /* Tipografi ve Logo */
+        h2 { font-size: 2rem; color: var(--egm-kirmizi); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; font-weight: 500; }
+        p.question-text { font-size: 1.3rem; margin-bottom: 30px; max-width: 700px; line-height: 1.5; font-weight: 300; }
+        .egm-logo { width: 120px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        
+        /* Minimalist Inputlar */
+        .minimal-input, .minimal-textarea {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #3a506b; /* Pasif renk */
+            color: white;
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 100%;
+            max-width: 500px;
+            transition: all 0.3s ease;
+            text-align: center;
+            border-radius: 0; /* Köşeleri düzleştir */
+        }
+        .minimal-textarea { height: 80px; resize: none; /* Textarea için ayar */ }
+        .minimal-input:focus, .minimal-textarea:focus { 
+            outline: none; 
+            border-bottom-color: var(--egm-altin); /* Aktif renk */
+            box-shadow: 0 5px 10px -5px rgba(212, 175, 55, 0.5);
+        }
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.4); }
 
-</body>
-</html>
+        /* Butonlar */
+        .btn-submit { padding: 15px 50px; font-size: 1.2rem; background-color: var(--egm-kirmizi); color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 30px; transition: background 0.3s; font-weight: bold; letter-spacing: 1px; }
+        .btn-submit:hover { background-color: #a01830; }
+        .nav-link { color: rgba(255,255,255,0.6); margin-top:20px; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; }
+        .nav-link:hover { color: white; }
+
+        /* İlerleme Göstergesi */
+        .scroll-hint { font
