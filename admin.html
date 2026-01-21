@@ -9,67 +9,49 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; }
         .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
-        
-        /* Tablo Stilleri */
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #1f4068; color: white; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; }
+        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; }
         
-        /* Butonlar */
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; transition: 0.2s; }
-        .btn:hover { opacity: 0.8; }
-        .btn-green { background: #28a745; } 
-        .btn-red { background: #dc3545; } 
-        .btn-blue { background: #007bff; }
-        .btn-dark { background: #343a40; } /* Silme butonu için */
-        
-        /* Login Ekranı */
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #162447; z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
-        
-        /* Sidebar Menü */
-        .tab-content { display: none; } .tab-content.active { display: block; }
-        .menu-item { padding: 15px; cursor: pointer; color: #ccc; border-radius: 5px; margin-bottom: 5px; } 
-        .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); }
-
-        /* --- DETAY PENCERESİ (MODAL) STİLLERİ --- */
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 60%; max-width: 800px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideDown 0.3s; }
-        .modal-header { padding: 20px; background-color: #162447; color: white; border-top-left-radius: 10px; border-top-right-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; line-height: 1.6; color: #333; }
-        .modal-footer { padding: 15px; background-color: #eee; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
-        .close-btn { color: white; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover { color: #ffd700; }
-        .soru-cevap-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; }
-
-        @keyframes slideDown { from {top: -50px; opacity: 0;} to {top: 0; opacity: 1;} }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 70%; max-width: 900px; border-radius: 10px; }
+        .modal-header { padding: 20px; background-color: #162447; color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
+        .modal-body { padding: 30px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 15px; background-color: #eee; text-align: right; border-radius: 0 0 10px 10px; }
+        
+        .soru-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; font-size: 1.1rem; }
+        .cevap-metni { color: #333; font-size: 1rem; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #ffd700; }
+        
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #162447; z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        .menu-item { padding: 15px; cursor: pointer; color: #ccc; } .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
     <div class="login-box">
-        <h2 style="color:#162447; margin-bottom:5px;">YÖNETİM PANELİ</h2>
-        <p style="color:#777; font-size:0.9rem; margin-bottom:20px;">Personel Daire Başkanlığı</p>
-        
+        <h2 style="color:#162447;">YÖNETİM PANELİ</h2>
         <input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı">
         <input type="password" id="sifre" class="login-input" placeholder="Şifre">
-        
-        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; font-size:1.1rem; margin-top:10px; background:#162447;">Giriş Yap</button>
-        <p id="loginMsg" style="color:#dc3545; margin-top:15px; font-weight:bold; font-size:0.9rem;"></p>
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">Giriş Yap</button>
+        <p id="loginMsg" style="color:red; margin-top:10px;"></p>
     </div>
 </div>
 
 <div id="detayModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 style="margin:0;">Başvuru Detayları</h2>
-            <span class="close-btn" onclick="modalKapat()">&times;</span>
+            <h2 id="modalBaslik" style="margin:0;">Başvuru Detayı</h2>
+            <span onclick="modalKapat()" style="cursor:pointer; font-size:24px;">&times;</span>
         </div>
-        <div class="modal-body" id="modalIcerik">
-            </div>
+        <div class="modal-body" id="modalIcerik"></div>
         <div class="modal-footer">
             <button onclick="modalKapat()" class="btn btn-red">Kapat</button>
         </div>
@@ -80,7 +62,7 @@
     <div class="sidebar">
         <h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2>
         <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div>
-        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel Listesi</div>
+        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div>
         <div class="menu-item" onclick="location.reload()" style="margin-top:auto; color:#e43f5a;">🚪 Çıkış</div>
     </div>
 
@@ -88,26 +70,17 @@
         <div id="basvurularTab" class="tab-content active">
             <h2 style="color:#162447;">Gelen Başvurular</h2>
             <table>
-                <thead>
-                    <tr>
-                        <th>Discord ID</th>
-                        <th>IC İsim</th>
-                        <th>Yaş</th>
-                        <th>Durum</th>
-                        <th>İşlem</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Discord ID</th><th>IC İsim</th><th>Durum</th><th>İşlem</th></tr></thead>
                 <tbody id="basvuruListesi"></tbody>
             </table>
         </div>
 
         <div id="yoneticilerTab" class="tab-content">
-            <h2 style="color:#162447;">Personel & Yönetici Listesi</h2>
-            <div style="background:white; padding:20px; border-radius:8px; display:flex; gap:10px; align-items:center;">
-                <b style="color:#162447;">+ Yeni Personel:</b>
-                <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
-                <input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
-                <button onclick="yetkiliEkle()" class="btn btn-green" style="padding:8px 15px;">Ekle</button>
+            <h2 style="color:#162447;">Personel Listesi</h2>
+            <div style="background:white; padding:20px; margin-bottom:20px;">
+                <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px;">
+                <input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px;">
+                <button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button>
             </div>
             <table>
                 <thead><tr><th>Kullanıcı</th><th>Şifre</th><th>İşlem</th></tr></thead>
@@ -119,13 +92,17 @@
 
 <script src="config.js"></script>
 <script>
-    // Global veri tutucu (Modal açarken kullanacağız)
+    // Eski başvurular için yedek sözlük
+    const yedekSozluk = {
+        "discord_id": "Discord ID", "ic_isim": "IC İsim Soyisim", "ooc_yas": "OOC Yaş",
+        "aktiflik": "Günlük Aktiflik", "karakter_hikaye": "Karakter Hikayesi", "deneyim": "FiveM Deneyimi"
+    };
+
     let basvuruVerileri = {};
 
     function girisYap() {
         const kadi = document.getElementById('kadi').value.trim();
         const sifre = document.getElementById('sifre').value.trim();
-
         if (kadi === "Müdür" && sifre === "GökSancak1881") {
             panelAc();
             database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => {
@@ -133,15 +110,10 @@
             });
             return;
         }
-
         database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => {
-            let girisBasarili = false;
-            snapshot.forEach(child => { 
-                if(child.val().sifre === sifre) girisBasarili = true; 
-            });
-            
-            if (girisBasarili) panelAc();
-            else document.getElementById('loginMsg').innerText = "Hatalı Kullanıcı Adı veya Şifre!";
+            let ok = false;
+            snapshot.forEach(c => { if(c.val().sifre === sifre) ok = true; });
+            if(ok) panelAc(); else document.getElementById('loginMsg').innerText = "Hatalı Giriş!";
         });
     }
 
@@ -156,123 +128,88 @@
         database.ref('basvurular').on('value', snapshot => {
             const liste = document.getElementById('basvuruListesi');
             liste.innerHTML = "";
-            basvuruVerileri = {}; // Verileri sıfırla
+            basvuruVerileri = {};
 
-            if(!snapshot.exists()) {
-                liste.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Henüz başvuru yok.</td></tr>";
-                return;
-            }
+            if(!snapshot.exists()) { liste.innerHTML = "<tr><td colspan='4'>Başvuru yok.</td></tr>"; return; }
 
             snapshot.forEach(child => {
                 const data = child.val();
                 const key = child.key;
-                
-                // Veriyi global değişkene kaydet (Modal için)
                 basvuruVerileri[key] = data;
 
-                let renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
-                let durumYazi = data.durum === 'Beklemede' ? 'DEĞERLENDİRİLİYOR' : data.durum;
+                let renk = data.durum==='Onaylandı'?'green':(data.durum==='Reddedildi'?'red':'orange');
+                let durumYazi = data.durum==='Beklemede'?'DEĞERLENDİRİLİYOR':data.durum;
 
                 liste.innerHTML += `
                 <tr>
                     <td>${data.discord_id}</td>
                     <td>${data.ic_isim}</td>
-                    <td>${data.ooc_yas}</td>
                     <td style="color:${renk}; font-weight:bold;">${durumYazi}</td>
                     <td>
                         <button onclick="detayAc('${key}')" class="btn btn-blue">İncele</button>
                         <button onclick="dbGuncelle('basvurular/${key}', {durum:'Onaylandı'})" class="btn btn-green">✓</button>
                         <button onclick="dbGuncelle('basvurular/${key}', {durum:'Reddedildi'})" class="btn btn-red">✗</button>
-                        <button onclick="basvuruSil('${key}')" class="btn btn-dark" title="Başvuruyu Sil">🗑️</button>
+                        <button onclick="dbSil('basvurular/${key}')" class="btn btn-dark">🗑️</button>
                     </td>
                 </tr>`;
             });
         });
     }
 
-    // --- YENİ EKLENEN FONKSİYONLAR ---
-
-    // 1. Detay Modalını Açma (Hata vermeyen yöntem)
     function detayAc(key) {
         const data = basvuruVerileri[key];
-        const modalBody = document.getElementById('modalIcerik');
-        
-        let htmlIcerik = `<h3 style="border-bottom:2px solid #ddd; padding-bottom:10px;">${data.ic_isim} (Yaş: ${data.ooc_yas})</h3>`;
-        htmlIcerik += `<p><strong>Discord ID:</strong> ${data.discord_id}</p>`;
-        htmlIcerik += `<p><strong>Durum:</strong> ${data.durum}</p><br>`;
+        document.getElementById('modalBaslik').innerText = `${data.ic_isim} - Başvuru Detayı`;
+        let html = "";
         
         if(data.cevaplar) {
-            for(const [soruID, cevap] of Object.entries(data.cevaplar)) {
-                // Soru ID'sini okunaklı yap (opsiyonel) veya direkt göster
-                htmlIcerik += `
-                <div class="soru-cevap-item">
-                    <span class="soru-baslik">Soru (${soruID}):</span>
-                    <span>${cevap}</span>
+            // Cevapları dolaş
+            for (const [soruID, cevap] of Object.entries(data.cevaplar)) {
+                // Soru metnini bulma önceliği:
+                // 1. Veritabanında kayıtlı soru metni var mı? (Yeni Sistem)
+                // 2. Yedek sözlükte var mı? (Eski Sistem)
+                // 3. Hiçbiri yoksa ID'yi göster (s1 vb.)
+                let soruMetni = "";
+                
+                if (data.soru_detaylari && data.soru_detaylari[soruID]) {
+                    soruMetni = data.soru_detaylari[soruID];
+                } else {
+                    soruMetni = yedekSozluk[soruID] || `Bilinmeyen Soru (${soruID})`;
+                }
+
+                html += `
+                <div class="soru-item">
+                    <span class="soru-baslik">${soruMetni}</span>
+                    <div class="cevap-metni">${cevap}</div>
                 </div>`;
             }
         } else {
-            htmlIcerik += "<p>Cevap bulunamadı.</p>";
+            html = "<p>Cevap verisi bulunamadı.</p>";
         }
 
-        modalBody.innerHTML = htmlIcerik;
+        document.getElementById('modalIcerik').innerHTML = html;
         document.getElementById('detayModal').style.display = "block";
     }
 
-    // 2. Modalı Kapatma
-    function modalKapat() {
-        document.getElementById('detayModal').style.display = "none";
-    }
-
-    // 3. Silme İşlemi
-    function basvuruSil(key) {
-        if(confirm("Bu başvuruyu kalıcı olarak silmek istediğinize emin misiniz?")) {
-            database.ref('basvurular/' + key).remove()
-            .then(() => { alert("Başvuru silindi."); })
-            .catch((error) => { alert("Hata: " + error.message); });
-        }
-    }
-
-    // Modal dışına tıklayınca kapatma
-    window.onclick = function(event) {
-        const modal = document.getElementById('detayModal');
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    // --- DİĞER STANDART FONKSİYONLAR ---
-
+    function modalKapat() { document.getElementById('detayModal').style.display = "none"; }
+    
     function yoneticileriGetir() {
-        database.ref('yetkililer').on('value', snapshot => {
-            const liste = document.getElementById('yoneticiListesi');
-            liste.innerHTML = "";
-            snapshot.forEach(child => {
-                const d = child.val();
-                let silBtn = d.kadi === 'Müdür' ? '🔒' : `<button onclick="dbSil('yetkililer/${child.key}')" class="btn btn-red">Sil</button>`;
-                liste.innerHTML += `<tr><td>${d.kadi}</td><td>••••••</td><td>${silBtn}</td></tr>`;
+        database.ref('yetkililer').on('value', s => {
+            const l = document.getElementById('yoneticiListesi'); l.innerHTML = "";
+            s.forEach(c => {
+                let sil = c.val().kadi === 'Müdür' ? '🔒' : `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`;
+                l.innerHTML += `<tr><td>${c.val().kadi}</td><td>••••</td><td>${sil}</td></tr>`;
             });
         });
     }
-
     function yetkiliEkle() {
-        const k = document.getElementById('yeniKadi').value.trim();
-        const s = document.getElementById('yeniSifre').value.trim();
-        if(k && s) { 
-            database.ref('yetkililer').push({kadi: k, sifre: s});
-            alert("Personel eklendi!");
-            document.getElementById('yeniKadi').value = "";
-            document.getElementById('yeniSifre').value = "";
-        }
+        const k=document.getElementById('yeniKadi').value.trim(), s=document.getElementById('yeniSifre').value.trim();
+        if(k&&s) { database.ref('yetkililer').push({kadi:k, sifre:s}); alert("Eklendi."); }
     }
-
-    function dbGuncelle(yol, veri) { database.ref(yol).update(veri); }
-    function dbSil(yol) { if(confirm('Bu personeli silmek istediğinize emin misiniz?')) database.ref(yol).remove(); }
-    
+    function dbGuncelle(y,v) { database.ref(y).update(v); }
+    function dbSil(y) { if(confirm('Silinsin mi?')) database.ref(y).remove(); }
     function tabDegistir(id, el) {
         document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab'));
         document.getElementById(id).classList.add('active');
-        el.classList.add('active-tab');
     }
 </script>
 </body>
