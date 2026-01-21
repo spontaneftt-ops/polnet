@@ -1,144 +1,48 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <title>EGM Siber Başvuru Terminali</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { margin: 0; background-color: #020a18; background-image: radial-gradient(circle at 50% 0%, rgba(0, 100, 255, 0.3), transparent 70%); color: #e0f7ff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Rajdhani', sans-serif; overflow: hidden; }
-        .card { width: 700px; height: 600px; background: rgba(13, 30, 60, 0.65); backdrop-filter: blur(15px); border-radius: 20px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0, 150, 255, 0.2); border: 1px solid rgba(0, 255, 255, 0.15); }
-        .logo { width: 120px; margin-bottom: 15px; filter: drop-shadow(0 0 15px rgba(0, 150, 255, 0.6)); }
-        .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .q-header { color:#00f7ff; margin:0 0 15px 0; font-size: 1.6rem; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 10px rgba(0, 247, 255, 0.5); }
-        .q-text { font-size:1.2rem; color:#cceeff; max-width:90%; line-height: 1.6; margin-bottom: 25px; }
-        input, textarea { background: rgba(0, 10, 30, 0.5); border: none; border-bottom: 2px solid rgba(0, 255, 255, 0.3); color: #00f7ff; padding: 15px 20px; width: 85%; font-size: 1.1rem; font-family: 'Rajdhani', sans-serif; }
-        input:focus, textarea:focus { outline: none; background: rgba(0, 20, 40, 0.7); border-bottom-color: #00f7ff; box-shadow: 0 10px 20px -10px rgba(0, 255, 255, 0.3); }
-        textarea { height: 150px; resize: none; }
-        .footer { display: flex; justify-content: space-between; margin-top: 20px; }
-        .btn { padding: 12px 40px; border: none; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 1rem; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; }
-        .btn-next { background: linear-gradient(45deg, #005bea, #00c6fb); color: white; box-shadow: 0 0 15px rgba(0, 198, 251, 0.4); }
-        .btn-back { background: transparent; color: #88aacc; border: 1px solid rgba(0, 255, 255, 0.2); }
-        .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(0,0,0,0.5); }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #005bea, #00f7ff); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 15px rgba(0, 247, 255, 0.8); }
-        .step-count { position: absolute; top: 20px; right: 25px; color: #00f7ff; font-weight: 700; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
-    <div class="step-count" id="stepCount">Giriş</div>
-    <img src="egmm.png" class="logo">
-    <div class="question-box" id="qBox"></div>
-    <div class="footer">
-        <button class="btn btn-back" id="bBack" onclick="nav(-1)">GERİ</button>
-        <button class="btn btn-next" id="bNext" onclick="nav(1)">BAŞLA</button>
-    </div>
-</div>
-
 <script src="config.js"></script>
 <script>
-    // --- 1. SORU HAVUZU VE SABİTLER ---
-    const sabitSorular = [
-        {id:'i', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz sisteme işlenecektir.<br>Sorular havuzdan rastgele seçilir.'},
+    const q = [
+        {id:'info', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz sisteme işlenecektir.'},
         {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
         {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakter Adı Soyadı (IC):'},
         {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
         {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Günlük aktiflik süreniz?'},
-        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakter hikayeniz ve polis olma motivasyonunuz?'}
-    ];
-    
-    // Soru havuzu
-    const havuz = [
-        {id:'h1', t:'textarea', h:'KURAL', s:'Powergaming (PG) nedir? Örnek veriniz.'},
-        {id:'h2', t:'textarea', h:'KURAL', s:'Metagaming (MG) nedir?'},
-        {id:'s1', t:'textarea', h:'SENARYO', s:'Trafik kontrolünde size silah çekildi. Ne yaparsınız?'},
-        {id:'s2', t:'textarea', h:'SENARYO', s:'Ortağınız vuruldu. İlk hamleniz ne olur?'}
+        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Polis olma motivasyonunuz?'}
     ];
 
-    function sorulariHazirla() {
-        const karisik = havuz.sort(() => 0.5 - Math.random()).slice(0, 5); // 5 Rastgele soru seç
-        return [...sabitSorular, ...karisik];
-    }
-
-    const q = sorulariHazirla();
     let idx = 0; let ans = {}; let soruMetinleri = {};
 
-    function render() {
-        const item = q[idx];
-        const box = document.getElementById('qBox');
-        const bNext = document.getElementById('bNext');
-        const bBack = document.getElementById('bBack');
-        const count = document.getElementById('stepCount');
-        
-        let inputHTML = item.t === 'info' ? "" : (item.t==='textarea' ? `<textarea id="inp"></textarea>` : `<input type="${item.t}" id="inp">`);
-        box.innerHTML = `<div class="q-header">${item.h}</div><div class="q-text">${item.s}</div>${inputHTML}`;
-        
-        if(item.t !== 'info' && document.getElementById('inp')) {
-            document.getElementById('inp').value = ans[item.id] || '';
-            setTimeout(() => document.getElementById('inp').focus(), 100);
-        }
-
-        bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
-        bNext.innerText = idx === 0 ? 'BAŞLAT' : (idx === q.length-1 ? 'VERİLERİ GÖNDER' : 'İLERİ');
-        document.getElementById('pBar').style.width = ((idx / (q.length-1)) * 100) + '%';
-        if(idx>0) count.innerText = `ADIM: ${idx} / ${q.length-1}`;
-    }
-
     function nav(d) {
-        if(d === 1 && idx > 0) {
-            const val = document.getElementById('inp').value.trim();
-            if(!val) return alert('Bu alan boş bırakılamaz!');
-            ans[q[idx].id] = val;
-            soruMetinleri[q[idx].id] = q[idx].s;
+        if(d === 1) {
+            const currentItem = q[idx];
+            if(currentItem.t !== 'info') {
+                const val = document.getElementById('inp').value.trim();
+                if(!val) { alert('Lütfen boş bırakmayın!'); return; }
+                ans[currentItem.id] = val;
+                soruMetinleri[currentItem.id] = currentItem.s;
+            }
         }
         if(d === 1 && idx === q.length-1) return send();
         idx += d; render();
     }
 
-    // --- KARA LİSTE KONTROLLÜ GÖNDERİM ---
     function send() {
-        // 1. Önce Kara Liste Kontrolü Yap
-        database.ref('blacklist').orderByChild('discord_id').equalTo(ans.discord_id).once('value', snapshot => {
-            if (snapshot.exists()) {
-                // Eğer yasaklıysa işlemi durdur ve uyarı ver
-                alert("⛔ HATA: Bu Discord ID kara listede olduğu için başvuru yapamazsınız!");
-                return; 
-            } else {
-                // 2. Yasaklı değilse başvuruyu gönder
-                const btn = document.getElementById('bNext');
-                btn.innerText = 'SİSTEME İŞLENİYOR...'; 
-                btn.disabled = true;
-
-                const data = { 
-                    discord_id: ans.discord_id, 
-                    ic_isim: ans.ic_isim, 
-                    ooc_yas: ans.ooc_yas, 
-                    durum: 'Beklemede', 
-                    tarih: new Date().toISOString(), 
-                    cevaplar: ans, 
-                    soru_detaylari: soruMetinleri
-                };
-                
-                database.ref('basvurular').push(data, (err) => {
-                    if(err) { 
-                        alert("Hata: " + err.message); 
-                        btn.innerText = 'VERİLERİ GÖNDER'; // Hata durumunda butonu eski haline getir
-                        btn.disabled = false; 
-                        return; 
-                    }
-                    document.querySelector('.card').innerHTML = `
-                        <h1 style="color:#00ff00;">BAŞVURU İLETİLDİ ✅</h1>
-                        <p>Verileriniz başarıyla kaydedildi.</p>
-                        <button onclick="window.location.href='index.html'" class="btn btn-next" style="margin-top:20px;">ÇIKIŞ</button>
-                    `;
-                });
-            }
+        database.ref('blacklist').orderByChild('discord_id').equalTo(ans.discord_id).once('value', s => {
+            if (s.exists()) return alert("Yasaklı ID!");
+            
+            const data = { 
+                discord_id: ans.discord_id, 
+                ic_isim: ans.ic_isim, 
+                ooc_yas: ans.ooc_yas, 
+                durum: 'Beklemede', 
+                tarih: new Date().toISOString(), 
+                cevaplar: ans, 
+                soru_detaylari: soruMetinleri
+            };
+            
+            database.ref('basvurular').push(data).then(() => {
+                document.querySelector('.card').innerHTML = "<h1>BAŞVURU İLETİLDİ ✅</h1>";
+            });
         });
     }
-    render();
+    // render fonksiyonu senin orijinal kodunla aynı kalacak.
 </script>
-</body>
-</html>
