@@ -12,8 +12,9 @@
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #1f4068; color: white; }
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; }
-        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; font-size: 0.9rem; }
+        .btn:hover { opacity: 0.8; }
+        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; } .btn-copy { background: #6c757d; font-size: 0.8rem; padding: 4px 8px; }
         
         /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
@@ -24,21 +25,97 @@
         .soru-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; font-size: 1.1rem; }
         .cevap-metni { color: #333; font-size: 1rem; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #ffd700; }
+        
         #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #162447; z-index: 999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; }
         .tab-content { display: none; } .tab-content.active { display: block; }
         .menu-item { padding: 15px; cursor: pointer; color: #ccc; } .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); border-radius: 5px; }
+
+        /* Webhook Ayar Kutusu */
+        .webhook-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 0.8rem; }
+        .webhook-input { width: 100%; padding: 5px; margin-top: 5px; box-sizing: border-box; border: none; border-radius: 3px; }
     </style>
 </head>
 <body>
-<div id="loginScreen"><div class="login-box"><h2 style="color:#162447;">YÖNETİM PANELİ</h2><input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı"><input type="password" id="sifre" class="login-input" placeholder="Şifre"><button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">Giriş Yap</button><p id="loginMsg" style="color:red; margin-top:10px;"></p></div></div>
-<div id="detayModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalBaslik" style="margin:0;">Başvuru Detayı</h2><span onclick="modalKapat()" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="modal-body" id="modalIcerik"></div><div class="modal-footer"><button onclick="modalKapat()" class="btn btn-red">Kapat</button></div></div></div>
-<div id="adminPanel" style="display:none; width:100%;"><div class="sidebar"><h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2><div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div><div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div><div class="menu-item" onclick="location.reload()" style="margin-top:auto; color:#e43f5a;">🚪 Çıkış</div></div><div class="content"><div id="basvurularTab" class="tab-content active"><h2 style="color:#162447;">Gelen Başvurular</h2><table><thead><tr><th>Discord ID</th><th>IC İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table></div><div id="yoneticilerTab" class="tab-content"><h2 style="color:#162447;">Personel Listesi</h2><div style="background:white; padding:20px; margin-bottom:20px;"><input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px;"><input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px;"><button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button></div><table><thead><tr><th>Kullanıcı</th><th>Şifre</th><th>İşlem</th></tr></thead><tbody id="yoneticiListesi"></tbody></table></div></div></div>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <h2 style="color:#162447;">YÖNETİM PANELİ</h2>
+        <input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı">
+        <input type="password" id="sifre" class="login-input" placeholder="Şifre">
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">Giriş Yap</button>
+        <p id="loginMsg" style="color:red; margin-top:10px;"></p>
+    </div>
+</div>
+
+<div id="detayModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalBaslik" style="margin:0;">Başvuru Detayı</h2>
+            <span onclick="modalKapat()" style="cursor:pointer; font-size:24px;">&times;</span>
+        </div>
+        <div class="modal-body" id="modalIcerik"></div>
+        <div class="modal-footer">
+            <button onclick="modalKapat()" class="btn btn-red">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<div id="adminPanel" style="display:none; width:100%;">
+    <div class="sidebar">
+        <h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2>
+        <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div>
+        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div>
+        
+        <div class="webhook-box">
+            <label>Discord Webhook URL:</label>
+            <input type="password" id="webhookUrl" class="webhook-input" placeholder="https://discord.com/api/webhooks/..." onchange="webhookKaydet()">
+        </div>
+
+        <div class="menu-item" onclick="location.reload()" style="margin-top:auto; color:#e43f5a;">🚪 Çıkış</div>
+    </div>
+
+    <div class="content">
+        <div id="basvurularTab" class="tab-content active">
+            <h2 style="color:#162447;">Gelen Başvurular</h2>
+            <table>
+                <thead><tr><th>Discord ID</th><th>IC İsim</th><th>Durum</th><th>İşlem</th></tr></thead>
+                <tbody id="basvuruListesi"></tbody>
+            </table>
+        </div>
+
+        <div id="yoneticilerTab" class="tab-content">
+            <h2 style="color:#162447;">Personel Listesi</h2>
+            <div style="background:white; padding:20px; margin-bottom:20px;">
+                <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px;">
+                <input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px;">
+                <button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button>
+            </div>
+            <table>
+                <thead><tr><th>Kullanıcı</th><th>Şifre</th><th>İşlem</th></tr></thead>
+                <tbody id="yoneticiListesi"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script src="config.js"></script>
 <script>
     const yedekSozluk = {"discord_id": "Discord ID", "ic_isim": "IC İsim Soyisim", "ooc_yas": "OOC Yaş", "aktiflik": "Günlük Aktiflik", "karakter_hikaye": "Karakter Hikayesi", "deneyim": "FiveM Deneyimi"};
     let basvuruVerileri = {};
+
+    // Sayfa Yüklendiğinde Webhook'u Çek
+    window.onload = function() {
+        const kayitliWebhook = localStorage.getItem('discordWebhook');
+        if(kayitliWebhook) document.getElementById('webhookUrl').value = kayitliWebhook;
+    }
+
+    function webhookKaydet() {
+        const url = document.getElementById('webhookUrl').value;
+        localStorage.setItem('discordWebhook', url);
+        // alert("Webhook kaydedildi!");
+    }
 
     function girisYap() {
         const kadi = document.getElementById('kadi').value.trim();
@@ -56,27 +133,84 @@
                 const data = child.val(); const key = child.key; basvuruVerileri[key] = data;
                 let renk = data.durum==='Onaylandı'?'green':(data.durum==='Reddedildi'?'red':'orange');
                 let durumYazi = data.durum==='Beklemede'?'DEĞERLENDİRİLİYOR':data.durum;
-                liste.innerHTML += `<tr><td>${data.discord_id}</td><td>${data.ic_isim}</td><td style="color:${renk}; font-weight:bold;">${durumYazi}</td><td><button onclick="detayAc('${key}')" class="btn btn-blue">İncele</button><button onclick="onayla('${key}')" class="btn btn-green">✓</button><button onclick="reddet('${key}')" class="btn btn-red">✗</button><button onclick="dbSil('basvurular/${key}')" class="btn btn-dark">🗑️</button></td></tr>`;
+                
+                // Discord Profil Linki ve Kopyalama
+                let discordLink = `https://discord.com/users/${data.discord_id}`;
+                
+                liste.innerHTML += `
+                <tr>
+                    <td>
+                        <a href="${discordLink}" target="_blank" style="text-decoration:none; color:#007bff; font-weight:bold;">${data.discord_id}</a>
+                        <button onclick="kopyala('${data.discord_id}')" class="btn btn-copy" title="Kopyala">📋</button>
+                    </td>
+                    <td>${data.ic_isim}</td>
+                    <td style="color:${renk}; font-weight:bold;">${durumYazi}</td>
+                    <td>
+                        <button onclick="detayAc('${key}')" class="btn btn-blue">İncele</button>
+                        <button onclick="onayla('${key}')" class="btn btn-green">✓</button>
+                        <button onclick="reddet('${key}')" class="btn btn-red">✗</button>
+                        <button onclick="dbSil('basvurular/${key}')" class="btn btn-dark">🗑️</button>
+                    </td>
+                </tr>`;
             });
         });
     }
 
-    // --- YENİ ONAY/RED FONKSİYONLARI ---
+    function kopyala(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            // alert("Discord ID kopyalandı: " + text); // İstersen açabilirsin, çok pop-up çıkmasın diye kapalı
+        });
+    }
+
     function onayla(key) {
-        if(confirm("Bu başvuruyu ONAYLAMAK istediğinize emin misiniz?\n(Discord botu aktifse otomatik rol verilecektir)")) {
+        if(confirm("Başvuruyu onaylamak istiyor musun?")) {
             database.ref('basvurular/'+key).update({durum: 'Onaylandı'});
+            discordLogGonder(key, "ONAYLANDI ✅", 0x28a745);
         }
     }
 
     function reddet(key) {
-        let sebep = prompt("Lütfen reddetme sebebini yazınız:", "Yetersiz başvuru / Kurallara uygun değil");
+        let sebep = prompt("Reddetme sebebini yazınız:", "Yetersiz başvuru / Kurallara uygun değil");
         if(sebep) {
-            database.ref('basvurular/'+key).update({
-                durum: 'Reddedildi',
-                red_sebebi: sebep
-            });
-            alert("Başvuru reddedildi ve sebep kaydedildi.");
+            database.ref('basvurular/'+key).update({ durum: 'Reddedildi', red_sebebi: sebep });
+            discordLogGonder(key, "REDDEDİLDİ ❌", 0xdc3545, sebep);
         }
+    }
+
+    // --- DISCORD LOG SİSTEMİ ---
+    function discordLogGonder(key, durumMetni, renk, sebep = "") {
+        const url = localStorage.getItem('discordWebhook');
+        if(!url) return; // Webhook ayarlanmamışsa yapma
+        
+        const data = basvuruVerileri[key];
+        
+        let fields = [
+            { name: "👤 IC İsim", value: data.ic_isim, inline: true },
+            { name: "🆔 Discord ID", value: `<@${data.discord_id}> (${data.discord_id})`, inline: true },
+            { name: "🎂 OOC Yaş", value: data.ooc_yas, inline: true }
+        ];
+
+        if(sebep) {
+            fields.push({ name: "📝 Red Sebebi", value: sebep });
+        } else {
+            fields.push({ name: "ℹ️ Bilgi", value: "Lütfen kullanıcıya rolünü veriniz." });
+        }
+
+        const payload = {
+            embeds: [{
+                title: `Başvuru Durumu Güncellendi: ${durumMetni}`,
+                color: renk,
+                fields: fields,
+                footer: { text: "EGM Yönetim Paneli" },
+                timestamp: new Date()
+            }]
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error(err));
     }
 
     function detayAc(key) {
