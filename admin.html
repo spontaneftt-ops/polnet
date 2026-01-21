@@ -9,12 +9,14 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; }
         .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
+        
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #1f4068; color: white; }
+        
         .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; font-size: 0.9rem; }
         .btn:hover { opacity: 0.8; }
-        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; } .btn-copy { background: #6c757d; font-size: 0.8rem; padding: 4px 8px; }
+        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; }
         
         /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
@@ -22,6 +24,7 @@
         .modal-header { padding: 20px; background-color: #162447; color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
         .modal-body { padding: 30px; max-height: 60vh; overflow-y: auto; }
         .modal-footer { padding: 15px; background-color: #eee; text-align: right; border-radius: 0 0 10px 10px; }
+        
         .soru-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; font-size: 1.1rem; }
         .cevap-metni { color: #333; font-size: 1rem; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #ffd700; }
@@ -32,8 +35,8 @@
         .tab-content { display: none; } .tab-content.active { display: block; }
         .menu-item { padding: 15px; cursor: pointer; color: #ccc; } .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); border-radius: 5px; }
 
-        /* Webhook Ayar Kutusu */
-        .webhook-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 0.8rem; }
+        /* MÜDÜR'E ÖZEL WEBHOOK KUTUSU */
+        .webhook-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 0.8rem; display: none; /* Varsayılan Gizli */ }
         .webhook-input { width: 100%; padding: 5px; margin-top: 5px; box-sizing: border-box; border: none; border-radius: 3px; }
     </style>
 </head>
@@ -68,7 +71,7 @@
         <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div>
         <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div>
         
-        <div class="webhook-box">
+        <div id="webhookAyarKutusu" class="webhook-box">
             <label>Discord Webhook URL:</label>
             <input type="password" id="webhookUrl" class="webhook-input" placeholder="https://discord.com/api/webhooks/..." onchange="webhookKaydet()">
         </div>
@@ -105,7 +108,7 @@
     const yedekSozluk = {"discord_id": "Discord ID", "ic_isim": "IC İsim Soyisim", "ooc_yas": "OOC Yaş", "aktiflik": "Günlük Aktiflik", "karakter_hikaye": "Karakter Hikayesi", "deneyim": "FiveM Deneyimi"};
     let basvuruVerileri = {};
 
-    // Sayfa Yüklendiğinde Webhook'u Çek
+    // Sayfa Yüklendiğinde Webhook'u Çek (Ama henüz gösterme)
     window.onload = function() {
         const kayitliWebhook = localStorage.getItem('discordWebhook');
         if(kayitliWebhook) document.getElementById('webhookUrl').value = kayitliWebhook;
@@ -114,16 +117,49 @@
     function webhookKaydet() {
         const url = document.getElementById('webhookUrl').value;
         localStorage.setItem('discordWebhook', url);
-        // alert("Webhook kaydedildi!");
     }
 
     function girisYap() {
         const kadi = document.getElementById('kadi').value.trim();
         const sifre = document.getElementById('sifre').value.trim();
-        if (kadi === "Müdür" && sifre === "GökSancak1881") { panelAc(); database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => { if(!s.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); }); return; }
-        database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => { let ok = false; snapshot.forEach(c => { if(c.val().sifre === sifre) ok = true; }); if(ok) panelAc(); else document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; });
+        
+        // MÜDÜR GİRİŞİ (MASTER KEY)
+        if (kadi === "Müdür" && sifre === "GökSancak1881") { 
+            panelAc(true); // true = Müdür olduğu için webhook kutusunu göster
+            database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => { 
+                if(!s.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); 
+            }); 
+            return; 
+        }
+
+        // NORMAL PERSONEL GİRİŞİ
+        database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => { 
+            let ok = false; 
+            snapshot.forEach(c => { if(c.val().sifre === sifre) ok = true; }); 
+            if(ok) {
+                // Giriş yapan kişi Müdür mü veritabanından kontrol et (İsim kontrolü)
+                let isMudur = (kadi === 'Müdür');
+                panelAc(isMudur); 
+            } else {
+                document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; 
+            }
+        });
     }
-    function panelAc() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex'; verileriGetir(); yoneticileriGetir(); }
+
+    function panelAc(isMudur) { 
+        document.getElementById('loginScreen').style.display = 'none'; 
+        document.getElementById('adminPanel').style.display = 'flex'; 
+        
+        // Sadece Müdür ise Webhook kutusunu göster
+        if(isMudur) {
+            document.getElementById('webhookAyarKutusu').style.display = 'block';
+        } else {
+            document.getElementById('webhookAyarKutusu').style.display = 'none';
+        }
+
+        verileriGetir(); 
+        yoneticileriGetir(); 
+    }
 
     function verileriGetir() {
         database.ref('basvurular').on('value', snapshot => {
@@ -134,15 +170,9 @@
                 let renk = data.durum==='Onaylandı'?'green':(data.durum==='Reddedildi'?'red':'orange');
                 let durumYazi = data.durum==='Beklemede'?'DEĞERLENDİRİLİYOR':data.durum;
                 
-                // Discord Profil Linki ve Kopyalama
-                let discordLink = `https://discord.com/users/${data.discord_id}`;
-                
                 liste.innerHTML += `
                 <tr>
-                    <td>
-                        <a href="${discordLink}" target="_blank" style="text-decoration:none; color:#007bff; font-weight:bold;">${data.discord_id}</a>
-                        <button onclick="kopyala('${data.discord_id}')" class="btn btn-copy" title="Kopyala">📋</button>
-                    </td>
+                    <td>${data.discord_id}</td>
                     <td>${data.ic_isim}</td>
                     <td style="color:${renk}; font-weight:bold;">${durumYazi}</td>
                     <td>
@@ -153,12 +183,6 @@
                     </td>
                 </tr>`;
             });
-        });
-    }
-
-    function kopyala(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            // alert("Discord ID kopyalandı: " + text); // İstersen açabilirsin, çok pop-up çıkmasın diye kapalı
         });
     }
 
@@ -177,10 +201,9 @@
         }
     }
 
-    // --- DISCORD LOG SİSTEMİ ---
     function discordLogGonder(key, durumMetni, renk, sebep = "") {
         const url = localStorage.getItem('discordWebhook');
-        if(!url) return; // Webhook ayarlanmamışsa yapma
+        if(!url) return; // Webhook yoksa gönderme
         
         const data = basvuruVerileri[key];
         
@@ -190,15 +213,11 @@
             { name: "🎂 OOC Yaş", value: data.ooc_yas, inline: true }
         ];
 
-        if(sebep) {
-            fields.push({ name: "📝 Red Sebebi", value: sebep });
-        } else {
-            fields.push({ name: "ℹ️ Bilgi", value: "Lütfen kullanıcıya rolünü veriniz." });
-        }
+        if(sebep) fields.push({ name: "📝 Red Sebebi", value: sebep });
 
         const payload = {
             embeds: [{
-                title: `Başvuru Durumu Güncellendi: ${durumMetni}`,
+                title: `Başvuru Durumu: ${durumMetni}`,
                 color: renk,
                 fields: fields,
                 footer: { text: "EGM Yönetim Paneli" },
