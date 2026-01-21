@@ -2,85 +2,99 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Personel Daire Başkanlığı</title>
+    <title>EGM Personel Yönetim</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; position: relative; }
-        .card { background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #1f4068; color: white; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; }
+        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; } .btn-dark { background: #343a40; }
         
-        .logo { width: 120px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3)); }
-        
-        h1 { color: #ffd700; font-size: 1.5rem; text-transform: uppercase; margin: 10px 0; }
-        input { padding: 15px; width: 90%; border-radius: 5px; border: 1px solid #333; margin-bottom: 15px; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem; }
-        
-        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; width: 40%; }
-        .btn-green { background: #28a745; color: white; width: 95%; } 
-        .btn-blue { background: #007bff; color: white; width: 95%; margin-top: 20px; } /* Başvuru butonu büyütüldü */
-        
-        #sonuc { margin-top: 25px; padding: 20px; display: none; border-radius: 8px; background: rgba(0,0,0,0.4); }
-
-        /* --- GİZLİ YÖNETİM BUTONU STİLİ --- */
-        .secret-admin {
-            position: fixed;      /* Ekranın altına sabitler */
-            bottom: 10px;         /* Alttan 10px yukarıda */
-            right: 10px;          /* Sağdan 10px içeride */
-            color: rgba(255,255,255,0.05); /* Neredeyse tamamen şeffaf (Görünmez gibi) */
-            text-decoration: none;
-            font-size: 12px;
-            cursor: default;      /* Üzerine gelince el işareti çıkmaz (dikkat çekmesin diye) */
-            z-index: 9999;
-            transition: 0.3s;
-        }
-        .secret-admin:hover {
-            color: rgba(255,255,255,0.5); /* Üzerine gelince hafif parlar */
-            cursor: pointer;
-        }
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 70%; max-width: 900px; border-radius: 10px; }
+        .modal-header { padding: 20px; background-color: #162447; color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
+        .modal-body { padding: 30px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 15px; background-color: #eee; text-align: right; border-radius: 0 0 10px 10px; }
+        .soru-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; font-size: 1.1rem; }
+        .cevap-metni { color: #333; font-size: 1rem; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border-radius: 5px; border-left: 4px solid #ffd700; }
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #162447; z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        .menu-item { padding: 15px; cursor: pointer; color: #ccc; } .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); border-radius: 5px; }
     </style>
 </head>
 <body>
-
-<div class="card">
-    <img src="egmm.png" class="logo" alt="EGM Logo">
-    
-    <h1>BAŞVURU SORGULAMA</h1>
-    <p style="color:#aaa; font-size:0.9rem;">Discord ID ile durumunuzu kontrol edin.</p>
-    
-    <input type="text" id="sorguDiscordId" placeholder="Discord ID (Örn: 82736...)">
-    <button onclick="sorgula()" class="btn btn-green">SORGULA</button>
-    
-    <div id="sonuc"></div>
-    
-    <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0;">
-    
-    <a href="apply.html" class="btn btn-blue">Başvuru Yap</a>
-</div>
-
-<a href="admin.html" class="secret-admin" title="Yönetim">🔒</a>
-
+<div id="loginScreen"><div class="login-box"><h2 style="color:#162447;">YÖNETİM PANELİ</h2><input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı"><input type="password" id="sifre" class="login-input" placeholder="Şifre"><button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">Giriş Yap</button><p id="loginMsg" style="color:red; margin-top:10px;"></p></div></div>
+<div id="detayModal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modalBaslik" style="margin:0;">Başvuru Detayı</h2><span onclick="modalKapat()" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="modal-body" id="modalIcerik"></div><div class="modal-footer"><button onclick="modalKapat()" class="btn btn-red">Kapat</button></div></div></div>
+<div id="adminPanel" style="display:none; width:100%;"><div class="sidebar"><h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2><div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div><div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel</div><div class="menu-item" onclick="location.reload()" style="margin-top:auto; color:#e43f5a;">🚪 Çıkış</div></div><div class="content"><div id="basvurularTab" class="tab-content active"><h2 style="color:#162447;">Gelen Başvurular</h2><table><thead><tr><th>Discord ID</th><th>IC İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table></div><div id="yoneticilerTab" class="tab-content"><h2 style="color:#162447;">Personel Listesi</h2><div style="background:white; padding:20px; margin-bottom:20px;"><input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px;"><input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px;"><button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button></div><table><thead><tr><th>Kullanıcı</th><th>Şifre</th><th>İşlem</th></tr></thead><tbody id="yoneticiListesi"></tbody></table></div></div></div>
 <script src="config.js"></script>
 <script>
-    function sorgula() {
-        const id = document.getElementById('sorguDiscordId').value.trim();
-        const sonucDiv = document.getElementById('sonuc');
-        if(!id) { alert("Lütfen Discord ID girin!"); return; }
-        sonucDiv.style.display = 'none';
-        
-        database.ref('basvurular').orderByChild('discord_id').equalTo(id).once('value', snapshot => {
-            if (snapshot.exists()) {
-                const data = Object.values(snapshot.val())[0];
-                let mesaj = "DEĞERLENDİRİLİYOR ⏳";
-                let renk = "#ffc107";
-                if (data.durum === 'Onaylandı') { mesaj = "ONAYLANDI ✅"; renk = "#28a745"; }
-                if (data.durum === 'Reddedildi') { mesaj = "REDDEDİLDİ ❌"; renk = "#dc3545"; }
-                
-                sonucDiv.innerHTML = `<h3 style="color:${renk}; margin:0;">${mesaj}</h3><p style="margin-top:10px;">${data.ic_isim}</p>`;
-                sonucDiv.style.display = 'block';
-            } else {
-                alert("Başvuru bulunamadı.");
-            }
+    const yedekSozluk = {"discord_id": "Discord ID", "ic_isim": "IC İsim Soyisim", "ooc_yas": "OOC Yaş", "aktiflik": "Günlük Aktiflik", "karakter_hikaye": "Karakter Hikayesi", "deneyim": "FiveM Deneyimi"};
+    let basvuruVerileri = {};
+
+    function girisYap() {
+        const kadi = document.getElementById('kadi').value.trim();
+        const sifre = document.getElementById('sifre').value.trim();
+        if (kadi === "Müdür" && sifre === "GökSancak1881") { panelAc(); database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => { if(!s.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'}); }); return; }
+        database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => { let ok = false; snapshot.forEach(c => { if(c.val().sifre === sifre) ok = true; }); if(ok) panelAc(); else document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; });
+    }
+    function panelAc() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex'; verileriGetir(); yoneticileriGetir(); }
+
+    function verileriGetir() {
+        database.ref('basvurular').on('value', snapshot => {
+            const liste = document.getElementById('basvuruListesi'); liste.innerHTML = ""; basvuruVerileri = {};
+            if(!snapshot.exists()) { liste.innerHTML = "<tr><td colspan='4'>Başvuru yok.</td></tr>"; return; }
+            snapshot.forEach(child => {
+                const data = child.val(); const key = child.key; basvuruVerileri[key] = data;
+                let renk = data.durum==='Onaylandı'?'green':(data.durum==='Reddedildi'?'red':'orange');
+                let durumYazi = data.durum==='Beklemede'?'DEĞERLENDİRİLİYOR':data.durum;
+                liste.innerHTML += `<tr><td>${data.discord_id}</td><td>${data.ic_isim}</td><td style="color:${renk}; font-weight:bold;">${durumYazi}</td><td><button onclick="detayAc('${key}')" class="btn btn-blue">İncele</button><button onclick="onayla('${key}')" class="btn btn-green">✓</button><button onclick="reddet('${key}')" class="btn btn-red">✗</button><button onclick="dbSil('basvurular/${key}')" class="btn btn-dark">🗑️</button></td></tr>`;
+            });
         });
     }
+
+    // --- YENİ ONAY/RED FONKSİYONLARI ---
+    function onayla(key) {
+        if(confirm("Bu başvuruyu ONAYLAMAK istediğinize emin misiniz?\n(Discord botu aktifse otomatik rol verilecektir)")) {
+            database.ref('basvurular/'+key).update({durum: 'Onaylandı'});
+        }
+    }
+
+    function reddet(key) {
+        let sebep = prompt("Lütfen reddetme sebebini yazınız:", "Yetersiz başvuru / Kurallara uygun değil");
+        if(sebep) {
+            database.ref('basvurular/'+key).update({
+                durum: 'Reddedildi',
+                red_sebebi: sebep
+            });
+            alert("Başvuru reddedildi ve sebep kaydedildi.");
+        }
+    }
+
+    function detayAc(key) {
+        const data = basvuruVerileri[key]; document.getElementById('modalBaslik').innerText = `${data.ic_isim} - Detay`; let html = "";
+        if(data.cevaplar) {
+            for (const [id, val] of Object.entries(data.cevaplar)) {
+                let txt = (data.soru_detaylari && data.soru_detaylari[id]) ? data.soru_detaylari[id] : (yedekSozluk[id] || id);
+                html += `<div class="soru-item"><span class="soru-baslik">${txt}</span><div class="cevap-metni">${val}</div></div>`;
+            }
+        } else { html = "<p>Veri yok.</p>"; }
+        if(data.red_sebebi) html += `<div style="margin-top:20px; border:2px solid red; padding:10px; border-radius:5px;"><strong style="color:red">RED SEBEBİ:</strong> ${data.red_sebebi}</div>`;
+        document.getElementById('modalIcerik').innerHTML = html; document.getElementById('detayModal').style.display = "block";
+    }
+    function modalKapat() { document.getElementById('detayModal').style.display = "none"; }
+    function yoneticileriGetir() { database.ref('yetkililer').on('value', s => { const l = document.getElementById('yoneticiListesi'); l.innerHTML = ""; s.forEach(c => { let sil = c.val().kadi === 'Müdür' ? '🔒' : `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`; l.innerHTML += `<tr><td>${c.val().kadi}</td><td>••••</td><td>${sil}</td></tr>`; }); }); }
+    function yetkiliEkle() { const k=document.getElementById('yeniKadi').value.trim(), s=document.getElementById('yeniSifre').value.trim(); if(k&&s) { database.ref('yetkililer').push({kadi:k, sifre:s}); alert("Eklendi."); } }
+    function dbSil(y) { if(confirm('Silinsin mi?')) database.ref(y).remove(); }
+    function tabDegistir(id, el) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 </script>
 </body>
 </html>
