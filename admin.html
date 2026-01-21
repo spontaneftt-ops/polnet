@@ -2,81 +2,97 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>EGM Yönetim Paneli</title>
+    <title>EGM Personel Yönetim Paneli</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar */
+        /* Sidebar (Sol Menü) */
         .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-        .sidebar h2 { margin-bottom: 40px; text-align: center; color: #ffd700; letter-spacing: 1px; }
-        .menu-item { padding: 15px; cursor: pointer; border-radius: 8px; margin-bottom: 10px; transition: 0.3s; display: flex; align-items: center; }
-        .menu-item:hover, .active-tab { background: #1f4068; }
+        .sidebar-header { text-align: center; margin-bottom: 40px; }
+        .sidebar-header img { width: 80px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .sidebar h2 { color: #ffd700; font-size: 1.2rem; letter-spacing: 1px; margin-top: 10px; text-transform: uppercase; }
+        
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 8px; margin-bottom: 10px; transition: 0.3s; display: flex; align-items: center; font-weight: 500; }
+        .menu-item:hover, .active-tab { background: #1f4068; border-left: 4px solid #e43f5a; }
         .menu-item span { margin-left: 10px; }
         
         /* İçerik Alanı */
-        .content { flex: 1; padding: 40px; overflow-y: auto; }
-        .page-title { font-size: 2rem; color: #162447; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
+        .page-title { font-size: 1.8rem; color: #162447; margin-bottom: 25px; border-bottom: 2px solid #ccc; padding-bottom: 10px; font-weight: bold; }
         
         /* Tablo Tasarımı */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #1f4068; color: white; text-transform: uppercase; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        th, td { padding: 18px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #1f4068; color: white; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
         tr:hover { background: #f8f9fa; }
         
         /* Butonlar */
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; margin-right: 5px; color: white; transition: 0.2s; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; margin-right: 5px; color: white; transition: 0.2s; font-weight: 600; }
         .btn-green { background: #28a745; }
         .btn-red { background: #dc3545; }
         .btn-blue { background: #007bff; }
         .btn-yellow { background: #ffc107; color: #333; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
         /* Login Ekranı */
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #162447, #0f172a); z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 50px; border-radius: 10px; width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); border-top: 5px solid #e43f5a; }
+        .login-input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; background: #f9f9f9; font-size: 1rem; }
+        .login-input:focus { border-color: #162447; outline: none; background: white; }
+        
+        /* Rozetler */
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
+        .badge-mudur { background: #ffd700; color: #333; }
+        .badge-memur { background: #e0e0e0; color: #555; }
         
         /* Sekmeler */
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active { display: block; fade-in: 0.5s; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
     <div class="login-box">
-        <img src="https://upload.wikimedia.org/wikipedia/tr/a/a6/Emniyet_Genel_M%C3%BCd%C3%BCrl%C3%BC%C4%9F%C3%BC_logosu.png" width="80" style="margin-bottom:15px;">
-        <h2 style="color:#162447; margin:0 0 20px 0;">Yönetim Paneli</h2>
-        <input type="text" id="kadi" class="login-input" placeholder="Kullanıcı Adı">
+        <img src="https://upload.wikimedia.org/wikipedia/tr/a/a6/Emniyet_Genel_M%C3%BCd%C3%BCrl%C3%BC%C4%9F%C3%BC_logosu.png" width="90" style="margin-bottom:15px;">
+        <h2 style="color:#162447; margin:0 0 5px 0;">EGM PERSONEL</h2>
+        <p style="color:#666; font-size:0.9rem; margin-bottom:25px;">Yönetim Paneli Girişi</p>
+        
+        <input type="text" id="kadi" class="login-input" placeholder="Sicil No / Kullanıcı Adı">
         <input type="password" id="sifre" class="login-input" placeholder="Şifre">
-        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:12px; font-size:1rem; margin-top:10px;">Giriş Yap</button>
-        <p id="loginMsg" style="color:red; margin-top:10px; font-size:0.9rem;"></p>
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding:15px; font-size:1.1rem; margin-top:15px; background: #162447;">Sisteme Giriş</button>
+        <p id="loginMsg" style="color:#e43f5a; margin-top:15px; font-size:0.9rem; font-weight:bold;"></p>
     </div>
 </div>
 
 <div id="adminPanel" style="display:none; width:100%;">
     <div class="sidebar">
-        <h2>POLNET YÖNETİM</h2>
-        <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvurular</div>
-        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Yöneticiler</div>
+        <div class="sidebar-header">
+            <img src="https://upload.wikimedia.org/wikipedia/tr/a/a6/Emniyet_Genel_M%C3%BCd%C3%BCrl%C3%BC%C4%9F%C3%BC_logosu.png">
+            <h2>Müdürlük Paneli</h2>
+        </div>
+        
+        <div class="menu-item active-tab" onclick="tabDegistir('basvurularTab', this)">📄 Başvuru Onay</div>
+        <div class="menu-item" onclick="tabDegistir('yoneticilerTab', this)">👮‍♂️ Personel Listesi</div>
         <div style="margin-top:auto;">
-            <div class="menu-item" onclick="location.reload()" style="background:#e43f5a;">🚪 Çıkış Yap</div>
+            <div class="menu-item" onclick="location.reload()" style="background:#e43f5a; border:none;">🚪 Güvenli Çıkış</div>
         </div>
     </div>
 
     <div class="content">
         
         <div id="basvurularTab" class="tab-content active">
-            <div class="page-title">Gelen Başvurular</div>
+            <div class="page-title">Bekleyen Personel Başvuruları</div>
             <table>
                 <thead>
                     <tr>
                         <th>Discord ID</th>
-                        <th>IC İsim</th>
+                        <th>IC İsim Soyisim</th>
                         <th>Yaş</th>
                         <th>Durum</th>
-                        <th>Detay / İşlem</th>
+                        <th>İşlemler</th>
                     </tr>
                 </thead>
                 <tbody id="basvuruListesi"></tbody>
@@ -84,25 +100,27 @@
         </div>
 
         <div id="yoneticilerTab" class="tab-content">
-            <div class="page-title">Yönetici Listesi & Ayarlar</div>
+            <div class="page-title">Yönetici & Personel Listesi</div>
             
-            <div style="background:white; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                <h3>Yeni Yönetici Ekle</h3>
-                <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
-                <input type="password" id="yeniSifre" placeholder="Şifre" style="padding:8px; border:1px solid #ccc; border-radius:4px;">
-                <button onclick="yetkiliEkle()" class="btn btn-green">Ekle</button>
+            <div style="background:white; padding:25px; border-radius:8px; margin-bottom:30px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px;">
+                <h3 style="margin:0; min-width:150px; color:#162447;">+ Yeni Memur Ekle:</h3>
+                <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı Belirle" style="padding:10px; border:1px solid #ccc; border-radius:4px; flex:1;">
+                <input type="password" id="yeniSifre" placeholder="Şifre Belirle" style="padding:10px; border:1px solid #ccc; border-radius:4px; flex:1;">
+                <button onclick="yetkiliEkle()" class="btn btn-green" style="padding:10px 20px;">Atama Yap</button>
             </div>
 
             <table>
                 <thead>
                     <tr>
+                        <th>Rütbe</th>
                         <th>Kullanıcı Adı</th>
                         <th>Şifre</th>
-                        <th>İşlemler</th>
+                        <th>Yetkiler</th>
                     </tr>
                 </thead>
                 <tbody id="yoneticiListesi"></tbody>
             </table>
+            <p style="color:#666; font-size:0.8rem; margin-top:10px;">* "Müdür" hesabı sistemin kök hesabıdır ve silinemez.</p>
         </div>
 
     </div>
@@ -110,29 +128,40 @@
 
 <script src="config.js"></script>
 <script>
-    // --- GİRİŞ İŞLEMLERİ ---
+    // --- GİRİŞ İŞLEMLERİ (ÖNEMLİ GÜNCELLEME) ---
     function girisYap() {
         const kadi = document.getElementById('kadi').value;
         const sifre = document.getElementById('sifre').value;
 
+        // Firebase sorgusu
         database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => {
             let giris = false;
-            snapshot.forEach(child => { if(child.val().sifre === sifre) giris = true; });
+            let bulunanKullanici = null;
 
-            // Kurtarma Modu (Veritabanı boşsa Müdür/123 ile gir)
-            if (!snapshot.exists() && kadi === 'Müdür' && sifre === 'GökSancak1881') {
-                giris = true;
-                database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'});
-            }
+            snapshot.forEach(child => { 
+                if(child.val().sifre === sifre) {
+                    giris = true;
+                    bulunanKullanici = child.val();
+                }
+            });
 
-            if (giris) {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'flex';
-                verileriGetir();
-                yoneticileriGetir();
-            } else {
-                document.getElementById('loginMsg').innerText = "Hatalı bilgi!";
-            }
+            // EĞER HİÇ KULLANICI YOKSA VE GİRİLEN BİLGİLER "Müdür" / "GökSancak1881" İSE
+            // OTOMATİK OLARAK ANA HESABI OLUŞTUR VE GİRİŞ YAP.
+            database.ref('yetkililer').once('value', tumKullanicilar => {
+                if (!tumKullanicilar.exists() && kadi === 'Müdür' && sifre === 'GökSancak1881') {
+                    database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'});
+                    giris = true;
+                }
+
+                if (giris) {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'flex';
+                    verileriGetir();
+                    yoneticileriGetir();
+                } else {
+                    document.getElementById('loginMsg').innerText = "Hatalı Sicil No veya Şifre!";
+                }
+            });
         });
     }
 
@@ -141,27 +170,34 @@
         database.ref('basvurular').on('value', snapshot => {
             const liste = document.getElementById('basvuruListesi');
             liste.innerHTML = "";
+            
+            if(!snapshot.exists()) {
+                liste.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Henüz başvuru yok.</td></tr>";
+                return;
+            }
+
             snapshot.forEach(child => {
                 const data = child.val();
                 const key = child.key;
-                const renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
+                const renk = data.durum === 'Onaylandı' ? '#28a745' : (data.durum === 'Reddedildi' ? '#dc3545' : '#ffc107');
+                const durumText = data.durum === 'Onaylandı' ? 'KABUL EDİLDİ' : (data.durum === 'Reddedildi' ? 'REDDEDİLDİ' : 'İNCELEMEDE');
 
-                // Cevapları görmek için alert içine alıyoruz (Basit yöntem)
+                // Cevapları formatla
                 let cevapMetni = "";
                 if(data.cevaplar) {
                     for (const [soru, cevap] of Object.entries(data.cevaplar)) {
-                        cevapMetni += `${soru}: ${cevap}\\n`;
+                        cevapMetni += `${soru}: ${cevap}\n────────────────\n`;
                     }
                 }
 
                 liste.innerHTML += `
                 <tr>
-                    <td>${data.discord_id}</td>
+                    <td style="font-weight:bold;">${data.discord_id}</td>
                     <td>${data.ic_isim}</td>
                     <td>${data.ooc_yas}</td>
-                    <td style="color:${renk}; font-weight:bold;">${data.durum}</td>
+                    <td style="color:${renk}; font-weight:bold;">${durumText}</td>
                     <td>
-                        <button onclick="alert('MÜLAKAT CEVAPLARI:\\n\\n${cevapMetni}')" class="btn btn-blue">Cevapları Gör</button>
+                        <button onclick="alert('MÜLAKAT CEVAPLARI:\\n\\n${cevapMetni}')" class="btn btn-blue">Dosya İncele</button>
                         <button onclick="durumDegis('${key}', 'Onaylandı')" class="btn btn-green">✓</button>
                         <button onclick="durumDegis('${key}', 'Reddedildi')" class="btn btn-red">✗</button>
                     </td>
@@ -172,7 +208,7 @@
 
     function durumDegis(key, drm) { database.ref('basvurular/'+key).update({durum: drm}); }
 
-    // --- YÖNETİCİ YÖNETİMİ (YENİ ÖZELLİK) ---
+    // --- YÖNETİCİ & PERSONEL YÖNETİMİ (KORUMALI SİSTEM) ---
     function yoneticileriGetir() {
         database.ref('yetkililer').on('value', snapshot => {
             const liste = document.getElementById('yoneticiListesi');
@@ -181,13 +217,19 @@
                 const data = child.val();
                 const key = child.key;
                 
+                // KORUMA MANTIĞI: Eğer isim "Müdür" ise silme butonu koyma.
+                let isMudur = (data.kadi === 'Müdür');
+                let rutbeBadge = isMudur ? '<span class="badge badge-mudur">MÜDÜR</span>' : '<span class="badge badge-memur">MEMUR</span>';
+                let silButonu = isMudur ? '<span style="color:#ccc; font-size:0.8rem; margin-left:10px;">🔒 Korumalı Hesap</span>' : `<button onclick="yoneticiSil('${key}')" class="btn btn-red">İlişiği Kes</button>`;
+
                 liste.innerHTML += `
                 <tr>
-                    <td>${data.kadi}</td>
-                    <td>••••••</td>
+                    <td>${rutbeBadge}</td>
+                    <td style="font-weight:bold; color:#162447;">${data.kadi}</td>
+                    <td style="font-family:monospace;">••••••</td>
                     <td>
-                        <button onclick="sifreDuzenle('${key}', '${data.kadi}')" class="btn btn-yellow">Şifre Değiştir</button>
-                        <button onclick="yoneticiSil('${key}')" class="btn btn-red">Sil</button>
+                        <button onclick="sifreDuzenle('${key}', '${data.kadi}')" class="btn btn-yellow">Şifre Yenile</button>
+                        ${silButonu}
                     </td>
                 </tr>`;
             });
@@ -201,12 +243,14 @@
             database.ref('yetkililer').push({kadi: k, sifre: s});
             document.getElementById('yeniKadi').value = "";
             document.getElementById('yeniSifre').value = "";
-            alert("Yönetici eklendi!");
+            alert("Yeni personel sisteme atandı!");
+        } else {
+            alert("Lütfen kullanıcı adı ve şifre giriniz.");
         }
     }
 
     function yoneticiSil(key) {
-        if(confirm("Bu yöneticiyi silmek istediğine emin misin?")) {
+        if(confirm("Bu personelin yetkilerini almak ve silmek istediğinize emin misiniz?")) {
             database.ref('yetkililer/'+key).remove();
         }
     }
@@ -215,7 +259,7 @@
         let yeniSifre = prompt(`${isim} kullanıcısı için yeni şifreyi girin:`);
         if(yeniSifre) {
             database.ref('yetkililer/'+key).update({sifre: yeniSifre});
-            alert("Şifre güncellendi.");
+            alert("Şifre başarıyla güncellendi.");
         }
     }
 
@@ -229,4 +273,3 @@
 </script>
 </body>
 </html>
-
