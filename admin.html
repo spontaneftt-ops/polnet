@@ -41,16 +41,19 @@
 
         /* TS3 Kısımları */
         .ts3-container { display: flex; height: 75vh; gap: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .ts3-sidebar { width: 280px; background: #2c3e50; color: white; padding: 0; display: flex; flex-direction: column; border-right: 3px solid #162447; }
+        .ts3-sidebar { width: 300px; background: #2c3e50; color: white; padding: 0; display: flex; flex-direction: column; border-right: 3px solid #162447; }
         .ts3-header { padding: 15px; font-size: 0.9rem; text-transform: uppercase; color: #95a5a6; border-bottom: 1px solid #34495e; background: #202d3a; }
+        
         .voice-control-panel { padding: 15px; background: #e74c3c; text-align: center; transition: 0.3s; }
         .voice-control-panel.active { background: #27ae60; }
         .voice-status-text { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.9rem; }
         .btn-voice { padding: 8px 20px; border: none; border-radius: 20px; cursor: pointer; background: white; color: #333; font-weight: bold; font-size: 0.8rem; }
+        
         .online-list { flex: 1; padding: 10px; overflow-y: auto; }
         .online-user { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 4px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .status-dot { width: 10px; height: 10px; background: #95a5a6; border-radius: 50%; }
         .status-online { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; } 
+        
         .ts3-chat-area { flex: 1; display: flex; flex-direction: column; background: #ecf0f1; }
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .message { max-width: 80%; padding: 10px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
@@ -61,7 +64,18 @@
         .chat-input-area { padding: 15px; background: white; border-top: 1px solid #ccc; display: flex; gap: 10px; }
         .chat-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         .btn-send { padding: 0 20px; background: #162447; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #jitsi-container { width: 100%; height: 0px; overflow: hidden; }
+        
+        /* Jitsi Alanı - Düzeltildi */
+        #jitsi-container { 
+            width: 100%; 
+            height: 0px; 
+            background: #000; 
+            transition: height 0.3s;
+        }
+        #jitsi-container.open {
+            height: 250px; /* Bağlanınca açılacak */
+            border-bottom: 2px solid #162447;
+        }
     </style>
 </head>
 <body>
@@ -134,7 +148,9 @@
                         <span id="voiceStatusText" class="voice-status-text">SES BAĞLANTISI YOK</span>
                         <button onclick="sesliSohbeteBaglan()" id="btnVoice" class="btn-voice">BAĞLAN</button>
                     </div>
+                    
                     <div id="jitsi-container"></div>
+
                     <div class="ts3-header">AKTİF PERSONEL</div>
                     <div id="onlineUsersList" class="online-list"></div>
                 </div>
@@ -206,21 +222,30 @@
         sohbetVeDurumBaslat();
     }
 
+    // --- SESLİ SOHBET (DÜZELTİLDİ: PENCERE AÇILIYOR) ---
     function sesliSohbeteBaglan() {
         const btn = document.getElementById('btnVoice');
         const panel = document.getElementById('voicePanel');
         const txt = document.getElementById('voiceStatusText');
+        const container = document.getElementById('jitsi-container');
+
         if(jitsiApi) {
+            // Bağlantıyı Kes
             jitsiApi.dispose(); jitsiApi = null;
             btn.innerText = "BAĞLAN"; txt.innerText = "SES BAĞLANTISI YOK";
             panel.classList.remove('active');
+            container.classList.remove('open'); // Pencereyi kapat
         } else {
+            // Bağlan
             btn.innerText = "AYRIL"; txt.innerText = "TELSİZ AKTİF";
             panel.classList.add('active');
+            container.classList.add('open'); // Pencereyi aç (GÖRÜNÜR YAP)
+
             const domain = "meet.jit.si";
             const options = {
                 roomName: "EGM-Polnet-Yonetim-Odasi-Gizli-82736",
-                width: "100%", height: 200, parentNode: document.querySelector('#jitsi-container'),
+                width: "100%", height: 250, 
+                parentNode: document.querySelector('#jitsi-container'),
                 configOverwrite: { startWithAudioMuted: false, startWithVideoMuted: true },
                 interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'tileview', 'hangup'], SHOW_JITSI_WATERMARK: false },
                 userInfo: { displayName: aktifKullanici }
@@ -283,7 +308,6 @@
     }
     function modalKapat() { document.getElementById('detayModal').style.display = "none"; }
 
-    // --- YENİ YETKİ KONTROLLÜ LİSTELEME ---
     function yoneticileriGetir() { 
         database.ref('yetkililer').on('value', s => { 
             const l = document.getElementById('yoneticiListesi'); l.innerHTML = ""; 
@@ -292,9 +316,6 @@
                 let isTargetMudur = (data.kadi === 'Müdür');
                 let isCurrentMudur = (aktifKullanici === 'Müdür');
                 
-                // Silme Butonu Mantığı:
-                // Müdür ise ve hedef Müdür değilse -> Sil butonu aktif
-                // Diğerleri -> Yetkisiz yazısı veya kilit
                 let silBtn = "";
                 if(isCurrentMudur && !isTargetMudur) {
                     silBtn = `<button onclick="dbSil('yetkililer/${c.key}')" class="btn btn-red">Sil</button>`;
@@ -302,17 +323,10 @@
                     silBtn = `<span style="color:#aaa; font-size:0.8rem;">🔒</span>`;
                 }
 
-                // Şifre Butonu Mantığı:
-                // 1. Müdür herkesin şifresini değiştirebilir.
-                // 2. Normal kullanıcı SADECE kendininkini değiştirebilir.
-                // 3. Normal kullanıcı BAŞKASININ (Müdür veya diğer memur) şifresini değiştiremez.
                 let sifreBtn = "";
-                
                 if (isCurrentMudur) {
-                    // Müdür ise herkese açık
                     sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`;
                 } else {
-                    // Normal kullanıcı ise, sadece kendi adınaysa buton koy
                     if (data.kadi === aktifKullanici) {
                         sifreBtn = `<button onclick="sifreDegistir('${c.key}', '${data.kadi}')" class="btn btn-yellow">Şifre</button>`;
                     } else {
@@ -334,7 +348,7 @@
     }
 
     function yetkiliEkle() { const k=document.getElementById('yeniKadi').value.trim(), s=document.getElementById('yeniSifre').value.trim(); if(k&&s) { database.ref('yetkililer').push({kadi:k, sifre:s}); alert("Eklendi."); } }
-    function dbSil(y) { if(confirm('Silinsin mi?')) database.ref(y).remove(); }
+    function dbSil(y) { if(confirm('Bu kaydı silmek istediğinize emin misiniz?')) database.ref(y).remove(); }
     function tabDegistir(id, el) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 </script>
 </body>
