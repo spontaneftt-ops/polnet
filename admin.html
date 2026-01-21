@@ -9,19 +9,42 @@
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 260px; background: #162447; color: white; display: flex; flex-direction: column; padding: 20px; }
         .content { flex: 1; padding: 40px; overflow-y: auto; background: #eef2f5; }
+        
+        /* Tablo Stilleri */
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #1f4068; color: white; }
-        .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; }
-        .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-blue { background: #007bff; }
         
+        /* Butonlar */
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right: 5px; font-weight: bold; transition: 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-green { background: #28a745; } 
+        .btn-red { background: #dc3545; } 
+        .btn-blue { background: #007bff; }
+        .btn-dark { background: #343a40; } /* Silme butonu için */
+        
+        /* Login Ekranı */
         #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #162447; z-index: 999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
         
+        /* Sidebar Menü */
         .tab-content { display: none; } .tab-content.active { display: block; }
         .menu-item { padding: 15px; cursor: pointer; color: #ccc; border-radius: 5px; margin-bottom: 5px; } 
         .menu-item:hover, .active-tab { color: white; background: rgba(255,255,255,0.1); }
+
+        /* --- DETAY PENCERESİ (MODAL) STİLLERİ --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 60%; max-width: 800px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideDown 0.3s; }
+        .modal-header { padding: 20px; background-color: #162447; color: white; border-top-left-radius: 10px; border-top-right-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; line-height: 1.6; color: #333; }
+        .modal-footer { padding: 15px; background-color: #eee; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
+        .close-btn { color: white; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: #ffd700; }
+        .soru-cevap-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .soru-baslik { font-weight: bold; color: #162447; display: block; margin-bottom: 5px; }
+
+        @keyframes slideDown { from {top: -50px; opacity: 0;} to {top: 0; opacity: 1;} }
     </style>
 </head>
 <body>
@@ -39,6 +62,20 @@
     </div>
 </div>
 
+<div id="detayModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0;">Başvuru Detayları</h2>
+            <span class="close-btn" onclick="modalKapat()">&times;</span>
+        </div>
+        <div class="modal-body" id="modalIcerik">
+            </div>
+        <div class="modal-footer">
+            <button onclick="modalKapat()" class="btn btn-red">Kapat</button>
+        </div>
+    </div>
+</div>
+
 <div id="adminPanel" style="display:none; width:100%;">
     <div class="sidebar">
         <h2 style="color:#ffd700; text-align:center;">MÜDÜRLÜK</h2>
@@ -51,7 +88,15 @@
         <div id="basvurularTab" class="tab-content active">
             <h2 style="color:#162447;">Gelen Başvurular</h2>
             <table>
-                <thead><tr><th>Discord ID</th><th>IC İsim</th><th>Yaş</th><th>Durum</th><th>İşlem</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Discord ID</th>
+                        <th>IC İsim</th>
+                        <th>Yaş</th>
+                        <th>Durum</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
                 <tbody id="basvuruListesi"></tbody>
             </table>
         </div>
@@ -74,22 +119,21 @@
 
 <script src="config.js"></script>
 <script>
+    // Global veri tutucu (Modal açarken kullanacağız)
+    let basvuruVerileri = {};
+
     function girisYap() {
-        // Kullanıcı hatasını önlemek için boşlukları siliyoruz (.trim())
         const kadi = document.getElementById('kadi').value.trim();
         const sifre = document.getElementById('sifre').value.trim();
 
-        // 1. MASTER KEY (Veritabanı bozuk olsa bile bu şifreyle girilir)
         if (kadi === "Müdür" && sifre === "GökSancak1881") {
             panelAc();
-            // Veritabanında Müdür yoksa, listeye ekle ki orada da gözüksün
             database.ref('yetkililer').orderByChild('kadi').equalTo('Müdür').once('value', s => {
                 if(!s.exists()) database.ref('yetkililer').push({kadi: 'Müdür', sifre: 'GökSancak1881'});
             });
             return;
         }
 
-        // 2. NORMAL YETKİLİ GİRİŞİ
         database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => {
             let girisBasarili = false;
             snapshot.forEach(child => { 
@@ -112,28 +156,91 @@
         database.ref('basvurular').on('value', snapshot => {
             const liste = document.getElementById('basvuruListesi');
             liste.innerHTML = "";
+            basvuruVerileri = {}; // Verileri sıfırla
+
+            if(!snapshot.exists()) {
+                liste.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Henüz başvuru yok.</td></tr>";
+                return;
+            }
+
             snapshot.forEach(child => {
                 const data = child.val();
-                let cevaplar = "";
-                if(data.cevaplar) for(const [k, v] of Object.entries(data.cevaplar)) cevaplar += `${k}: ${v}\n\n`;
+                const key = child.key;
                 
+                // Veriyi global değişkene kaydet (Modal için)
+                basvuruVerileri[key] = data;
+
                 let renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
                 let durumYazi = data.durum === 'Beklemede' ? 'DEĞERLENDİRİLİYOR' : data.durum;
 
-                liste.innerHTML += `<tr>
+                liste.innerHTML += `
+                <tr>
                     <td>${data.discord_id}</td>
                     <td>${data.ic_isim}</td>
                     <td>${data.ooc_yas}</td>
                     <td style="color:${renk}; font-weight:bold;">${durumYazi}</td>
                     <td>
-                        <button onclick="alert('${cevaplar}')" class="btn btn-blue">İncele</button>
-                        <button onclick="dbGuncelle('basvurular/${child.key}', {durum:'Onaylandı'})" class="btn btn-green">✓</button>
-                        <button onclick="dbGuncelle('basvurular/${child.key}', {durum:'Reddedildi'})" class="btn btn-red">✗</button>
+                        <button onclick="detayAc('${key}')" class="btn btn-blue">İncele</button>
+                        <button onclick="dbGuncelle('basvurular/${key}', {durum:'Onaylandı'})" class="btn btn-green">✓</button>
+                        <button onclick="dbGuncelle('basvurular/${key}', {durum:'Reddedildi'})" class="btn btn-red">✗</button>
+                        <button onclick="basvuruSil('${key}')" class="btn btn-dark" title="Başvuruyu Sil">🗑️</button>
                     </td>
                 </tr>`;
             });
         });
     }
+
+    // --- YENİ EKLENEN FONKSİYONLAR ---
+
+    // 1. Detay Modalını Açma (Hata vermeyen yöntem)
+    function detayAc(key) {
+        const data = basvuruVerileri[key];
+        const modalBody = document.getElementById('modalIcerik');
+        
+        let htmlIcerik = `<h3 style="border-bottom:2px solid #ddd; padding-bottom:10px;">${data.ic_isim} (Yaş: ${data.ooc_yas})</h3>`;
+        htmlIcerik += `<p><strong>Discord ID:</strong> ${data.discord_id}</p>`;
+        htmlIcerik += `<p><strong>Durum:</strong> ${data.durum}</p><br>`;
+        
+        if(data.cevaplar) {
+            for(const [soruID, cevap] of Object.entries(data.cevaplar)) {
+                // Soru ID'sini okunaklı yap (opsiyonel) veya direkt göster
+                htmlIcerik += `
+                <div class="soru-cevap-item">
+                    <span class="soru-baslik">Soru (${soruID}):</span>
+                    <span>${cevap}</span>
+                </div>`;
+            }
+        } else {
+            htmlIcerik += "<p>Cevap bulunamadı.</p>";
+        }
+
+        modalBody.innerHTML = htmlIcerik;
+        document.getElementById('detayModal').style.display = "block";
+    }
+
+    // 2. Modalı Kapatma
+    function modalKapat() {
+        document.getElementById('detayModal').style.display = "none";
+    }
+
+    // 3. Silme İşlemi
+    function basvuruSil(key) {
+        if(confirm("Bu başvuruyu kalıcı olarak silmek istediğinize emin misiniz?")) {
+            database.ref('basvurular/' + key).remove()
+            .then(() => { alert("Başvuru silindi."); })
+            .catch((error) => { alert("Hata: " + error.message); });
+        }
+    }
+
+    // Modal dışına tıklayınca kapatma
+    window.onclick = function(event) {
+        const modal = document.getElementById('detayModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // --- DİĞER STANDART FONKSİYONLAR ---
 
     function yoneticileriGetir() {
         database.ref('yetkililer').on('value', snapshot => {
@@ -159,7 +266,7 @@
     }
 
     function dbGuncelle(yol, veri) { database.ref(yol).update(veri); }
-    function dbSil(yol) { if(confirm('Silinsin mi?')) database.ref(yol).remove(); }
+    function dbSil(yol) { if(confirm('Bu personeli silmek istediğinize emin misiniz?')) database.ref(yol).remove(); }
     
     function tabDegistir(id, el) {
         document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
