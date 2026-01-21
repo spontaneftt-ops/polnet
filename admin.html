@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Paneli</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f4f4f4; display: flex; }
+        /* Login Ekranı Stili */
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:#121212; display:flex; justify-content:center; align-items:center; z-index:999; }
+        .login-box { background:#1e1e1e; padding:40px; border-radius:10px; text-align:center; color:white; }
+        
+        /* Panel Stili */
+        #adminPanel { display: none; width: 100%; display: flex; }
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .content { margin-left: 290px; padding: 40px; width: 100%; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 15px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #007bff; color: white; }
+        
+        input { padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        .btn { padding: 5px 10px; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-green { background: green; } .btn-red { background: red; } .btn-blue { background: blue; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <h2>Yetkili Girişi</h2>
+        <input type="text" id="kadi" placeholder="Kullanıcı Adı"><br>
+        <input type="password" id="sifre" placeholder="Şifre"><br><br>
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%;">Giriş Yap</button>
+        <p id="loginMsg" style="color:red; margin-top:10px;"></p>
+        <a href="index.html" style="color:#666; font-size:0.8rem;">Ana Sayfa</a>
+    </div>
+</div>
+
+<div id="adminPanel" style="display:none;">
+    <div class="sidebar">
+        <h2>Yönetim</h2>
+        <p>Hoşgeldin Yetkili</p>
+        <hr>
+        <h3>Yetkili Ekle</h3>
+        <input type="text" id="yeniKadi" placeholder="Kullanıcı Adı" style="width:90%">
+        <input type="password" id="yeniSifre" placeholder="Şifre" style="width:90%">
+        <button onclick="yetkiliEkle()" class="btn btn-green" style="width:100%; margin-top:5px;">Oluştur</button>
+        <br><br>
+        <button onclick="cikisYap()" class="btn btn-red">Çıkış Yap</button>
+    </div>
+
+    <div class="content">
+        <h1>Gelen Başvurular</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Discord ID</th>
+                    <th>IC İsim</th>
+                    <th>Yaş</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="basvuruListesi">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+    // 1. Giriş Kontrolü
+    function girisYap() {
+        const kadi = document.getElementById('kadi').value;
+        const sifre = document.getElementById('sifre').value;
+
+        // Basitlik için veritabanındaki 'yetkililer' tablosunu kontrol ediyoruz
+        database.ref('yetkililer').orderByChild('kadi').equalTo(kadi).once('value', snapshot => {
+            let girisBasarili = false;
+            snapshot.forEach(child => {
+                if (child.val().sifre === sifre) girisBasarili = true;
+            });
+
+            // Eğer veritabanı boşsa ilk girişi admin/123 olarak kabul et (Kurtarma modu)
+            if (!snapshot.exists() && kadi === 'admin' && sifre === '123') {
+                girisBasarili = true;
+                // İlk admini veritabanına da ekleyelim ki sonraki girişlerde çalışsın
+                database.ref('yetkililer').push({kadi: 'admin', sifre: '123'});
+            }
+
+            if (girisBasarili) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'flex';
+                verileriCek(); // Giriş başarılıysa verileri getir
+            } else {
+                document.getElementById('loginMsg').innerText = "Hatalı kullanıcı adı veya şifre!";
+            }
+        });
+    }
+
+    // 2. Verileri Tabloya Dökme
+    function verileriCek() {
+        database.ref('basvurular').on('value', snapshot => {
+            const liste = document.getElementById('basvuruListesi');
+            liste.innerHTML = ""; // Temizle
+            
+            snapshot.forEach(child => {
+                const data = child.val();
+                const key = child.key; // Kayıt ID'si (Update için lazım)
+                
+                // Renklendirme
+                const renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
+
+                liste.innerHTML += `
+                <tr>
+                    <td>${data.discord_id}</td>
+                    <td>${data.ic_isim}</td>
+                    <td>${data.ooc_yas}</td>
+                    <td style="color:${renk}; font-weight:bold;">${data.durum}</td>
+                    <td>
+                        <button onclick="durumGuncelle('${key}', 'Onaylandı')" class="btn btn-green">Onayla</button>
+                        <button onclick="durumGuncelle('${key}', 'Reddedildi')" class="btn btn-red">Reddet</button>
+                    </td>
+                </tr>`;
+            });
+        });
+    }
+
+    // 3. Durum Güncelleme
+    function durumGuncelle(key, yeniDurum) {
+        database.ref('basvurular/' + key).update({ durum: yeniDurum });
+    }
+
+    // 4. Yetkili Ekleme
+    function yetkiliEkle() {
+        const kadi = document.getElementById('yeniKadi').value;
+        const sifre = document.getElementById('yeniSifre').value;
+        if(kadi && sifre) {
+            database.ref('yetkililer').push({ kadi: kadi, sifre: sifre });
+            alert("Yeni yetkili eklendi!");
+            document.getElementById('yeniKadi').value = "";
+            document.getElementById('yeniSifre').value = "";
+        }
+    }
+
+    function cikisYap() {
+        location.reload();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>LSPD Polnet - Sorgulama</title>
+    <style>
+        body { background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; margin: 0; }
+        .card { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; width: 350px; }
+        input { padding: 12px; width: 90%; border-radius: 5px; border: none; margin-bottom: 15px; background: #333; color: white; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; }
+        .btn-green { background: #28a745; color: white; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-gray { background: #555; color: white; font-size: 0.8rem; }
+        #sonuc { margin-top: 20px; padding: 10px; display: none; border-radius: 5px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="card">
+    <h1>LSPD Personel Daire</h1>
+    <p>Başvuru durumunu kontrol et</p>
+    
+    <input type="text" id="sorguDiscordId" placeholder="Discord ID Giriniz">
+    <br>
+    <button onclick="sorgula()" class="btn btn-green">Sorgula</button>
+    
+    <div id="sonuc"></div>
+    
+    <hr style="border-color: #333; margin: 20px 0;">
+    <a href="apply.html" class="btn btn-blue">Başvuru Yap</a>
+    <br><br>
+    <a href="admin.html" class="btn btn-gray">Yetkili Paneli</a>
+</div>
+
+<script src="config.js"></script>
+<script>
+    function sorgula() {
+        const id = document.getElementById('sorguDiscordId').value;
+        const sonucDiv = document.getElementById('sonuc');
+
+        if(!id) { alert("Lütfen Discord ID girin!"); return; }
+
+        sonucDiv.style.display = 'none';
+        
+        // Veritabanında arama yap
+        database.ref('basvurular').orderByChild('discord_id').equalTo(id).once('value', snapshot => {
+            if (snapshot.exists()) {
+                // İlk bulunan kaydı al
+                const data = Object.values(snapshot.val())[0];
+                let renk = data.durum === 'Onaylandı' ? 'green' : (data.durum === 'Reddedildi' ? 'red' : 'orange');
+                
+                sonucDiv.innerHTML = `<div style="border: 1px solid ${renk}; color: ${renk};">
+                    <h3>${data.durum}</h3>
+                    <p>${data.ic_isim}</p>
+                </div>`;
+                sonucDiv.style.display = 'block';
+            } else {
+                alert("Bu ID ile bir başvuru bulunamadı.");
+            }
+        });
+    }
+</script>
+</body>
+</html>
