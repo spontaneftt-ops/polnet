@@ -6,33 +6,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { 
-            background: linear-gradient(135deg, #0f172a 0%, #162447 100%); 
-            color: #fff; display: flex; justify-content: center; align-items: center; 
-            height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; 
-        }
-        .card { 
-            background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; 
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        /* Logo ayarı: egmm.png kullanılıyor */
+        body { background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .card { background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* GÜNCELLENEN LOGO */
         .logo { width: 120px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3)); }
         
         h1 { color: #ffd700; font-size: 1.5rem; text-transform: uppercase; margin: 10px 0; }
-        
-        input { 
-            padding: 15px; width: 90%; border-radius: 5px; border: 1px solid #333; 
-            margin-bottom: 15px; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem;
-        }
-        .btn { 
-            padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; 
-            text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; width: 40%;
-        }
-        .btn-green { background: #28a745; color: white; width: 95%; font-size: 1.1rem; }
-        .btn-blue { background: #007bff; color: white; }
-        .btn-gray { background: #4b5563; color: white; }
-        
+        input { padding: 15px; width: 90%; border-radius: 5px; border: 1px solid #333; margin-bottom: 15px; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem; }
+        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin: 5px; font-weight: bold; width: 40%; }
+        .btn-green { background: #28a745; color: white; width: 95%; } .btn-blue { background: #007bff; color: white; } .btn-gray { background: #4b5563; color: white; }
         #sonuc { margin-top: 25px; padding: 20px; display: none; border-radius: 8px; background: rgba(0,0,0,0.4); }
     </style>
 </head>
@@ -41,11 +24,11 @@
 <div class="card">
     <img src="egmm.png" class="logo" alt="EGM Logo">
     
-    <h1>Başvuru Sonuç Ekranı</h1>
-    <p style="color:#aaa; font-size:0.9rem;">Discord ID'nizi girerek durumunuzu sorgulayabilirsiniz.</p>
+    <h1>BAŞVURU SORGULAMA</h1>
+    <p style="color:#aaa; font-size:0.9rem;">Discord ID ile durumunuzu kontrol edin.</p>
     
     <input type="text" id="sorguDiscordId" placeholder="Discord ID (Örn: 82736...)">
-    <button onclick="sorgula()" class="btn btn-green">DURUMU SORGULA</button>
+    <button onclick="sorgula()" class="btn btn-green">SORGULA</button>
     
     <div id="sonuc"></div>
     
@@ -59,36 +42,21 @@
     function sorgula() {
         const id = document.getElementById('sorguDiscordId').value.trim();
         const sonucDiv = document.getElementById('sonuc');
-
         if(!id) { alert("Lütfen Discord ID girin!"); return; }
-
         sonucDiv.style.display = 'none';
         
         database.ref('basvurular').orderByChild('discord_id').equalTo(id).once('value', snapshot => {
             if (snapshot.exists()) {
                 const data = Object.values(snapshot.val())[0];
+                let mesaj = "DEĞERLENDİRİLİYOR ⏳";
+                let renk = "#ffc107";
+                if (data.durum === 'Onaylandı') { mesaj = "ONAYLANDI ✅"; renk = "#28a745"; }
+                if (data.durum === 'Reddedildi') { mesaj = "REDDEDİLDİ ❌"; renk = "#dc3545"; }
                 
-                let mesaj = "";
-                let renk = "";
-
-                if (data.durum === 'Onaylandı') {
-                    mesaj = "BAŞVURUNUZ ONAYLANDI ✅";
-                    renk = "#28a745";
-                } else if (data.durum === 'Reddedildi') {
-                    mesaj = "BAŞVURUNUZ REDDEDİLDİ ❌";
-                    renk = "#dc3545";
-                } else {
-                    mesaj = "BAŞVURUNUZ DEĞERLENDİRİLİYOR ⏳";
-                    renk = "#ffc107";
-                }
-                
-                sonucDiv.innerHTML = `
-                    <h3 style="color:${renk}; margin:0;">${mesaj}</h3>
-                    <p style="margin-top:10px; font-size:0.9rem;">IC İsim: ${data.ic_isim}</p>
-                `;
+                sonucDiv.innerHTML = `<h3 style="color:${renk}; margin:0;">${mesaj}</h3><p style="margin-top:10px;">${data.ic_isim}</p>`;
                 sonucDiv.style.display = 'block';
             } else {
-                alert("Sistemde bu ID ile kayıtlı bir başvuru bulunamadı.");
+                alert("Başvuru bulunamadı.");
             }
         });
     }
