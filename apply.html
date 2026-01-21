@@ -8,24 +8,17 @@
     <style>
         body { margin: 0; background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         .card { width: 700px; height: 600px; background: rgba(22, 36, 71, 0.95); border-radius: 15px; padding: 40px; text-align: center; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        
         .logo { width: 110px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-        
         .question-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; }
-        /* Soru metni stili */
         .q-header { color:#ffd700; margin:0 0 10px 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
         .q-text { font-size:1.1rem; color:#e0e0e0; max-width:90%; line-height: 1.5; margin-bottom: 15px; }
-        
-        /* Input stilleri */
         input, textarea { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; width: 85%; border-radius: 5px; font-size: 1.1rem; transition: 0.3s; font-family: 'Segoe UI', sans-serif; }
         input:focus, textarea:focus { border-color: #ffd700; outline: none; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
         textarea { height: 150px; resize: none; }
-        
         .footer { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
         .btn { padding: 12px 35px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
         .btn-next { background: #e43f5a; color: white; } .btn-next:hover { background: #c0354a; }
         .btn-back { background: transparent; color: #aaa; border: 1px solid #aaa; } .btn-back:hover { color: white; border-color: white; }
-        
         .progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 15px 15px 0 0; overflow: hidden; }
         .progress-bar { height: 100%; background: #ffd700; width: 0%; transition: width 0.4s ease; }
         .step-count { position: absolute; top: 15px; right: 20px; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
@@ -35,12 +28,9 @@
 
 <div class="card">
     <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
-    <div class="step-count" id="stepCount">1 / 25</div>
-    
+    <div class="step-count" id="stepCount">Giriş</div>
     <img src="egmm.png" class="logo" alt="EGM Logo">
-    
     <div class="question-box" id="qBox"></div>
-    
     <div class="footer">
         <button class="btn btn-back" id="bBack" onclick="nav(-1)">GERİ</button>
         <button class="btn btn-next" id="bNext" onclick="nav(1)">BAŞLA</button>
@@ -49,49 +39,72 @@
 
 <script src="config.js"></script>
 <script>
-    // --- 25 ADET ÇEŞİTLENDİRİLMİŞ SORU LİSTESİ ---
-    const q = [
-        // GİRİŞ
-        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz Emniyet Genel Müdürlüğü Personel Daire Başkanlığı tarafından incelenecektir.<br>Lütfen tüm soruları ciddiyetle ve rol kurallarına uygun cevaplayınız.'},
-        
-        // KİMLİK & OOC
-        {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
-        {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakterinizin Adı ve Soyadı (IC):'},
-        {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
+    // --- 1. SABİT SORULAR (Herkese Sorulur) ---
+    const sabitSorular = [
+        {id:'i', t:'info', h:'EGM PERSONEL ALIM', s:'Başvurunuz Emniyet Genel Müdürlüğü tarafından incelenecektir.<br>Sorular sistem tarafından 100 soruluk havuzdan <b>rastgele</b> seçilmiştir.'},
+        {id:'discord_id', t:'text', h:'KİMLİK', s:'Discord ID Giriniz:'},
+        {id:'ic_isim', t:'text', h:'KİMLİK', s:'Karakterinizin Adı ve Soyadı (IC):'},
+        {id:'ooc_yas', t:'number', h:'KİMLİK', s:'Gerçek Yaşınız (OOC):'},
         {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Sunucuda günlük ortalama kaç saat aktif olabilirsiniz?'},
-
-        // KARAKTER & HİKAYE
-        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakterinizin polis olma motivasyonu nedir? Kısa bir özgeçmiş yazınız.'},
         {id:'deneyim', t:'textarea', h:'DENEYİM', s:'Daha önce FiveM üzerinde polislik yaptınız mı? Yaptıysanız hangi rütbede?'},
-
-        // SUNUCU KURALLARI (TERİMLER)
-        {id:'kural_pg', t:'textarea', h:'KURAL BİLGİSİ', s:'"Powergaming" (PG) nedir? Polis rolü üzerinden bir örnek veriniz.'},
-        {id:'kural_mg', t:'textarea', h:'KURAL BİLGİSİ', s:'"Metagaming" (MG) nedir? Neden yasaktır?'},
-        {id:'kural_rdm_vdm', t:'textarea', h:'KURAL BİLGİSİ', s:'RDM ve VDM kavramlarını kısaca açıklayınız.'},
-        {id:'kural_fearrp', t:'textarea', h:'KURAL BİLGİSİ', s:'"FearRP" (Korku Rolü) bir polis memuru için ne zaman geçerlidir? Örnek veriniz.'},
-        {id:'kural_nlr', t:'textarea', h:'KURAL BİLGİSİ', s:'"New Life Rule" (NLR) nedir? Ölen bir polis memuru olaya geri dönebilir mi?'},
-
-        // POLİS PROSEDÜRLERİ & TEKNİK
-        {id:'teknik_telsiz', t:'textarea', h:'TELSİZ DİSİPLİNİ', s:'Telsiz konuşmaları nasıl olmalıdır? "10-20" kodunun anlamı nedir?'},
-        {id:'teknik_hiyerarsi', t:'textarea', h:'HİYERARŞİ', s:'Üst rütbeli bir amiriniz size mantıksız gelen bir emir verirse tepkiniz ne olur?'},
-        {id:'teknik_miranda', t:'textarea', h:'HUKUKİ PROSEDÜR', s:'Gözaltına aldığınız şahsa "Miranda Hakları"nı ne zaman ve neden okumalısınız?'},
-        {id:'teknik_silah', t:'textarea', h:'GÜÇ KULLANIMI', s:'Hangi durumlarda öldürücü güç (Silah) kullanma yetkiniz vardır?'},
-
-        // SENARYO & DURUM ANALİZİ
-        {id:'senaryo_trafik', t:'textarea', h:'SENARYO - 1', s:'Rutin trafik kontrolünde (Traffic Stop) durdurduğunuz araçtan inen 4 kişi size uzun namlulu silah doğrulttu. Ne yaparsınız?'},
-        {id:'senaryo_yarali', t:'textarea', h:'SENARYO - 2', s:'Devriye arkadaşınız çatışmada vuruldu ve yere düştü. Karşı ateş devam ediyor. İlk hamleniz ne olur?'},
-        {id:'senaryo_ruşvet', t:'textarea', h:'SENARYO - 3', s:'Gözaltına aldığınız bir şahıs sizi serbest bırakmanız karşılığında yüksek miktarda para (Rüşvet) teklif etti. Rolsel tepkiniz ne olur?'},
-        {id:'senaryo_bug', t:'textarea', h:'SENARYO - 4', s:'Kovaladığınız şüpheli oyun hatası (bug) yüzünden havada uçmaya başladı veya görünmez oldu. Ne yaparsınız?'},
-        {id:'senaryo_emir', t:'textarea', h:'SENARYO - 5', s:'Amiriniz sivil hayatta illegal bir grupla iş birliği yaparken gördünüz. Bu durumu IC (Oyun içi) nasıl yönetirsiniz?'},
-        {id:'senaryo_rehine', t:'textarea', h:'SENARYO - 6', s:'Bir market soygununda soyguncular rehineyi öldürmekle tehdit ediyor ve siz müzakerecisiniz. İlk cümleniz ne olur?'},
-        
-        // ETİK & KAPANIŞ
-        {id:'etik_tutum', t:'textarea', h:'MESLEK ETİĞİ', s:'Sivil vatandaşlara karşı tutumunuz nasıl olmalıdır? Agresif bir vatandaşı nasıl sakinleştirirsiniz?'},
-        {id:'kapanis', t:'textarea', h:'SON SÖZ', s:'Ekibimize neden sizi almalıyız? Sizi diğer adaylardan ayıran özellik nedir?'}
+        {id:'karakter_hikaye', t:'textarea', h:'KARAKTER', s:'Karakterinizin polis olma motivasyonu nedir? Kısa bir özgeçmiş yazınız.'}
     ];
+
+    // --- 2. SORU HAVUZU (Buradan Rastgele 10 Tane Seçilecek) ---
+    // Burayı istediğin kadar artırabilirsin.
+    const havuz = [
+        {id:'h1', t:'textarea', h:'KURAL', s:'Powergaming (PG) nedir? Örnek veriniz.'},
+        {id:'h2', t:'textarea', h:'KURAL', s:'Metagaming (MG) nedir? Rolde nasıl kaçınılmalıdır?'},
+        {id:'h3', t:'textarea', h:'KURAL', s:'RDM ve VDM kavramlarını açıklayınız.'},
+        {id:'h4', t:'textarea', h:'KURAL', s:'FearRP (Korku Rolü) bir polis için ne zaman geçerlidir?'},
+        {id:'h5', t:'textarea', h:'KURAL', s:'New Life Rule (NLR) nedir? Ölen polis olaya dönebilir mi?'},
+        {id:'h6', t:'textarea', h:'KURAL', s:'Mixing nedir? IC ve OOC kavramlarını karıştırmak ne demektir?'},
+        {id:'h7', t:'textarea', h:'KURAL', s:'Combat Log (CL) nedir? Yapan birini görürseniz ne yaparsınız?'},
+        {id:'h8', t:'textarea', h:'KURAL', s:'Retarded RP nedir? Neden yasaktır?'},
+        {id:'h9', t:'textarea', h:'KURAL', s:'Bunny Hopping nedir? Polis koşarken zıplar mı?'},
+        {id:'h10', t:'textarea', h:'KURAL', s:'Cop Baiting (Polis Kışkırtma) nedir?'},
+        
+        {id:'p1', t:'textarea', h:'PROSEDÜR', s:'10-20, 10-78 ve 10-99 kodlarının anlamları nelerdir?'},
+        {id:'p2', t:'textarea', h:'PROSEDÜR', s:'Miranda Hakları nelerdir? Şüpheliye ne zaman okunur?'},
+        {id:'p3', t:'textarea', h:'PROSEDÜR', s:'Üstünüz size mantıksız bir emir verirse ne yaparsınız?'},
+        {id:'p4', t:'textarea', h:'PROSEDÜR', s:'Öldürücü güç (Silah) kullanma yetkiniz hangi durumlarda vardır?'},
+        {id:'p5', t:'textarea', h:'PROSEDÜR', s:'Kelepçeleme prosedürü nasıldır? Önce kelepçe mi takılır, Miranda mı okunur?'},
+        {id:'p6', t:'textarea', h:'PROSEDÜR', s:'Telsiz konuşma adabı nasıl olmalıdır?'},
+        {id:'p7', t:'textarea', h:'PROSEDÜR', s:'Bir şüpheliyi araca bindirirken nelere dikkat etmelisiniz?'},
+        {id:'p8', t:'textarea', h:'PROSEDÜR', s:'Departman aracını kullanırken nelere dikkat edersiniz?'},
+        
+        {id:'s1', t:'textarea', h:'SENARYO', s:'Trafik kontrolünde durdurduğunuz araçtan inen 4 kişi size silah çekti. Ne yaparsınız?'},
+        {id:'s2', t:'textarea', h:'SENARYO', s:'Ortağınız çatışmada vuruldu ve yere düştü. Karşı ateş sürüyor. İlk hamleniz ne olur?'},
+        {id:'s3', t:'textarea', h:'SENARYO', s:'Gözaltına aldığınız kişi size rüşvet teklif etti. Rolsel tepkiniz ne olur?'},
+        {id:'s4', t:'textarea', h:'SENARYO', s:'Kovaladığınız şüpheli oyun hatası (bug) yüzünden havada uçmaya başladı. Ne yaparsınız?'},
+        {id:'s5', t:'textarea', h:'SENARYO', s:'Amiriniz sivil hayatta illegal bir grupla iş birliği yaparken gördünüz. IC ne yaparsınız?'},
+        {id:'s6', t:'textarea', h:'SENARYO', s:'Market soygununda rehine var ve müzakerecisiniz. İlk cümleniz ne olur?'},
+        {id:'s7', t:'textarea', h:'SENARYO', s:'Hastanede yaralı bir şüpheliyi sorgulamanız lazım ama doktor izin vermiyor. Ne yaparsınız?'},
+        {id:'s8', t:'textarea', h:'SENARYO', s:'Devriye sırasında sivil bir araç size kasten çarpıp kaçtı. Prosedür nedir?'},
+        {id:'s9', t:'textarea', h:'SENARYO', s:'Karakol önünde eylem yapan sivil halka nasıl müdahale edersiniz?'},
+        {id:'s10', t:'textarea', h:'SENARYO', s:'Bir ihbara gittiniz, olay yerinde 3 yaralı polis ve 5 silahlı şahıs var. Ne yaparsınız?'},
+        
+        {id:'e1', t:'textarea', h:'ETİK', s:'Agresif ve küfürbaz bir vatandaşı sakinleştirmek için nasıl konuşursunuz?'},
+        {id:'e2', t:'textarea', h:'ETİK', s:'Polis üniforması sizin için neyi temsil eder?'},
+        {id:'e3', t:'textarea', h:'ETİK', s:'Suçlu yakalamak mı önemlidir, sivil güvenliği mi? Neden?'},
+        {id:'e4', t:'textarea', h:'SON SÖZ', s:'Ekibimize neden sizi almalıyız?'}
+    ];
+
+    // --- 3. KARIŞTIRMA VE SEÇME İŞLEMİ ---
+    function sorulariHazirla() {
+        // Havuzu karıştır (Shuffle)
+        const karisikHavuz = havuz.sort(() => 0.5 - Math.random());
+        // İlk 10 taneyi al
+        const secilenSorular = karisikHavuz.slice(0, 10);
+        // Sabit sorularla birleştir
+        return [...sabitSorular, ...secilenSorular];
+    }
+
+    const q = sorulariHazirla(); // Artık 'q' değişkeni dinamik!
     
     let idx = 0; 
     let ans = {};
+    let soruMetinleri = {}; // Admin paneli için soruları buraya kaydedeceğiz
 
     function render() {
         const item = q[idx];
@@ -100,62 +113,37 @@
         const bBack = document.getElementById('bBack');
         const count = document.getElementById('stepCount');
         
-        // Input tipini belirle
-        let inputHTML = "";
-        if(item.t === 'info') {
-            inputHTML = "";
-        } else if(item.t === 'textarea') {
-            inputHTML = `<textarea id="inp" placeholder="Cevabınızı detaylı bir şekilde yazınız..."></textarea>`;
-        } else {
-            inputHTML = `<input type="${item.t}" id="inp" placeholder="Cevabınız...">`;
-        }
+        let inputHTML = item.t === 'info' ? "" : (item.t==='textarea' ? `<textarea id="inp" placeholder="Cevabınızı detaylı yazınız..."></textarea>` : `<input type="${item.t}" id="inp" placeholder="Cevabınız...">`);
         
-        // HTML'i bas
-        box.innerHTML = `
-            <div class="q-header">${item.h}</div>
-            <div class="q-text">${item.s}</div>
-            ${inputHTML}
-        `;
+        box.innerHTML = `<div class="q-header">${item.h}</div><div class="q-text">${item.s}</div>${inputHTML}`;
         
-        // Eski cevabı geri getir
         if(item.t !== 'info' && document.getElementById('inp')) {
             document.getElementById('inp').value = ans[item.id] || '';
-            // Otomatik odaklanma
             setTimeout(() => document.getElementById('inp').focus(), 100);
         }
 
-        // Buton ve Sayaç Yönetimi
         bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
         bNext.innerText = idx === 0 ? 'BAŞLA' : (idx === q.length-1 ? 'GÖNDER' : 'İLERİ');
-        
-        // Progress Bar
-        const progressPercent = ((idx) / (q.length-1)) * 100;
-        document.getElementById('pBar').style.width = progressPercent + '%';
-        
-        // Sayaç Yazısı
+        document.getElementById('pBar').style.width = ((idx / (q.length-1)) * 100) + '%';
         if(idx > 0) count.innerText = `${idx} / ${q.length - 1}`;
-        else count.innerText = "Giriş";
     }
 
     function nav(d) {
-        // İleri giderken boş kontrolü
         if(d === 1 && idx > 0) {
             const val = document.getElementById('inp').value.trim();
             if(!val) return alert('Lütfen bu soruyu boş bırakmayınız!');
             ans[q[idx].id] = val;
+            
+            // ÖNEMLİ: Sorunun metnini de kaydediyoruz ki Admin panelinde sözlüğe gerek kalmasın!
+            soruMetinleri[q[idx].id] = q[idx].s;
         }
-        
-        // Gönderme aşaması
         if(d === 1 && idx === q.length-1) return send();
-        
-        idx += d;
-        render();
+        idx += d; render();
     }
 
     function send() {
         const btn = document.getElementById('bNext');
-        btn.innerText = 'GÖNDERİLİYOR...';
-        btn.disabled = true;
+        btn.innerText = 'GÖNDERİLİYOR...'; btn.disabled = true;
         
         const data = { 
             discord_id: ans.discord_id, 
@@ -163,26 +151,20 @@
             ooc_yas: ans.ooc_yas, 
             durum: 'Beklemede', 
             tarih: new Date().toISOString(), 
-            cevaplar: ans 
+            cevaplar: ans,
+            soru_detaylari: soruMetinleri // <--- YENİ: Soru metinlerini de gönderiyoruz
         };
         
         database.ref('basvurular').push(data, (err) => {
-            if(err) { 
-                alert("Hata: " + err.message); 
-                btn.disabled = false; 
-                btn.innerText = 'TEKRAR DENE';
-                return; 
-            }
+            if(err) { alert("Hata: " + err.message); btn.disabled = false; return; }
             document.querySelector('.card').innerHTML = `
                 <img src="egmm.png" class="logo" style="width:100px;">
                 <h1 style="color:#28a745; margin-top:20px;">BAŞVURU İLETİLDİ ✅</h1>
-                <p style="font-size:1.1rem; color:#eee;">Başvurunuz personel daire başkanlığı sistemine başarıyla kaydedildi.<br>Sonuçları Discord üzerinden veya ana sayfadan takip edebilirsiniz.</p>
+                <p style="font-size:1.1rem; color:#eee;">Başvurunuz sisteme kaydedildi.<br>Sorular rastgele seçildiği için diğer adaylardan farklı olabilir.</p>
                 <button onclick="window.location.href='index.html'" class="btn" style="background:#007bff; color:white; margin-top:30px;">Ana Sayfaya Dön</button>
             `;
         });
     }
-    
-    // İlk render
     render();
 </script>
 </body>
