@@ -100,7 +100,7 @@
         <div id="playerStatus" style="color:white; font-size:0.8rem; text-align:center;">Müzik Seçilmedi</div>
         <audio id="radioPlayer" controls class="hidden" style="width:100%; margin-top:5px;"></audio>
         <div id="ytContainer" class="hidden">
-            <input type="text" id="musicUrl" style="width:100%; box-sizing:border-box; margin-bottom:5px; padding:5px; background:rgba(0,0,0,0.5); color:white; border:1px solid #00f7ff;" placeholder="YouTube Linki...">
+            <input type="text" id="musicUrl" style="width:100%; box-sizing:border-box; margin-bottom:5px; padding:5px;" placeholder="YouTube Linki...">
             <button onclick="youtubeCal()" class="btn btn-blue" style="width:100%; padding:5px;">VİDEOYU AÇ</button>
             <iframe id="ytPlayer" style="height:150px; margin-top:5px;" src="" frameborder="0" allow="autoplay; encrypted-media"></iframe>
         </div>
@@ -195,13 +195,15 @@
 
 <script src="config.js"></script>
 <script>
-    // --- SES EFEKTLERİ ---
+    // --- SES EFEKTLERİ KÜTÜPHANESİ ---
     const SFX = {
-        success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), 
-        error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), 
-        alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), 
-        click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") 
+        success: new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"), // Onay
+        error: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"), // Red/Silme
+        alert: new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"), // Bildirim
+        click: new Audio("https://actions.google.com/sounds/v1/ui/click_on.ogg") // Menü geçişi
     };
+    
+    // Seslerin sesi çok yüksek olmasın
     SFX.success.volume = 0.5; SFX.error.volume = 0.5; SFX.alert.volume = 0.4; SFX.click.volume = 0.2;
 
     let basvuruVerileri = {};
@@ -211,25 +213,12 @@
     dragElement(document.getElementById("musicPlayer"));
     function toggleMusicPlayer() { document.getElementById("musicPlayer").classList.toggle("minimized"); SFX.click.play(); }
 
-    // --- YENİLENEN RADYO FONKSİYONU (HATA YAKALAMALI & HTTPS) ---
     function radyoCal(url, isim) {
-        document.getElementById("playerStatus").innerText = "Bağlanıyor: " + isim + "...";
-        document.getElementById("ytContainer").classList.add("hidden"); 
-        document.getElementById("ytPlayer").src = ""; // YouTube durdur
-        
+        document.getElementById("playerStatus").innerText = "Çalıyor: " + isim;
+        document.getElementById("ytContainer").classList.add("hidden"); document.getElementById("ytPlayer").src = "";
         const audio = document.getElementById("radioPlayer");
-        audio.src = url;
-        audio.classList.remove("hidden");
-        
-        audio.play().then(() => {
-            document.getElementById("playerStatus").innerText = "Çalıyor: " + isim;
-        }).catch(e => {
-            console.error("Radyo Hatası:", e);
-            document.getElementById("playerStatus").innerText = "Hata!";
-            alert("Radyo çalınamadı. Ağ hatası veya tarayıcı engeli olabilir.");
-        });
+        audio.src = url; audio.classList.remove("hidden"); audio.play().catch(e => alert("Radyo başlatılamadı."));
     }
-
     function youtubeMod() { document.getElementById("playerStatus").innerText = "Mod: YouTube"; document.getElementById("radioPlayer").pause(); document.getElementById("radioPlayer").classList.add("hidden"); document.getElementById("ytContainer").classList.remove("hidden"); }
     function youtubeCal() {
         const url = document.getElementById('musicUrl').value;
@@ -277,7 +266,7 @@
             let [t, b, o, r] = [0, 0, 0, 0];
             s.forEach(c => {
                 const d = c.val(); const k = c.key; basvuruVerileri[k] = d;
-                t++; if(d.durum === 'Beklemede') b++; else if(d.durum === 'Onaylandı') o++; else if(d.durum === 'Reddedildi') r++;
+                t++; if(d.durum === 'Beklemede') b++; else if(d.durum === 'Onaylandı') o++; else r++;
                 let renk = d.durum==='Onaylandı'?'#10b981':(d.durum==='Reddedildi'?'#ef4444':'#f59e0b');
                 l.innerHTML += `<tr><td><div onclick="kopyala('${d.discord_id}')" class="discord-link"><i class="fab fa-discord"></i> ${d.discord_id}</div></td><td>${d.ic_isim}</td><td style="color:${renk}; font-weight:bold;">${d.durum}</td><td><small>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</small></td><td><button onclick="detayAc('${k}')" class="btn btn-blue"><i class="fas fa-eye"></i></button><button onclick="onayla('${k}')" class="btn btn-green"><i class="fas fa-check"></i></button><button onclick="reddet('${k}')" class="btn btn-red"><i class="fas fa-times"></i></button><button onclick="dbSil('basvurular/${k}')" class="btn btn-dark"><i class="fas fa-trash"></i></button></td></tr>`;
             });
