@@ -1,15 +1,15 @@
-// Firebase SDK'larını HTML içinde çağıracağız, burası sadece ayarlar.
-
+// staffbs Projesi Yapılandırması
 const firebaseConfig = {
-    apiKey: "AIzaSyD4mXN8BZ3OMzl35vtEbNGA9BUuHPgoqQU",
-    authDomain: "mit-sistemi.firebaseapp.com",
-    databaseURL: "https://mit-sistemi-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mit-sistemi",
-    storageBucket: "mit-sistemi.firebasestorage.app",
-    messagingSenderId: "195453377116",
-    appId: "1:195453377116:web:85067f5070ecf983bb6499"
+  apiKey: "AIzaSyDlA94GPamBHnkz-gi-JpGr0gRoPlctgw4",
+  authDomain: "staffbs.firebaseapp.com",
+  databaseURL: "https://staffbs-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "staffbs",
+  storageBucket: "staffbs.firebasestorage.app",
+  messagingSenderId: "653886716850",
+  appId: "1:653886716850:web:822c14fc7f4eede14e82ab",
+  measurementId: "G-TVH5EJT8CT"
 };
 
-// Uygulamayı Başlat
+// Uygulamayı Başlat (Compat Modu)
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
