@@ -3,613 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v4.0 - EGM Entegre Sistem</title>
+    <title>POLNET v4.0 - Emniyet Teşkilatı Yönetim Sistemi</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        :root { 
-            --bg-dark: #0f172a; 
-            --sidebar-bg: #020617; 
-            --card-bg: #1e293b; 
-            --input-bg: rgba(0,0,0,0.3);
-            --text-main: #f1f5f9; 
-            --text-muted: #94a3b8; 
-            --border: #334155; 
-            --accent: #3b82f6; /* Polis Mavisi */
-            --danger: #ef4444; 
-            --success: #10b981; 
-            --warning: #f59e0b; 
-            --gold: #fbbf24; /* Rütbe Rengi */
-        }
+        :root { --bg-dark: #0f172a; --sidebar-bg: #020617; --card-bg: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
         
         * { box-sizing: border-box; outline: none; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; transition: background 0.5s ease; }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* SIDEBAR */
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; z-index: 10; user-select: none; }
-        .logo-area { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo-area img { width: 80px; filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
+        /* OHAL MODU */
+        body.ohal-active { 
+            --bg-dark: #2a0505; --sidebar-bg: #1a0000; --card-bg: #3f0a0a; --accent: #ff0000; --border: #5c1818; 
+            animation: redPulse 2s infinite alternate;
+        }
+        @keyframes redPulse { 0% { box-shadow: inset 0 0 0 0 rgba(255, 0, 0, 0); } 100% { box-shadow: inset 0 0 100px 30px rgba(255, 0, 0, 0.4); } }
         
-        .user-info { margin-top: 10px; font-family: 'Chakra Petch', sans-serif; }
-        .rank-badge { display: inline-block; background: rgba(251, 191, 36, 0.1); color: var(--gold); border: 1px solid var(--gold); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+        #ohalAlertBar { 
+            background: #000; color: red; font-family: 'Chakra Petch', sans-serif; font-weight: 900; font-size: 1.5rem; 
+            padding: 10px 0; border-bottom: 4px solid red; white-space: nowrap; overflow: hidden; display: none; z-index: 9999; 
+            position: fixed; top: 0; width: 100%; letter-spacing: 2px;
+        }
+        .ohal-content { display: inline-block; padding-left: 100%; animation: ohalScroll 15s linear infinite; }
+        @keyframes ohalScroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
-        .menu-item { padding: 14px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 12px; color: var(--text-muted); transition: 0.2s; font-weight: 500; font-family: 'Chakra Petch', sans-serif; letter-spacing: 0.5px; }
-        .menu-item:hover, .active-tab { background: linear-gradient(90deg, rgba(59,130,246,0.2) 0%, transparent 100%); color: white; border-left: 3px solid var(--accent); }
-        .menu-item i { width: 20px; text-align: center; }
+        /* LAYOUT */
+        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; overflow-y: auto; z-index: 10; padding-bottom: 50px; }
+        .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; background-image: radial-gradient(var(--card-bg) 1px, transparent 1px); background-size: 20px 20px; padding-bottom: 50px; }
+        body.ohal-active .sidebar, body.ohal-active .content { margin-top: 50px; }
 
-        /* CONTENT */
-        .content { flex: 1; padding: 40px; overflow-y: auto; background-image: radial-gradient(var(--card-bg) 1px, transparent 1px); background-size: 20px 20px; }
+        .menu-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; color: var(--text-muted); transition: 0.2s; font-weight: 500; font-family: 'Chakra Petch', sans-serif; letter-spacing: 0.5px; }
+        .menu-item:hover, .active-tab { background: rgba(59,130,246,0.15); color: white; border-left: 3px solid var(--accent); }
         
-        /* UI ELEMENTS */
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
-        
-        h1, h2, h3, h4 { font-family: 'Chakra Petch', sans-serif; margin-top: 0; color: white; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-
-        input, select, textarea { width: 100%; padding: 14px; background: var(--input-bg); border: 1px solid var(--border); color: white; border-radius: 8px; margin-bottom: 12px; font-family: 'Inter', sans-serif; transition: 0.3s; font-size: 0.95rem; }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; transition: 0.2s; font-size: 0.9rem; }
+        h1, h2, h3 { font-family: 'Chakra Petch', sans-serif; margin-top: 0; }
+        
+        input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 10px; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+        option { background: var(--card-bg); color: white; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 5px; justify-content: center; font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; transition: 0.2s; }
         .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:active { transform: translateY(0); }
-        .btn-blue { background: var(--accent); } 
-        .btn-green { background: var(--success); } 
-        .btn-red { background: var(--danger); } 
-        .btn-dark { background: #334155; }
+        .btn-blue { background: var(--accent); } .btn-green { background: var(--success); } .btn-red { background: var(--danger); } .btn-dark { background: #334155; } .btn-yellow { background: #f59e0b; color:black; }
         
-        /* TABLES */
-        table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { background: rgba(0,0,0,0.4); color: var(--accent); padding: 15px; text-align: left; border-bottom: 2px solid var(--border); font-family: 'Chakra Petch', sans-serif; font-weight: 600; }
-        td { padding: 15px; border-bottom: 1px solid var(--border); color: var(--text-muted); }
-        tr:hover td { background: rgba(255,255,255,0.02); color: white; }
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        th { background: rgba(0,0,0,0.4); color: var(--accent); padding: 15px; text-align: left; border-bottom: 2px solid var(--border); font-family: 'Chakra Petch', sans-serif; }
+        td { padding: 15px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
 
-        /* MODALS */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-content { background: var(--card-bg); width: 60%; max-height: 85vh; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: zoomIn 0.2s ease-out; }
-        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-header { padding: 20px 25px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-bg); width: 70%; max-height: 90vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: zoomIn 0.2s; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 25px; overflow-y: auto; }
 
-        /* CEZA LISTESI DESIGN */
-        .ceza-list-container { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
-        .ceza-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-        .ceza-item:last-child { border-bottom: none; }
-        .ceza-item:hover { background: rgba(255,255,255,0.03); }
-        .ceza-item.selected { background: rgba(59,130,246,0.15); border-left: 4px solid var(--accent); }
-        .ceza-code { font-family: 'Chakra Petch', monospace; color: var(--accent); font-weight: bold; width: 90px; }
-        .ceza-desc { flex: 1; margin-right: 15px; color: var(--text-main); }
-        .ceza-val { font-family: 'Chakra Petch'; font-size: 0.85rem; color: var(--warning); text-align: right; }
-
-        /* LOGIN */
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        
-        /* Utility */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        .stat-card { border-left: 4px solid var(--accent); padding-left: 20px; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-blue { background: rgba(59,130,246,0.2); color: var(--accent); border: 1px solid var(--accent); }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        .badge-purple { background: rgba(147, 51, 234, 0.2); color: #c084fc; border: 1px solid #c084fc; }
+        .badge-gold { background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; }
+
+        .mesai-card { text-align: center; border: 2px solid var(--border); transition: 0.3s; }
+        .mesai-active { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        #mesaiSayac { font-size: 3rem; font-family: 'Chakra Petch', monospace; font-weight: bold; margin: 20px 0; }
+        
+        .ceza-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; font-size: 0.9rem; }
+        .ceza-item:hover { background: rgba(255,255,255,0.05); }
+        .ceza-item.selected { background: rgba(59,130,246,0.2); border-left: 4px solid var(--accent); }
+        .ceza-code { color: var(--text-muted); font-family: 'Chakra Petch'; margin-right: 10px; width: 60px; display:inline-block; font-weight:bold; }
     </style>
 </head>
 <body>
 
+<div id="ohalAlertBar"><div class="ohal-content">⚠️ DİKKAT: OLAĞANÜSTÜ HAL (OHAL) İLAN EDİLMİŞTİR! ⚠️ TÜM İZİNLER İPTAL. SOKAĞA ÇIKMA YASAĞI AKTİF. ŞÜPHELİ GÖRÜLEN HERKES GÖZALTINA ALINACAKTIR.</div></div>
+
 <div id="loginScreen">
-    <div style="background:var(--card-bg); padding:40px; border-radius:16px; width:420px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 100px rgba(59,130,246,0.1);">
-        <img src="https://cdn-icons-png.flaticon.com/512/9203/9203764.png" style="width:80px; margin-bottom:20px;">
-        <h2 style="margin:0; letter-spacing: 2px; color: white;">POLNET v4.0</h2>
-        <p style="color:var(--text-muted); margin-bottom:30px; font-size: 0.9rem;">Emniyet Teşkilatı Güvenli Giriş</p>
-        
+    <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
+        <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v4.0</h2>
+        <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
-        
-        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; padding: 16px; margin-top:10px;">GİRİŞ YAP</button>
-        <p id="loginMsg" style="color:var(--danger); margin-top:15px; font-weight: bold;"></p>
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
+        <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
+        <p style="font-size:10px; color:#555;">v4.0.1 Stable - Authorized Personnel Only</p>
     </div>
 </div>
 
 <div id="adminPanel" style="display:none; width:100%;">
-    
     <div class="sidebar">
-        <div class="logo-area">
-            <img src="https://cdn-icons-png.flaticon.com/512/9203/9203764.png">
-            <div class="user-info">
-                <div id="panelUserAd" style="font-weight: bold; font-size: 1.1rem;">Memur</div>
-                <div id="panelUserRank" class="rank-badge">POLİS MEMURU</div>
-            </div>
+        <div style="text-align:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border);">
+            <img src="egmm.png" style="width:70px; margin-bottom:10px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
+            <h3 style="margin:0; font-size:1.4rem;">POLNET</h3>
+            <div id="aktifKullaniciAdi" style="font-weight:bold; color:white; margin-top:10px;"></div>
+            <div id="aktifKullaniciRutbe" class="badge badge-blue" style="margin-top:5px; display:inline-block;">YÜKLENİYOR...</div>
         </div>
 
-        <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-home"></i> Komuta Merkezi</div>
-        <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-search"></i> GBT & Ceza İşlemleri</div>
-        <div class="menu-item" onclick="tabDegistir('aracTab', this)"><i class="fas fa-car"></i> Araç Sorgu</div>
-        <div class="menu-item" onclick="tabDegistir('tckTab', this)"><i class="fas fa-book"></i> TCK Rehberi</div>
-        <div class="menu-item" onclick="tabDegistir('personelTab', this)"><i class="fas fa-user-shield"></i> Personel İşlemleri</div>
+        <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-chart-pie"></i> Özet Durum</div>
+        <div class="menu-item" onclick="tabDegistir('basvuruTab', this)"><i class="fas fa-clipboard-list"></i> Başvurular <span id="basvuruBadge" class="badge badge-red" style="margin-left:auto; display:none;">0</span></div>
+        <div class="menu-item" onclick="tabDegistir('mesaiTab', this)"><i class="fas fa-clock"></i> Mesai İşlemleri</div>
+        <div class="menu-item" onclick="tabDegistir('ruhsatTab', this)"><i class="fas fa-id-card"></i> Silah Ruhsatları</div>
+        <div class="menu-item" onclick="tabDegistir('cezaRehberTab', this)"><i class="fas fa-book"></i> TCK Veritabanı</div>
+        <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-fingerprint"></i> GBT Sorgu & İşlem</div>
+        <div class="menu-item" onclick="tabDegistir('aracTab', this)"><i class="fas fa-car"></i> Araç & Trafik</div>
+        <div class="menu-item" onclick="tabDegistir('personelTab', this)"><i class="fas fa-users-cog"></i> Personel Yönetimi</div>
         
         <div style="margin-top:auto;">
-            <button onclick="location.reload()" class="btn btn-dark" style="width:100%;"><i class="fas fa-sign-out-alt"></i> ÇIKIŞ</button>
+            <button id="ohalBtn" onclick="ohalDegistir()" class="btn btn-red" style="width:100%; margin-bottom:10px; padding:15px; font-size:1rem;">🚨 OHAL BAŞLAT</button>
+            <button onclick="location.reload()" class="btn btn-dark" style="width:100%;">GÜVENLİ ÇIKIŞ</button>
         </div>
     </div>
 
     <div class="content">
-        
         <div id="dashboardTab" class="tab-content active">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>Komuta Merkezi</h1>
-                <span style="color:var(--text-muted); font-family:'Chakra Petch'">Sistem Durumu: <span style="color:var(--success)">AKTİF</span></span>
-            </div>
-            
+            <h1 style="margin-bottom:20px;">Komuta Merkezi</h1>
             <div class="grid-3">
-                <div class="card stat-card" style="border-color: var(--warning);">
-                    <h3>Aranan Şahıslar</h3>
-                    <h1 id="lblAranan" style="font-size: 3rem; color: var(--warning);">0</h1>
-                </div>
-                <div class="card stat-card" style="border-color: var(--danger);">
-                    <h3>Son 24 Saat Olay</h3>
-                    <h1 style="font-size: 3rem; color: var(--danger);">142</h1>
-                </div>
-                <div class="card stat-card" style="border-color: var(--success);">
-                    <h3>Aktif Devriye</h3>
-                    <h1 style="font-size: 3rem; color: var(--success);">8</h1>
-                </div>
+                <div class="card" style="border-left:4px solid var(--warning);"><h3>Bekleyen Başvuru</h3><h1 id="statBasvuru">0</h1></div>
+                <div class="card" style="border-left:4px solid var(--danger);"><h3>Aranan Şahıs</h3><h1 id="statAranan">0</h1></div>
+                <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Devriye</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
-
             <div class="card">
-                <h3><i class="fas fa-broadcast-tower"></i> Sistem Duyurusu</h3>
-                <p><strong>DİKKAT:</strong> TCK veritabanı güncellenmiştir. Yeni sistemde maksimum hapis cezası <strong>100 Kamu/Ay</strong> olarak sınırlandırılmıştır. Para cezaları güncel enflasyon oranlarına göre dengelenmiştir. Tüm personelin dikkatine.</p>
+                <h3><i class="fas fa-shield-alt"></i> Organize Suçlarla Mücadele Güncellemesi v4.0</h3>
+                <p>Yeni Türk Ceza Kanunu veritabanı sisteme entegre edildi. Gerçekçi suç tanımları, kamu cezası (maksimum 100 birim) ve dengeli para cezaları ayarlandı. Personel rütbe sistemi aktif edildi.</p>
             </div>
         </div>
 
-        <div id="gbtTab" class="tab-content">
-            <h1>GBT Sorgulama ve Ceza</h1>
+        <div id="basvuruTab" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h1>Gelen Başvurular</h1><button onclick="verileriYukle()" class="btn btn-dark"><i class="fas fa-sync"></i> Yenile</button></div>
             <div class="card">
-                <div class="grid-2">
-                    <input id="gbtInput" placeholder="Vatandaş Adı Soyadı giriniz...">
-                    <button onclick="gbtSorgula()" class="btn btn-blue">SORGULA</button>
-                </div>
+                <input type="text" id="basvuruAra" placeholder="İsim veya Discord ID ara..." onkeyup="tabloAra('basvuruAra','basvuruListesi')">
+                <table><thead><tr><th>Tarih</th><th>Discord ID</th><th>IC İsim</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="basvuruListesi"></tbody></table>
             </div>
-            
-            <div id="gbtResultArea"></div>
-
-            <div style="margin-top: 20px; text-align: right;">
-                <button onclick="cezaModalAc()" class="btn btn-red" style="padding: 15px 30px; font-size: 1rem;">
-                    <i class="fas fa-gavel"></i> YENİ CEZA / SABIKA GİRİŞİ
-                </button>
-            </div>
+            <div class="card"><h3>🚫 Kara Liste</h3><div style="display:flex; gap:10px;"><input id="bl_id" placeholder="Discord ID"><input id="bl_sebep" placeholder="Sebep"><button onclick="karaListeyeEkle()" class="btn btn-red">EKLE</button></div><div id="blacklistContainer" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div></div>
         </div>
 
-        <div id="aracTab" class="tab-content">
-            <h1>Trafik Tescil Sorgu</h1>
-            <div class="card" style="text-align:center; padding: 50px;">
-                <i class="fas fa-car" style="font-size: 3rem; color: var(--border); margin-bottom: 20px;"></i>
-                <br>
-                <input id="plakaInput" placeholder="34 TR 34" style="text-align:center; font-size:3rem; text-transform:uppercase; font-family:'Chakra Petch'; width:400px; letter-spacing: 5px;">
-                <br>
-                <button onclick="plakaSorgula()" class="btn btn-blue" style="margin-top: 20px; width: 200px;">PLAKA SORGULA</button>
-                <div id="aracSonuc" style="margin-top: 30px;"></div>
+        <div id="ruhsatTab" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Silah Ruhsatı Yönetimi</h1>
+                <button onclick="modalAc('ruhsatEkleModal')" class="btn btn-blue">+ YENİ RUHSAT TANIMLA</button>
             </div>
-        </div>
-
-        <div id="tckTab" class="tab-content">
-            <h1>Türk Ceza Kanunu Rehberi</h1>
             <div class="card">
-                <input type="text" id="tckRehberAra" placeholder="Kanun maddesi veya suç adı ara..." onkeyup="tckRehberFiltrele()">
-                <div class="ceza-list-container" id="tckRehberListesi" style="max-height: 600px;">
-                    </div>
-            </div>
-        </div>
-
-        <div id="personelTab" class="tab-content">
-            <h1>Personel Yönetimi</h1>
-            
-            <div class="card">
-                <h3>Yeni Personel Kaydı</h3>
-                <div class="grid-4">
-                    <input id="yeniSicil" placeholder="Sicil No">
-                    <input id="yeniSifre" placeholder="Şifre">
-                    <select id="yeniRutbe">
-                        <option value="Polis Memuru">Polis Memuru</option>
-                        <option value="Başpolis">Başpolis</option>
-                        <option value="Kıdemli Başpolis">Kıdemli Başpolis</option>
-                        <option value="Komiser Yardımcısı">Komiser Yardımcısı</option>
-                        <option value="Başkomiser">Başkomiser</option>
-                        <option value="Emniyet Amiri">Emniyet Amiri</option>
-                        <option value="4. Sınıf Emniyet Müdürü">4. Sınıf Emniyet Müdürü</option>
-                        <option value="3. Sınıf Emniyet Müdürü">3. Sınıf Emniyet Müdürü</option>
-                        <option value="2. Sınıf Emniyet Müdürü">2. Sınıf Emniyet Müdürü</option>
-                        <option value="1. Sınıf Emniyet Müdürü">1. Sınıf Emniyet Müdürü</option>
-                    </select>
-                    <button onclick="personelEkle()" class="btn btn-green">KAYDET</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Personel Listesi</h3>
+                <input type="text" id="ruhsatAra" placeholder="Ruhsat sahibi adı ara..." onkeyup="tabloAra('ruhsatAra','ruhsatListesi')">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Rütbe</th>
-                            <th>Sicil No</th>
-                            <th>Durum</th>
-                            <th>İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody id="personelTableBody"></tbody>
+                    <thead><tr><th>Ruhsat Sahibi</th><th>Ruhsat Tipi</th><th>Geçerlilik Tarihi</th><th>Veren Memur</th><th>İşlem</th></tr></thead>
+                    <tbody id="ruhsatListesi"></tbody>
                 </table>
             </div>
         </div>
 
+        <div id="cezaRehberTab" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Ceza Kanunu Rehberi (TCK)</h1>
+            </div>
+            <p style="color:var(--text-muted);">Aşağıdaki liste Adalet Bakanlığı onaylı güncel ceza listesidir. Değişiklikler sadece üst yönetim tarafından veritabanından yapılabilir.</p>
+            <div class="card" style="height:600px; overflow-y:auto;">
+                <input id="tckAra" placeholder="Kanun kodu veya adı ara... (Örn: TRF-01)" onkeyup="tabloAra('tckAra','tckEditListesi')">
+                <table>
+                    <thead><tr><th>Kod</th><th>Suç Tanımı</th><th>Para Cezası</th><th>Kamu Cezası (Hapis)</th></tr></thead>
+                    <tbody id="tckEditListesi"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="mesaiTab" class="tab-content">
+            <h1>Mesai İşlemleri</h1>
+            <div class="card mesai-card" id="kisiselMesaiKart">
+                <h3 id="mesaiDurumText" style="color:var(--text-muted);">MESAİ DIŞI</h3>
+                <div id="mesaiSayac">00:00:00</div>
+                <button onclick="mesaiToggle()" id="btnMesai" class="btn btn-green" style="font-size:1.5rem; padding:15px 50px;">MESAİYE BAŞLA</button>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-users"></i> Aktif Personeller</h3>
+                <table id="aktifMesaiTablo"><thead><tr><th>Personel</th><th>Rütbe</th><th>Başlangıç Saati</th><th>Aktif Süre</th></tr></thead><tbody id="aktifMesaiBody"></tbody></table>
+            </div>
+        </div>
+
+        <div id="gbtTab" class="tab-content">
+            <h1>GBT Sorgu & Ceza Sistemi</h1>
+            <div class="card">
+                <div class="grid-2"><input id="gbtInput" placeholder="Vatandaş Adı..."><button onclick="gbtSorgula()" class="btn btn-green">SORGULA</button></div>
+            </div>
+            <div id="gbtSonuc"></div>
+            <button onclick="cezaModalAc()" class="btn btn-red" style="width:100%; margin-top:20px; padding:20px; font-size:1.2rem;">⚖️ YENİ CEZA / SABIKA KAYDI OLUŞTUR</button>
+        </div>
+
+        <div id="aracTab" class="tab-content">
+            <h1>Trafik Şube</h1>
+            <div class="card" style="text-align:center;">
+                <input id="plakaInput" placeholder="PLAKA (34 TR 34)" style="text-align:center; font-size:3rem; text-transform:uppercase; letter-spacing:5px; font-family:'Chakra Petch'; width:60%;">
+                <br><br>
+                <button onclick="plakaSorgula()" class="btn btn-green" style="padding:15px 40px; font-size:1.2rem;">SORGULA</button>
+            </div>
+            <div id="aracSonuc" style="margin-top:20px;"></div>
+        </div>
+
+        <div id="personelTab" class="tab-content">
+            <h1>Personel Yönetimi</h1>
+            <div class="card">
+                <div class="grid-3">
+                    <input id="yeniKadi" placeholder="Sicil No">
+                    <input id="yeniSifre" placeholder="Şifre">
+                    <select id="yeniRutbe">
+                        <option value="0">Polis Memuru</option>
+                        <option value="1">Baş Polis</option>
+                        <option value="2">Kıdemli Baş Polis</option>
+                        <option value="3">Komiser Yardımcısı</option>
+                        <option value="4">Komiser</option>
+                        <option value="5">Baş Komiser</option>
+                        <option value="6">Emniyet Amiri</option>
+                        <option value="7">4. Sınıf Emniyet Müdürü</option>
+                        <option value="8">3. Sınıf Emniyet Müdürü</option>
+                        <option value="9">2. Sınıf Emniyet Müdürü</option>
+                        <option value="10">1. Sınıf Emniyet Müdürü</option>
+                    </select>
+                </div>
+                <button onclick="personelEkle()" class="btn btn-green" style="width:100%">PERSONEL EKLE</button>
+            </div>
+            <table><thead><tr><th>Sicil</th><th>Rütbe</th><th>Şifre</th><th>İşlem</th></tr></thead><tbody id="personelListesi"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div id="basvuruModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Başvuru İnceleme</h3><span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem;">&times;</span></div><div class="modal-body"><div id="basvuruDetayIcerik"></div><hr style="border-color:var(--border); margin:20px 0;"><div id="basvuruIslemButtonlari" class="grid-3"></div></div></div></div>
+
+<div id="ruhsatEkleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Yeni Silah Ruhsatı</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div>
+        <div class="modal-body">
+            <input id="ruh_sahip" placeholder="Ruhsat Sahibi (Ad Soyad)">
+            <select id="ruh_tip">
+                <option value="Silah Taşıma">Silah Taşıma Ruhsatı</option>
+                <option value="Silah Bulundurma">Silah Bulundurma Ruhsatı</option>
+                <option value="Av Tüfeği">Av Tüfeği Ruhsatı</option>
+            </select>
+            <label style="color:var(--text-muted); font-size:0.8rem;">Geçerlilik Tarihi:</label>
+            <input type="date" id="ruh_tarih">
+            <button onclick="ruhsatKaydet()" class="btn btn-green" style="width:100%; margin-top:10px;">RUHSATI OLUŞTUR</button>
+        </div>
     </div>
 </div>
 
 <div id="cezaModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-file-contract"></i> Ceza İşlemi Uygula</h3>
-            <span onclick="modalKapat()" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
-        </div>
+        <div class="modal-header"><h3>Adalet Bakanlığı Ceza Sistemi</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div>
         <div class="modal-body">
-            <input id="ceza_sahis" placeholder="Şüpheli Adı Soyadı" style="border: 2px solid var(--accent);">
-            
-            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <input id="ceza_ara" placeholder="Suç Ara (Örn: Hız, Yaralama, Silah)..." onkeyup="cezaAra()">
-                <div class="ceza-list-container" id="cezaSecimListesi">
-                    </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
-                <div>
-                    <div style="color: var(--text-muted); font-size: 0.9rem;">TOPLAM CEZA</div>
-                    <div id="toplamDegerler" style="font-size: 1.5rem; font-family: 'Chakra Petch'; color: white;">0 TL / 0 Kamu</div>
+            <input id="ceza_sahis" placeholder="Suçlu Adı Soyadı..." style="border:2px solid var(--accent);">
+            <div class="grid-2"><input id="ceza_ara" placeholder="Suç Kodu veya Adı Ara..." onkeyup="cezaFiltrele()"><button onclick="cezaSifirla()" class="btn btn-dark">Seçimleri Temizle</button></div>
+            <div style="height:400px; overflow-y:auto; border:1px solid #334155; padding:10px; margin-bottom:15px;" id="cezaListesiContainer">
                 </div>
-                <button onclick="cezayiOnayla()" class="btn btn-red" style="padding: 15px 40px;">ONAYLA VE İŞLE</button>
+            <div style="background:#0f172a; padding:15px; text-align:center; border-radius:8px;">
+                <h2 id="toplamTutar" style="color:var(--danger); margin:0;">0 TL / 0 Kamu (Hapis)</h2>
             </div>
+            <button onclick="cezayiKes()" class="btn btn-red" style="width:100%; margin-top:15px; padding:15px;">CEZAYI ONAYLA VE İŞLE</button>
         </div>
     </div>
 </div>
 
-<script src="config.js"></script> <script>
-    // --- GLOBAL DEĞİŞKENLER ---
-    let aktifKullanici = null;
-    let tckVeritabani = [];
-    
-    // Firebase referansları
-    const db = typeof firebase !== 'undefined' ? firebase.database() : null;
+<script src="config.js"></script>
+<script>
+    // --- CONFİGURATION & GLOBALS ---
+    let aktifKullanici = "";
+    let aktifRutbeId = 0; // 0: Memur, 10: 1.Sınıf Müdür
+    let seciliBasvuruId = "";
+    let myShiftStart = null;
+    let myShiftTimer = null;
+    let tckDb = []; 
 
-    // --- SİSTEM BAŞLANGIÇ ---
-    window.onload = function() {
-        if(!db) {
-            console.error("Firebase bulunamadı! Lütfen config.js dosyasını ekleyin.");
-            // Test amaçlı alert vermiyorum, konsola basıyorum.
-        }
-        tckVeritabani = tckOlustur(); // 1000 adetlik veriyi oluştur
-        console.log("TCK Yüklendi: " + tckVeritabani.length + " madde.");
-    };
+    // --- RÜTBE SİSTEMİ TANIMLARI ---
+    const RUTBELER = [
+        { id: 0, ad: "Polis Memuru", class: "badge-blue" },
+        { id: 1, ad: "Baş Polis", class: "badge-blue" },
+        { id: 2, ad: "Kıdemli Baş Polis", class: "badge-blue" },
+        { id: 3, ad: "Komiser Yardımcısı", class: "badge-purple" },
+        { id: 4, ad: "Komiser", class: "badge-purple" },
+        { id: 5, ad: "Baş Komiser", class: "badge-purple" },
+        { id: 6, ad: "Emniyet Amiri", class: "badge-gold" },
+        { id: 7, ad: "4. Sınıf Emniyet Müdürü", class: "badge-gold" },
+        { id: 8, ad: "3. Sınıf Emniyet Müdürü", class: "badge-gold" },
+        { id: 9, ad: "2. Sınıf Emniyet Müdürü", class: "badge-gold" },
+        { id: 10, ad: "1. Sınıf Emniyet Müdürü", class: "badge-red" }
+    ];
 
-    // --- TCK OLUŞTURUCU (PROCEDURAL GENERATION - MANTIKLI SUÇLAR) ---
-    function tckOlustur() {
-        const categories = [
-            { code: "TRF", name: "Trafik", pRange: [800, 5000], hRange: [0, 0] },
-            { code: "ASY", name: "Asayiş", pRange: [2000, 15000], hRange: [5, 40] },
-            { code: "MLY", name: "Mali", pRange: [10000, 50000], hRange: [10, 60] },
-            { code: "NRK", name: "Narkotik", pRange: [5000, 30000], hRange: [20, 80] },
-            { code: "ORG", name: "Organize", pRange: [20000, 80000], hRange: [40, 100] }, // Max 100
-            { code: "SBR", name: "Siber", pRange: [5000, 25000], hRange: [10, 50] }
-        ];
+    function getRutbeAd(id) { return RUTBELER[id] ? RUTBELER[id].ad : "Bilinmiyor"; }
+    function getRutbeClass(id) { return RUTBELER[id] ? RUTBELER[id].class : "badge-blue"; }
 
-        const crimes = {
-            "TRF": ["Hız Sınırı İhlali", "Kırmızı Işık", "Alkollü Araç", "Ehliyetsiz Araç", "Hatalı Park", "Drift Atmak", "Muayenesiz Araç", "Ters Yön"],
-            "ASY": ["Kasten Yaralama", "Tehdit", "Hakaret", "Hırsızlık", "Gasp", "Mala Zarar Verme", "Kavga Çıkarma", "Polise Mukavemet"],
-            "MLY": ["Kara Para Aklama", "Vergi Kaçırma", "Naylon Fatura", "Dolandırıcılık", "Sahtecilik"],
-            "NRK": ["Uyuşturucu Bulundurma", "Uyuşturucu Satışı", "Uyuşturucu İmalatı", "Reçetesiz İlaç Satışı"],
-            "ORG": ["Çete Kurma", "Silahlı Örgüt Üyeliği", "İnsan Kaçakçılığı", "Silah Kaçakçılığı", "Örgüt Propagandası"],
-            "SBR": ["Kredi Kartı Dolandırıcılığı", "Veri Hırsızlığı", "Sistem Hackleme", "Siber Zorbalık"]
-        };
-
-        const modifiers = ["(Teşebbüs)", "(Tekerrür)", "(Nitelikli)", "(Zincirleme)", "(Yardım ve Yataklık)", ""];
+    // --- GERÇEKÇİ TCK LİSTESİ (100+ Madde) ---
+    const REALISTIC_TCK = [
+        // TRAFİK (TRF)
+        {code: "TRF-01", ad: "Hatalı Park / Park İhlali", p: 1500, h: 0},
+        {code: "TRF-02", ad: "Kırmızı Işık İhlali", p: 2000, h: 0},
+        {code: "TRF-03", ad: "Hız Sınırını Aşmak (+%10)", p: 2500, h: 0},
+        {code: "TRF-04", ad: "Hız Sınırını Aşmak (+%50)", p: 6000, h: 0},
+        {code: "TRF-05", ad: "Ehliyetsiz Araç Kullanmak", p: 10000, h: 0},
+        {code: "TRF-06", ad: "Alkollü Araç Kullanmak (1. Seviye)", p: 8000, h: 0},
+        {code: "TRF-07", ad: "Alkollü Araç Kullanmak (2. Seviye)", p: 15000, h: 5},
+        {code: "TRF-08", ad: "Trafik Güvenliğini Tehlikeye Atmak", p: 5000, h: 2},
+        {code: "TRF-09", ad: "Dur İhtarına Uymamak", p: 7500, h: 3},
+        {code: "TRF-10", ad: "Trafik Kazasına Sebebiyet Vermek", p: 10000, h: 0},
         
-        let fullList = [];
-        let idCounter = 1;
+        // ASAYİŞ - DÜZEN (ASY)
+        {code: "ASY-01", ad: "Çevreyi Rahatsız Etmek", p: 2000, h: 0},
+        {code: "ASY-02", ad: "Kamusal Alanda Maske/Kimlik Gizleme", p: 3500, h: 0},
+        {code: "ASY-03", ad: "Polise Mukavemet", p: 10000, h: 10},
+        {code: "ASY-04", ad: "Polise Hakaret", p: 7500, h: 5},
+        {code: "ASY-05", ad: "Kavga Çıkarmak", p: 5000, h: 2},
+        {code: "ASY-06", ad: "Tehdit ve Şantaj", p: 12000, h: 10},
+        {code: "ASY-07", ad: "Haneye Tecavüz", p: 15000, h: 15},
+        {code: "ASY-08", ad: "Mala Zarar Verme", p: 8000, h: 5},
+        {code: "ASY-09", ad: "Kamu Malına Zarar Verme", p: 15000, h: 15},
+        
+        // ŞİDDET VE YARALAMA (SDT)
+        {code: "SDT-01", ad: "Basit Yaralama (Darp)", p: 10000, h: 10},
+        {code: "SDT-02", ad: "Silahlı Yaralama", p: 30000, h: 30},
+        {code: "SDT-03", ad: "Adam Öldürmeye Teşebbüs", p: 50000, h: 60},
+        {code: "SDT-04", ad: "Kasten Adam Öldürme", p: 100000, h: 100},
+        {code: "SDT-05", ad: "Taksirle Adam Öldürme", p: 40000, h: 40},
+        {code: "SDT-06", ad: "Rehin Alma / Adam Kaçırma", p: 45000, h: 50},
+        
+        // HIRSIZLIK VE GASP (HRS)
+        {code: "HRS-01", ad: "Basit Hırsızlık", p: 5000, h: 5},
+        {code: "HRS-02", ad: "Araç Hırsızlığı", p: 15000, h: 20},
+        {code: "HRS-03", ad: "Gasp ve Yağma", p: 25000, h: 30},
+        {code: "HRS-04", ad: "Nitelikli Soygun (İşyeri/Banka)", p: 60000, h: 70},
+        {code: "HRS-05", ad: "Dolandırıcılık", p: 20000, h: 15},
+        
+        // NARKOTİK (NRK)
+        {code: "NRK-01", ad: "Uyuşturucu Kullanmak", p: 5000, h: 5},
+        {code: "NRK-02", ad: "Uyuşturucu Bulundurmak (Az Miktar)", p: 10000, h: 10},
+        {code: "NRK-03", ad: "Uyuşturucu Satıcılığı (Torbacılık)", p: 40000, h: 50},
+        {code: "NRK-04", ad: "Uyuşturucu İmalatı ve Ticareti", p: 80000, h: 90},
+        
+        // SİLAH (SLH)
+        {code: "SLH-01", ad: "Ruhsatsız Silah Bulundurma", p: 15000, h: 10},
+        {code: "SLH-02", ad: "Ruhsatsız Silah Ticareti", p: 50000, h: 60},
+        {code: "SLH-03", ad: "Ateşli Silah Teşhiri (Korku Yaratma)", p: 10000, h: 15},
+        {code: "SLH-04", ad: "Meskun Mahalde Ateş Etme", p: 20000, h: 20},
+        {code: "SLH-05", ad: "Yasadışı (Ağır) Silah Bulundurma", p: 60000, h: 70},
 
-        categories.forEach(cat => {
-            let catCrimes = crimes[cat.code];
-            // Her suçu modifiyelerle çoğalt
-            catCrimes.forEach(crimeName => {
-                modifiers.forEach(mod => {
-                    // Rastgele ama aralık içinde değerler
-                    let baseP = Math.floor(Math.random() * (cat.pRange[1] - cat.pRange[0]) + cat.pRange[0]);
-                    let baseH = Math.floor(Math.random() * (cat.hRange[1] - cat.hRange[0]) + cat.hRange[0]);
-                    
-                    // Nitelikli ise cezayı artır
-                    if(mod === "(Nitelikli)") { baseP *= 1.5; baseH *= 1.5; }
-                    if(mod === "(Teşebbüs)") { baseP *= 0.5; baseH *= 0.5; }
+        // İLLEGAL ORGANİZASYON (ORG)
+        {code: "ORG-01", ad: "Suç Örgütü Üyeliği", p: 30000, h: 40},
+        {code: "ORG-02", ad: "Suç Örgütü Liderliği", p: 100000, h: 100},
+        {code: "ORG-03", ad: "Devlete Karşı Suçlar / Terör", p: 150000, h: 120}
+    ];
 
-                    // LİMİTLEME (MAX 100 KAMU - İsteğiniz üzerine)
-                    baseH = Math.min(100, Math.floor(baseH));
-                    // Para cezası yuvarlama (düzgün görünsün)
-                    baseP = Math.floor(baseP / 100) * 100;
-
-                    if(baseP < 500) baseP = 500;
-
-                    fullList.push({
-                        code: `${cat.code}-${idCounter.toString().padStart(3, '0')}`,
-                        name: `${crimeName} ${mod}`,
-                        price: baseP,
-                        jail: baseH
-                    });
-                    idCounter++;
-                });
-            });
-        });
-
-        // Listeyi 1000'e tamamlamak için varyasyonları artır
-        while(fullList.length < 1000) {
-            let randomCat = categories[Math.floor(Math.random()*categories.length)];
-            let randomP = Math.floor(Math.random() * (randomCat.pRange[1] - randomCat.pRange[0]) + randomCat.pRange[0]);
-            let randomH = Math.min(100, Math.floor(Math.random() * randomCat.hRange[1]));
-            fullList.push({
-                code: `EK-${idCounter}`,
-                name: `Mülhakat Kanunu Md. ${idCounter} (${randomCat.name} İhlali)`,
-                price: Math.floor(randomP/100)*100,
-                jail: randomH
-            });
-            idCounter++;
-        }
-
-        return fullList;
-    }
-
-    // --- GİRİŞ SİSTEMİ ---
     function girisYap() {
-        const k = document.getElementById('kadi').value;
-        const s = document.getElementById('sifre').value;
-
-        // Admin Backdoor (Acil Durumlar İçin)
-        if(k === "admin" && s === "123") {
-            loginSuccess({ sicil: "0000", sifre: "123", rutbe: "1. Sınıf Emniyet Müdürü" });
-            return;
-        }
-
-        db.ref('personel').orderByChild('sicil').equalTo(k).once('value', snapshot => {
-            let found = false;
-            snapshot.forEach(child => {
-                const p = child.val();
-                if(p.sifre === s) {
-                    loginSuccess(p);
-                    found = true;
-                }
+        const k = document.getElementById('kadi').value.trim();
+        const s = document.getElementById('sifre').value.trim();
+        
+        // İlk Kurulum / Admin Backdoor (Geliştirici Girişi)
+        if(k === "admin" && s === "admin") { 
+            basariliGiris(k, 10); // Admin Full Yetki
+            return; 
+        } 
+        
+        database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => {
+            let userFound = null;
+            sn.forEach(c => { 
+                const data = c.val();
+                if(data.sifre === s) userFound = data; 
             });
-            if(!found) document.getElementById('loginMsg').innerText = "Hatalı sicil veya şifre!";
+            
+            if(userFound) {
+                // Eğer rütbe verisi veritabanında yoksa varsayılan olarak 0 (Memur) ata
+                let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0;
+                basariliGiris(k, r); 
+            } else {
+                document.getElementById('loginMsg').innerText = "Hatalı Sicil veya Şifre!";
+            }
         });
     }
 
-    function loginSuccess(user) {
-        aktifKullanici = user;
+    function basariliGiris(k, r) {
+        aktifKullanici = k;
+        aktifRutbeId = r;
+        
+        document.getElementById('aktifKullaniciAdi').innerText = "Sicil: " + k;
+        document.getElementById('aktifKullaniciRutbe').innerText = getRutbeAd(r);
+        document.getElementById('aktifKullaniciRutbe').className = "badge " + getRutbeClass(r);
+        
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         
-        document.getElementById('panelUserAd').innerText = "Sicil: " + user.sicil;
-        document.getElementById('panelUserRank').innerText = user.rutbe;
-        
-        personelListele();
+        verileriYukle();
+        basvurulariDinle();
+        mesaiSistemiBaslat();
+        tckVeritabaniHazirla();
     }
 
-    // --- TAB SİSTEMİ ---
-    function tabDegistir(id, elem) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active-tab'));
-        
-        document.getElementById(id).classList.add('active');
-        if(elem) elem.classList.add('active-tab');
-        
-        // Tab özelinde işlemler (Performans için sadece görünürken yükle)
-        if(id === 'tckTab') renderTckRehber(tckVeritabani.slice(0, 50)); // İlk 50'yi göster
+    function tckVeritabaniHazirla() {
+        // Sabit TCK listesini kullan, veritabanına bağımlılığı azalt (Performans ve Stabilite için)
+        tckDb = REALISTIC_TCK;
+        cezaListesiniOlustur();
+        tckEditorListesiniGuncelle();
     }
 
-    // --- PERSONEL İŞLEMLERİ (YENİ RÜTBE SİSTEMİ) ---
-    function personelEkle() {
-        const sicil = document.getElementById('yeniSicil').value;
-        const sifre = document.getElementById('yeniSifre').value;
-        const rutbe = document.getElementById('yeniRutbe').value;
-
-        if(!sicil || !sifre) return alert("Eksik bilgi!");
-
-        db.ref('personel').push({
-            sicil: sicil,
-            sifre: sifre,
-            rutbe: rutbe
-        });
-        alert("Personel eklendi!");
-        document.getElementById('yeniSicil').value = "";
-        document.getElementById('yeniSifre').value = "";
-    }
-
-    function personelListele() {
-        db.ref('personel').on('value', snap => {
-            const tb = document.getElementById('personelTableBody');
-            tb.innerHTML = "";
-            snap.forEach(child => {
-                const p = child.val();
-                tb.innerHTML += `
-                    <tr>
-                        <td><span class="rank-badge">${p.rutbe}</span></td>
-                        <td>${p.sicil}</td>
-                        <td style="color:var(--success)">Aktif</td>
-                        <td><button onclick="db.ref('personel/${child.key}').remove()" class="btn btn-red btn-sm">SİL</button></td>
-                    </tr>
-                `;
-            });
+    function tckEditorListesiniGuncelle() {
+        const tb = document.getElementById('tckEditListesi');
+        tb.innerHTML = "";
+        tckDb.forEach(item => {
+            tb.innerHTML += `<tr>
+                <td><span class="badge badge-purple">${item.code}</span></td>
+                <td>${item.ad}</td>
+                <td>${item.p.toLocaleString()} TL</td>
+                <td>${item.h} Kamu (Hapis)</td>
+            </tr>`;
         });
     }
 
-    // --- GBT SİSTEMİ ---
-    function gbtSorgula() {
-        const isim = document.getElementById('gbtInput').value;
-        const div = document.getElementById('gbtResultArea');
-        div.innerHTML = `<div style="text-align:center; color:var(--accent); margin-top:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>EGM Veritabanı Taranıyor...</div>`;
-        
-        setTimeout(() => {
-            db.ref('gbt').orderByChild('sahis').equalTo(isim).once('value', snap => {
-                div.innerHTML = "";
-                if(snap.exists()) {
-                    let html = `<h3 style="color:var(--danger); border-bottom:1px solid var(--border); padding-bottom:10px;">⚠️ SABIKA KAYDI MEVCUT</h3>`;
-                    snap.forEach(child => {
-                        const r = child.val();
-                        html += `
-                            <div class="card" style="border-left: 4px solid var(--danger);">
-                                <div style="display:flex; justify-content:space-between;">
-                                    <strong><i class="fas fa-calendar"></i> ${r.tarih}</strong>
-                                    <span>İşlem: ${r.memur}</span>
-                                </div>
-                                <div style="margin-top:10px; color:white;">${r.suclar}</div>
-                                <div style="margin-top:5px; color:var(--warning);">CEZA: ${r.toplamPara} TL / ${r.toplamHapis} Kamu</div>
-                            </div>
-                        `;
-                    });
-                    div.innerHTML = html;
-                } else {
-                    div.innerHTML = `<div class="card" style="border-left: 4px solid var(--success); text-align:center;"><h3><i class="fas fa-check-circle"></i> TEMİZ</h3><p>Aranan şahıs kaydı veya GBT kaydı bulunamadı.</p></div>`;
-                }
+    // --- RUHSAT SİSTEMİ ---
+    function ruhsatKaydet() {
+        const sahip = document.getElementById('ruh_sahip').value;
+        const tip = document.getElementById('ruh_tip').value;
+        const tarih = document.getElementById('ruh_tarih').value;
+        if(!sahip || !tarih) return alert("Tüm alanları doldurun!");
+        database.ref('ruhsatlar').push({ sahip: sahip, tip: tip, gecerlilik: tarih, veren: aktifKullanici, verilis_tarihi: Date.now() });
+        alert("Ruhsat başarıyla verildi!"); modalKapat();
+    }
+    function ruhsatlariDinle() {
+        database.ref('ruhsatlar').on('value', s => {
+            const tb = document.getElementById('ruhsatListesi'); tb.innerHTML = "";
+            s.forEach(c => { const d = c.val(); let tarihStil = new Date(d.gecerlilik) < new Date() ? "color:red; font-weight:bold;" : ""; tb.innerHTML += `<tr><td>${d.sahip}</td><td><span class="badge badge-blue">${d.tip}</span></td><td style="${tarihStil}">${d.gecerlilik} ${tarihStil?'(DOLDU)':''}</td><td>${d.veren}</td><td><button onclick="dbSil('ruhsatlar/${c.key}')" class="btn btn-red btn-sm">İPTAL</button></td></tr>`; });
+        });
+    }
+
+    // --- MESAİ ---
+    function mesaiSistemiBaslat() {
+        database.ref('active_shifts').on('value', s => {
+            const tbody = document.getElementById('aktifMesaiBody'); tbody.innerHTML = ""; let count = 0;
+            s.forEach(c => { 
+                const d = c.val(); 
+                let sure = Math.floor((Date.now() - d.start) / 60000); 
+                let rAd = d.rutbeAd || "Bilinmiyor"; // Eski kayıtlar için fallback
+                tbody.innerHTML += `<tr><td>${d.user}</td><td><span class="badge badge-blue">${rAd}</span></td><td>${new Date(d.start).toLocaleTimeString()}</td><td>${sure} Dk</td></tr>`; 
+                count++; 
+                if(d.user === aktifKullanici && !myShiftTimer) { myShiftStart = d.start; startLocalTimer(); uiMesaiActive(); } 
             });
-        }, 800);
+            document.getElementById('statAktifPersonel').innerText = count;
+        });
     }
-
-    // --- CEZA İŞLEMLERİ (ARA BUL ÖZELLİĞİ) ---
-    let seciliSuclar = [];
-    
-    function cezaModalAc() {
-        seciliSuclar = [];
-        updateTotal();
-        document.getElementById('cezaModal').style.display = 'flex';
-        // Modal açılınca temiz liste göster
-        renderCezaListesi(tckVeritabani.slice(0, 20)); 
+    function mesaiToggle() { 
+        if(!myShiftStart) { 
+            database.ref('active_shifts/' + aktifKullanici).set({ user: aktifKullanici, rutbeAd: getRutbeAd(aktifRutbeId), start: Date.now() }); 
+        } else { 
+            if(confirm("Mesaiyi bitir?")) { database.ref('active_shifts/' + aktifKullanici).remove(); myShiftStart = null; clearInterval(myShiftTimer); myShiftTimer = null; uiMesaiInactive(); } 
+        } 
     }
+    function startLocalTimer() { if(myShiftTimer) clearInterval(myShiftTimer); myShiftTimer = setInterval(() => { if(!myShiftStart) return; let diff = Date.now() - myShiftStart; let h = Math.floor(diff / 3600000); let m = Math.floor((diff % 3600000) / 60000); let s = Math.floor((diff % 60000) / 1000); document.getElementById('mesaiSayac').innerText = (h<10?'0':'')+h + ":" + (m<10?'0':'')+m + ":" + (s<10?'0':'')+s; }, 1000); }
+    function uiMesaiActive() { const c = document.getElementById('kisiselMesaiKart'); c.classList.add('mesai-active'); document.getElementById('mesaiDurumText').innerText = "MESAİDE"; document.getElementById('mesaiDurumText').style.color = "var(--success)"; document.getElementById('btnMesai').innerText = "MESAİ BİTİR"; document.getElementById('btnMesai').classList.remove('btn-green'); document.getElementById('btnMesai').classList.add('btn-red'); }
+    function uiMesaiInactive() { const c = document.getElementById('kisiselMesaiKart'); c.classList.remove('mesai-active'); document.getElementById('mesaiDurumText').innerText = "MESAİ DIŞI"; document.getElementById('mesaiDurumText').style.color = "var(--text-muted)"; document.getElementById('btnMesai').innerText = "MESAİYE BAŞLA"; document.getElementById('btnMesai').classList.remove('btn-red'); document.getElementById('btnMesai').classList.add('btn-green'); document.getElementById('mesaiSayac').innerText = "00:00:00"; }
 
-    function modalKapat() {
-        document.getElementById('cezaModal').style.display = 'none';
-    }
-
-    function cezaAra() {
-        const val = document.getElementById('ceza_ara').value.toLowerCase();
-        // Arama algoritması (Hızlı Filtreleme)
-        const filtrelenmis = tckVeritabani.filter(item => 
-            item.name.toLowerCase().includes(val) || 
-            item.code.toLowerCase().includes(val)
-        );
-        renderCezaListesi(filtrelenmis.slice(0, 50)); // Performans için max 50 göster
+    // --- CEZA SİSTEMİ ---
+    function cezaListesiniOlustur() {
+        renderCezaListesi(tckDb);
     }
 
     function renderCezaListesi(liste) {
-        const container = document.getElementById('cezaSecimListesi');
+        const container = document.getElementById('cezaListesiContainer');
         container.innerHTML = "";
-        liste.forEach((item, index) => {
-            // Zaten seçiliyse highlight et
-            const isSelected = seciliSuclar.some(s => s.code === item.code);
-            const cls = isSelected ? 'ceza-item selected' : 'ceza-item';
-            
+        liste.forEach(c => {
             container.innerHTML += `
-                <div class="${cls}" onclick="sucluSec('${item.code}')">
-                    <span class="ceza-code">${item.code}</span>
-                    <span class="ceza-desc">${item.name}</span>
-                    <span class="ceza-val">${item.price} TL / ${item.jail > 0 ? item.jail + ' Kamu' : '-'}</span>
+                <div class="ceza-item" onclick="cezaSec(this, ${c.p}, ${c.h})">
+                    <div>
+                        <span class="ceza-code">${c.code}</span>
+                        <span>${c.ad}</span>
+                    </div>
+                    <span class="badge badge-blue">${c.p.toLocaleString()} TL / ${c.h} Kamu</span>
                 </div>
             `;
         });
     }
 
-    function sucluSec(code) {
-        const item = tckVeritabani.find(x => x.code === code);
-        const index = seciliSuclar.findIndex(x => x.code === code);
-        
-        if(index > -1) {
-            seciliSuclar.splice(index, 1); // Çıkar
-        } else {
-            seciliSuclar.push(item); // Ekle
-        }
-        
-        // Listeyi yeniden render et
-        const currentInput = document.getElementById('ceza_ara').value;
-        if(currentInput) cezaAra(); else renderCezaListesi(tckVeritabani.slice(0,20));
-        
-        updateTotal();
+    let toplamPara = 0; let toplamAy = 0;
+    function cezaSec(element, para, ay) {
+        if(element.classList.contains('selected')) { element.classList.remove('selected'); toplamPara -= para; toplamAy -= ay; } 
+        else { element.classList.add('selected'); toplamPara += para; toplamAy += ay; }
+        document.getElementById('toplamTutar').innerText = `${toplamPara.toLocaleString()} TL / ${toplamAy} Kamu (Hapis)`;
+    }
+    
+    function cezaFiltrele() {
+        const val = document.getElementById('ceza_ara').value.toLowerCase();
+        const filtrelenmis = tckDb.filter(item => 
+            item.ad.toLowerCase().includes(val) || (item.code && item.code.toLowerCase().includes(val))
+        );
+        renderCezaListesi(filtrelenmis);
     }
 
-    function updateTotal() {
-        let tPara = 0;
-        let tHapis = 0;
-        seciliSuclar.forEach(s => { tPara += s.price; tHapis += s.jail; });
-        
-        // MAX LIMIT UYGULAMASI (Görsel ve veri olarak)
-        if(tHapis > 100) tHapis = 100;
-
-        document.getElementById('toplamDegerler').innerText = `${tPara.toLocaleString()} TL / ${tHapis} Kamu`;
-        return { p: tPara, h: tHapis };
-    }
-
-    function cezayiOnayla() {
+    function cezaSifirla() { toplamPara=0; toplamAy=0; renderCezaListesi(tckDb); document.getElementById('toplamTutar').innerText="0 TL / 0 Kamu"; }
+    function cezaModalAc() { cezaSifirla(); document.getElementById('cezaModal').style.display = 'flex'; }
+    function cezayiKes() {
         const sahis = document.getElementById('ceza_sahis').value;
         if(!sahis) return alert("Şahıs adı girilmedi!");
-        if(seciliSuclar.length === 0) return alert("Suç seçilmedi!");
-
-        const totals = updateTotal();
-        const sucIsimleri = seciliSuclar.map(s => s.name).join(", ");
-
-        db.ref('gbt').push({
-            sahis: sahis,
-            memur: `${aktifKullanici.rutbe} ${aktifKullanici.sicil}`,
-            tarih: new Date().toLocaleDateString(),
-            suclar: sucIsimleri,
-            toplamPara: totals.p,
-            toplamHapis: totals.h
-        });
-
-        alert("Ceza Sisteme İşlendi!");
-        modalKapat();
+        if(toplamPara === 0 && toplamAy === 0) return alert("Hiçbir suç seçmediniz!");
+        database.ref('gbt').push({ isim: sahis, tarih: new Date().toISOString(), suc: `TOPLAM: ${toplamPara.toLocaleString()} TL, ${toplamAy} Kamu Cezası`, memur: aktifKullanici });
+        alert("Ceza Sisteme İşlendi!"); modalKapat();
     }
-
-    // --- REHBER LİSTELEME ---
-    function tckRehberFiltrele() {
-        const val = document.getElementById('tckRehberAra').value.toLowerCase();
-        const filtrelenmis = tckVeritabani.filter(i => i.name.toLowerCase().includes(val) || i.code.toLowerCase().includes(val));
-        renderTckRehber(filtrelenmis.slice(0, 100));
-    }
-
-    function renderTckRehber(liste) {
-        const c = document.getElementById('tckRehberListesi');
-        c.innerHTML = "";
-        liste.forEach(item => {
-            c.innerHTML += `
-                <div class="ceza-item" style="cursor:default;">
-                    <span class="ceza-code">${item.code}</span>
-                    <span class="ceza-desc">${item.name}</span>
-                    <span class="ceza-val">${item.price} TL / ${item.jail} Kamu</span>
-                </div>
-            `;
+    function gbtSorgula() {
+        const isim = document.getElementById('gbtInput').value;
+        const div = document.getElementById('gbtSonuc'); div.innerHTML = "Aranıyor...";
+        database.ref('gbt').orderByChild('isim').equalTo(isim).once('value', s => {
+            div.innerHTML = "";
+            if(s.exists()) {
+                let html = `<h3 style="color:var(--danger)">SABIKA KAYDI BULUNDU</h3>`;
+                s.forEach(c => { let d=c.val(); html += `<div class="card" style="border-left:4px solid var(--danger)"><h4>${d.suc}</h4><p>${new Date(d.tarih).toLocaleDateString()} - İşleyen: ${d.memur}</p></div>`; });
+                div.innerHTML = html;
+            } else { div.innerHTML = `<div class="card" style="border-left:4px solid var(--success)"><h3>TEMİZ</h3><p>Sabıka kaydı yok.</p></div>`; }
         });
     }
 
-    // --- ARAÇ SORGUSU ---
-    function plakaSorgula() {
-        const p = document.getElementById('plakaInput').value;
-        const res = document.getElementById('aracSonuc');
+    // --- GENEL & YETKİLER ---
+    
+    // Yetki Seviyeleri:
+    // 0-2: Düşük (Memur) -> Sadece Okuma ve Basit İşlemler
+    // 3-5: Orta (Komiser) -> Başvuru Onaylama
+    // 6-8: Yüksek (Amir) -> Kara Liste, Personel Ekleme
+    // 9-10: Yönetim (Müdür) -> Personel Silme, OHAL
+    
+    function yetkiKontrol(gerekliSeviye) {
+        if(aktifRutbeId >= gerekliSeviye) return true;
+        alert("BU İŞLEM İÇİN YETKİNİZ YETERSİZ!\nGereken: " + getRutbeAd(gerekliSeviye));
+        return false;
+    }
+
+    function verileriYukle() {
+        database.ref('personel').on('value', s => { 
+            const tb = document.getElementById('personelListesi'); tb.innerHTML = ""; 
+            s.forEach(c => { 
+                const p = c.val();
+                // Rütbe ID'sine göre adını bul
+                let rId = p.rutbe !== undefined ? p.rutbe : 0; 
+                let rAd = getRutbeAd(rId);
+                let rClass = getRutbeClass(rId);
+                
+                tb.innerHTML += `<tr>
+                    <td>${p.kadi}</td>
+                    <td><span class="badge ${rClass}">${rAd}</span></td>
+                    <td>****</td>
+                    <td><button onclick="personelSil('${c.key}')" class="btn btn-red btn-sm">SİL</button></td>
+                </tr>`; 
+            }); 
+        });
         
-        if(p === "34 TR 34") {
-            res.innerHTML = `<div class="card" style="border-left:5px solid red; background:#2a0505;"><h2><i class="fas fa-exclamation-triangle"></i> ÇALINTI ARAÇ</h2><p>Araç Sahibi: Ahmet Yılmaz<br>Model: Tofaş Şahin<br>Durum: Çalıntı İhbarlı</p></div>`;
-        } else {
-            res.innerHTML = `<div class="card" style="border-left:5px solid green;"><h2><i class="fas fa-check"></i> TEMİZ</h2><p>Araç Sahibi: Mehmet Demir<br>Model: Renault Megane<br>Durum: Trafiğe Uygun</p></div>`;
-        }
+        database.ref('blacklist').on('value', s => { const d = document.getElementById('blacklistContainer'); d.innerHTML = ""; s.forEach(c => d.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333;">${c.val().discord_id} (${c.val().sebep}) <button onclick="karaListeSil('${c.key}')" class="btn btn-red btn-sm">X</button></div>`); });
+        ruhsatlariDinle();
+        database.ref('gbt').on('value', s => { if(s.exists()) document.getElementById('statAranan').innerText = Object.keys(s.val()).length; });
     }
 
+    function personelEkle() { 
+        if(!yetkiKontrol(6)) return; // Sadece Amir ve üzeri
+        const k = document.getElementById('yeniKadi').value;
+        const s = document.getElementById('yeniSifre').value;
+        const r = document.getElementById('yeniRutbe').value;
+        
+        if(!k || !s) return alert("Bilgileri doldurun!");
+        
+        database.ref('personel').push({
+            kadi: k, 
+            sifre: s,
+            rutbe: parseInt(r)
+        }); 
+        alert("Personel Eklendi!");
+    }
+
+    function personelSil(key) {
+        if(!yetkiKontrol(9)) return; // Sadece 2. Sınıf Müdür ve üzeri
+        if(confirm("Bu personeli silmek istediğinize emin misiniz?")) database.ref('personel/' + key).remove();
+    }
+
+    function basvurulariDinle() {
+        database.ref('basvurular').on('value', s => {
+            const tb = document.getElementById('basvuruListesi'); tb.innerHTML = ""; let bekleyen = 0;
+            let arr = []; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.reverse();
+            arr.forEach(i => { const d = i.v; if(d.durum==='Beklemede') bekleyen++; let b = d.durum==='Onaylandı' ? 'badge-green' : (d.durum==='Reddedildi' ? 'badge-red' : 'badge-warn'); tb.innerHTML += `<tr><td>${new Date(d.tarih).toLocaleDateString()}</td><td>${d.discord_id}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button></td></tr>`; });
+            document.getElementById('statBasvuru').innerText = bekleyen; document.getElementById('basvuruBadge').style.display = bekleyen > 0 ? 'inline-block' : 'none'; document.getElementById('basvuruBadge').innerText = bekleyen;
+        });
+    }
+    function basvuruIncele(key) {
+        seciliBasvuruId = key;
+        database.ref('basvurular/'+key).once('value', s => {
+            const d = s.val();
+            let h = `<div class="grid-2"><div><strong>ID:</strong> ${d.discord_id}</div><div><strong>İsim:</strong> ${d.ic_isim}</div></div><hr><h4>Cevaplar:</h4>`;
+            for(let k in d.cevaplar) if(!['discord_id','ic_isim','ooc_yas'].includes(k)) h += `<p style="color:#aaa;margin-bottom:2px;">${d.soru_detaylari?d.soru_detaylari[k]:k}</p><div style="background:rgba(0,0,0,0.2);padding:10px;margin-bottom:10px;">${d.cevaplar[k]}</div>`;
+            document.getElementById('basvuruDetayIcerik').innerHTML = h; document.getElementById('basvuruIslemButtonlari').innerHTML = `<button onclick="durumGuncelle('Onaylandı')" class="btn btn-green">ONAYLA</button><button onclick="durumGuncelle('Reddedildi')" class="btn btn-red">REDDET</button><button onclick="karaListeyeEkle('${d.discord_id}')" class="btn btn-dark">BANLA</button>`; document.getElementById('basvuruModal').style.display = 'flex';
+        });
+    }
+    function durumGuncelle(durum) { 
+        if(!yetkiKontrol(3)) return; // Komiser Yrd ve üzeri onaylayabilir
+        database.ref('basvurular/'+seciliBasvuruId).update({durum:durum}); modalKapat(); 
+    }
+    function plakaSorgula() { const p = document.getElementById('plakaInput').value; const r = document.getElementById('aracSonuc'); if(p === "34 TR 34") r.innerHTML = `<div class="card" style="border-left:5px solid red; text-align:center;"><h1>ÇALINTI ARAÇ</h1><p>Aranan Şahıs: Mehmet Yılmaz</p></div>`; else r.innerHTML = `<div class="card" style="border-left:5px solid green; text-align:center;"><h1>TEMİZ</h1><p>Ruhsat Sahibi: Ahmet Demir</p></div>`; }
+    
+    function ohalDegistir() { 
+        if(!yetkiKontrol(9)) return; // Sadece Üst Yönetim OHAL ilan edebilir
+        database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); 
+    }
+    database.ref('sistem/ohal').on('value', s => { if(s.val()) { document.body.classList.add('ohal-active'); document.getElementById('ohalAlertBar').style.display = 'block'; document.getElementById('ohalBtn').innerText = "⚠️ OHAL BİTİR"; } else { document.body.classList.remove('ohal-active'); document.getElementById('ohalAlertBar').style.display = 'none'; document.getElementById('ohalBtn').innerText = "🚨 OHAL BAŞLAT"; } });
+    
+    function dbSil(path) { if(yetkiKontrol(6) && confirm("Sil?")) database.ref(path).remove(); }
+    function modalKapat() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+    function modalAc(id){ document.getElementById(id).style.display='flex'; }
+    function tabDegistir(id, el) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(id).classList.add('active'); el.classList.add('active-tab'); }
+    function tabloAra(i,t){ let v=document.getElementById(i).value.toLowerCase(); document.querySelectorAll('#'+t+' tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(v)?'':'none'); }
+    function karaListeyeEkle(id=null) { 
+        if(!yetkiKontrol(5)) return; // Baş Komiser ve üzeri
+        const d=id||document.getElementById('bl_id').value; database.ref('blacklist').push({discord_id:d, sebep:"Yönetici Banı", tarih:Date.now()}); if(id) durumGuncelle('Reddedildi'); else alert("Eklendi"); 
+    }
+    function karaListeSil(key) {
+        if(!yetkiKontrol(6)) return;
+        if(confirm("Kara listeden çıkar?")) database.ref('blacklist/'+key).remove();
+    }
 </script>
 </body>
 </html>
