@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v4.5 - Emniyet Teşkilatı Yönetim Sistemi</title>
+    <title>POLNET v4.7 - Emniyet Teşkilatı Yönetim Sistemi</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -93,13 +93,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v4.5</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v4.7</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v4.5 Stable - Authorized Personnel Only</p>
+        <p style="font-size:10px; color:#555;">v4.7 Stable - Authorized Personnel Only</p>
     </div>
 </div>
 
@@ -137,8 +137,8 @@
                 <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Devriye</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-shield-alt"></i> Organize Suçlarla Mücadele Güncellemesi v4.5</h3>
-                <p>Yeni Türk Ceza Kanunu veritabanı sisteme entegre edildi. Gerçekçi suç tanımları, kamu cezası (maksimum 100 birim) ve dengeli para cezaları ayarlandı. Personel rütbe sistemi aktif edildi. Discord Webhook entegrasyonu sağlandı.</p>
+                <h3><i class="fas fa-shield-alt"></i> Organize Suçlarla Mücadele Güncellemesi v4.7</h3>
+                <p>Yeni Türk Ceza Kanunu veritabanı sisteme entegre edildi. Gerçekçi suç tanımları, kamu cezası (maksimum 100 birim) ve dengeli para cezaları ayarlandı. Personel rütbe sistemi aktif edildi. Discord Webhook entegrasyonu (Onay/Red) sağlandı. <strong>Başvuru silme özelliği eklendi.</strong></p>
             </div>
         </div>
 
@@ -483,12 +483,28 @@
                 // Discord ID'yi Linke Çevirme
                 let discordLink = `<a href="https://discord.com/users/${d.discord_id}" target="_blank" style="color:#5865F2; text-decoration:none; font-weight:bold;"><i class="fab fa-discord"></i> ${d.discord_id}</a>`;
 
-                tb.innerHTML += `<tr><td>${new Date(d.tarih).toLocaleDateString()}</td><td>${discordLink}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button></td></tr>`; 
+                tb.innerHTML += `<tr>
+                    <td>${new Date(d.tarih).toLocaleDateString()}</td>
+                    <td>${discordLink}</td>
+                    <td>${d.ic_isim}</td>
+                    <td><span class="badge ${b}">${d.durum}</span></td>
+                    <td>
+                        <button onclick="basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button>
+                        <button onclick="basvuruSil('${i.k}')" class="btn btn-red" style="margin-left:5px;"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`; 
             });
             document.getElementById('statBasvuru').innerText = bekleyen; 
             document.getElementById('basvuruBadge').style.display = bekleyen > 0 ? 'inline-block' : 'none'; 
             document.getElementById('basvuruBadge').innerText = bekleyen;
         });
+    }
+
+    function basvuruSil(key) {
+        if(aktifRutbeId < 5) return alert("Yetkiniz yetersiz. Sadece Baş Komiser ve üzeri başvuru silebilir.");
+        if(confirm("Bu başvuruyu kalıcı olarak silmek istediğinize emin misiniz?")) {
+            database.ref('basvurular/' + key).remove();
+        }
     }
 
     function basvuruIncele(key) {
@@ -510,17 +526,33 @@
     function durumGuncelle(durum) { 
         if(aktifRutbeId < 3) return alert("Yetkiniz yetersiz."); 
         database.ref('basvurular/'+seciliBasvuruId).update({durum:durum});
-        if(durum === "Onaylandı" && seciliBasvuruData) { sendDiscordWebhook(seciliBasvuruData); }
+        
+        // Hem Onay hem Red durumunda Webhook gönder
+        if((durum === "Onaylandı" || durum === "Reddedildi") && seciliBasvuruData) { 
+            sendDiscordWebhook(seciliBasvuruData, durum); 
+        }
+        
         modalKapat(); 
     }
 
-    function sendDiscordWebhook(data) {
+    function sendDiscordWebhook(data, status) {
+        let embedColor = 3066993; // Yeşil (Varsayılan - Onay)
+        let titleText = "👮‍♂️ BAŞVURU KABUL EDİLDİ";
+        let descText = `Tebrikler! **${data.ic_isim}** isimli karakter başvurunuz onaylanmıştır.`;
+
+        // Eğer Reddedildiyse Rengi ve Yazıyı Değiştir
+        if (status === "Reddedildi") {
+            embedColor = 15158332; // Kırmızı
+            titleText = "🚫 BAŞVURU REDDEDİLDİ";
+            descText = `Üzgünüz, **${data.ic_isim}** isimli başvurunuz kabul edilmemiştir. Eksikleriniz için yetkililerle iletişime geçebilirsiniz.`;
+        }
+
         const payload = {
             content: `<@${data.discord_id}>`,
             embeds: [{
-                title: "👮‍♂️ BAŞVURU KABUL EDİLDİ",
-                description: `Tebrikler! **${data.ic_isim}** isimli karakter başvurunuz onaylanmıştır.`,
-                color: 3066993,
+                title: titleText,
+                description: descText,
+                color: embedColor,
                 fields: [
                     { name: "Discord ID", value: data.discord_id, inline: true },
                     { name: "IC İsim", value: data.ic_isim, inline: true },
