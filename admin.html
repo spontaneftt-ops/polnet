@@ -3,190 +3,474 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v18.5 - EGM Yönetim</title>
+    <title>POLNET v19.0 - Yönetim Paneli</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root { --bg-dark: #0f172a; --sidebar-bg: #020617; --card-bg: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
+        
         * { box-sizing: border-box; outline: none; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 15px; }
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; overflow-y: auto; z-index: 10; }
-        .content { flex: 1; padding: 30px; overflow-y: auto; background-image: radial-gradient(var(--card-bg) 1px, transparent 1px); background-size: 20px 20px; }
-        .menu-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; color: var(--text-muted); transition: 0.2s; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
+
+        /* OHAL & Animasyonlar */
+        body.ohal-active { --bg-dark: #2a0505; --sidebar-bg: #1a0000; --card-bg: #3f0a0a; --accent: #ff0000; --border: #5c1818; animation: redPulse 1.5s infinite alternate; }
+        @keyframes redPulse { 0% { box-shadow: inset 0 0 0 0 rgba(255, 0, 0, 0); } 100% { box-shadow: inset 0 0 100px 30px rgba(255, 0, 0, 0.6); } }
+        
+        #ohalAlertBar { background: #000; color: red; font-weight: 900; font-size: 1.5rem; padding: 15px 0; border-bottom: 4px solid red; white-space: nowrap; display: none; z-index: 9999; position: fixed; top: 0; width: 100%; text-transform: uppercase; }
+        .ohal-content { display: inline-block; padding-left: 100%; animation: ohalScroll 12s linear infinite; }
+        @keyframes ohalScroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* LAYOUT */
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; overflow-y: auto; z-index: 10; }
+        .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; background-image: radial-gradient(var(--card-bg) 1px, transparent 1px); background-size: 20px 20px; }
+        body.ohal-active .sidebar, body.ohal-active .content { margin-top: 60px; }
+
+        .menu-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; color: var(--text-muted); transition: 0.2s; font-weight: 500; }
         .menu-item:hover, .active-tab { background: rgba(59,130,246,0.15); color: white; border-left: 3px solid var(--accent); }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
-        .btn-blue { background: var(--accent); } .btn-green { background: var(--success); } .btn-red { background: var(--danger); }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { background: rgba(0,0,0,0.4); color: var(--accent); padding: 15px; text-align: left; border-bottom: 2px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); }
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: var(--card-bg); width: 60%; max-height: 90vh; border-radius: 12px; overflow-y: auto; padding: 25px; }
-        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .tab-content { display: none; } .tab-content.active { display: block; }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        input, select, textarea { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 10px; font-family: 'Inter', sans-serif; }
+        input:focus { border-color: var(--accent); }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 5px; justify-content: center; transition: 0.2s; font-size: 0.9rem; }
+        .btn:hover { filter: brightness(1.1); }
+        .btn-blue { background: var(--accent); } .btn-green { background: var(--success); } .btn-red { background: var(--danger); } .btn-dark { background: #334155; }
+        
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; margin-bottom: 20px; font-size: 0.9rem; }
+        th { background: rgba(0,0,0,0.4); color: var(--accent); padding: 12px; text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .badge-blue { background: rgba(59,130,246,0.2); color: var(--accent); }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-bg); width: 60%; max-height: 90vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; animation: zoomIn 0.2s; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { padding: 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+
+        /* Login Screen */
+        #loginScreen { position: fixed; top:0; left:0; width:100%; height:100%; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        /* Başvuru Kartı */
+        .basvuru-detay-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); }
+        .basvuru-soru { color: var(--accent); font-weight: bold; margin-top: 10px; display: block; }
+        .basvuru-cevap { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; color: white; margin-bottom: 10px; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
+<div id="ohalAlertBar"><div class="ohal-content">⚠️ DİKKAT: OLAĞANÜSTÜ HAL (OHAL) İLAN EDİLMİŞTİR! ⚠️ TÜM İZİNLER İPTAL. SOKAĞA ÇIKMA YASAĞI AKTİF.</div></div>
+
 <div id="loginScreen">
-    <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center;">
-        <img src="egmm.png" style="width:100px; margin-bottom:20px;">
-        <h2>POLNET GİRİŞ</h2>
-        <input type="text" id="kadi" placeholder="Sicil No">
+    <div style="background:var(--card-bg); padding:40px; border-radius:15px; width:350px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+        <img src="egmm.png" style="width:80px; margin-bottom:15px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
+        <h2 style="color:white; margin:0 0 20px 0;">POLNET YÖNETİM</h2>
+        <input type="text" id="kadi" placeholder="Kullanıcı Adı">
         <input type="password" id="sifre" placeholder="Şifre">
-        <button onclick="girisYap()" class="btn btn-blue" style="width:100%;">GİRİŞ YAP</button>
-        <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
+        <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 12px;">GİRİŞ YAP</button>
+        <p id="loginMsg" style="color:var(--danger); margin-top:15px; font-size:0.9rem;"></p>
     </div>
 </div>
 
 <div id="adminPanel" style="display:none; width:100%;">
     <div class="sidebar">
-        <div style="text-align:center; margin-bottom:20px;">
-            <img src="egmm.png" style="width:70px;">
-            <h3 id="aktifKullaniciAdi">POLNET</h3>
-            <div id="aktifRutbeGoster" class="badge badge-blue"></div>
+        <div style="text-align:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border);">
+            <img src="egmm.png" style="width:60px; margin-bottom:10px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
+            <h3 style="margin:0;">POLNET</h3>
+            <div id="aktifKullaniciAdi" style="font-size:0.9rem; color:var(--text-muted); margin-top:5px;"></div>
         </div>
-        <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-home"></i> Panel</div>
-        <div class="menu-item" onclick="tabDegistir('basvuruTab', this)"><i class="fas fa-file-signature"></i> Başvurular</div>
-        <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-fingerprint"></i> GBT</div>
-        <div class="menu-item" onclick="tabDegistir('personelTab', this)"><i class="fas fa-users"></i> Personel</div>
-        <button onclick="location.reload()" class="btn btn-red" style="margin-top:auto;">ÇIKIŞ</button>
+
+        <div class="menu-item active-tab" onclick="tabDegistir('dashboardTab', this)"><i class="fas fa-chart-pie"></i> Özet Durum</div>
+        
+        <div class="menu-item" onclick="tabDegistir('basvuruTab', this)">
+            <i class="fas fa-clipboard-list"></i> Başvurular 
+            <span id="basvuruBadge" class="badge badge-red" style="margin-left:auto; display:none;">0</span>
+        </div>
+
+        <div class="menu-item" onclick="tabDegistir('mesaiTab', this)"><i class="fas fa-clock"></i> Mesai Takip</div>
+        <div class="menu-item" onclick="tabDegistir('gbtTab', this)"><i class="fas fa-fingerprint"></i> GBT Sorgu</div>
+        <div class="menu-item" onclick="tabDegistir('aracTab', this)"><i class="fas fa-car"></i> Araç Sorgu</div>
+        <div class="menu-item" onclick="tabDegistir('personelTab', this)"><i class="fas fa-users-cog"></i> Personel</div>
+        
+        <div style="margin-top:auto;">
+            <button id="ohalBtn" onclick="ohalDegistir()" class="btn btn-red" style="width:100%; margin-bottom:10px;">🚨 OHAL</button>
+            <button onclick="location.reload()" class="btn btn-dark" style="width:100%;">ÇIKIŞ</button>
+        </div>
     </div>
 
     <div class="content">
+        
         <div id="dashboardTab" class="tab-content active">
-            <h1>Özet Durum</h1>
+            <h1>Komuta Merkezi</h1>
             <div class="grid-3">
-                <div class="card"><h3>Bekleyen Başvuru</h3><h1 id="statBasvuru">0</h1></div>
-                <div class="card"><h3>Aranan Şahıs</h3><h1 id="statAranan">0</h1></div>
-                <div class="card"><h3>Toplam Tutanak</h3><h1 id="statDosya">0</h1></div>
+                <div class="card" style="border-left:4px solid var(--warning);"><h3>Bekleyen Başvuru</h3><h1 id="statBasvuru">0</h1></div>
+                <div class="card" style="border-left:4px solid var(--danger);"><h3>Aranan Şahıs</h3><h1 id="statAranan">0</h1></div>
+                <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Personel</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
         </div>
 
         <div id="basvuruTab" class="tab-content">
-            <h1>Aday Başvuruları</h1>
-            <table>
-                <thead><tr><th>İsim (IC)</th><th>Discord ID</th><th>Yaş</th><th>Durum</th><th>İşlem</th></tr></thead>
-                <tbody id="basvuruListesi"></tbody>
-            </table>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Gelen Başvurular</h1>
+                <button onclick="verileriYukle()" class="btn btn-dark"><i class="fas fa-sync"></i> Yenile</button>
+            </div>
+            <div class="card">
+                <input type="text" id="basvuruAra" placeholder="İsim veya Discord ID ara..." onkeyup="tabloAra('basvuruAra','basvuruListesi')">
+                <table>
+                    <thead><tr><th>Tarih</th><th>Discord ID</th><th>IC İsim</th><th>Yaş</th><th>Durum</th><th>İşlem</th></tr></thead>
+                    <tbody id="basvuruListesi"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h3>🚫 Kara Liste (Blacklist)</h3>
+                <div style="display:flex; gap:10px;">
+                    <input id="bl_id" placeholder="Discord ID">
+                    <input id="bl_sebep" placeholder="Sebep">
+                    <button onclick="karaListeyeEkle()" class="btn btn-red">EKLE</button>
+                </div>
+                <div id="blacklistContainer" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <div id="mesaiTab" class="tab-content">
+            <h1>Mesai Durumu</h1>
+            <div class="card">
+                <h3>Aktif Personeller</h3>
+                <table id="aktifMesaiTablo"><thead><tr><th>Personel</th><th>Başlangıç</th><th>Süre</th></tr></thead><tbody id="aktifMesaiBody"></tbody></table>
+            </div>
         </div>
 
         <div id="gbtTab" class="tab-content">
-            <h1>GBT Sorgu</h1>
-            <div class="card"><input id="gbtInput" placeholder="İsim ara..."><button onclick="gbtSorgula()" class="btn btn-blue">ARA</button></div>
+            <h1>GBT Sorgulama</h1>
+            <div class="card">
+                <div class="grid-2"><input id="gbtInput" placeholder="İsim Ara..."><button onclick="gbtSorgula()" class="btn btn-green">SORGULA</button></div>
+            </div>
             <div id="gbtSonuc"></div>
         </div>
-        
-        <div id="personelTab" class="tab-content">
-            <h1>Personel</h1>
-            <table><thead><tr><th>Sicil</th><th>Rütbe</th></tr></thead><tbody id="personelListesi"></tbody></table>
+
+        <div id="aracTab" class="tab-content">
+            <h1>Araç Sorgulama</h1>
+            <div class="card" style="text-align:center;">
+                <input id="plakaInput" placeholder="PLAKA" style="text-align:center; font-size:2rem; text-transform:uppercase; letter-spacing:5px; width:50%;">
+                <br>
+                <button onclick="plakaSorgula()" class="btn btn-green" style="padding:15px 40px;">SORGULA</button>
+            </div>
+            <div id="aracSonuc" style="margin-top:20px;"></div>
         </div>
+
+        <div id="personelTab" class="tab-content">
+            <h1>Personel Yönetimi</h1>
+            <div class="card">
+                <div class="grid-3">
+                    <input id="yeniKadi" placeholder="Sicil / Ad">
+                    <input id="yeniSifre" placeholder="Şifre">
+                    <button onclick="personelEkle()" class="btn btn-green">EKLE</button>
+                </div>
+            </div>
+            <table><thead><tr><th>Sicil</th><th>Şifre</th><th>İşlem</th></tr></thead><tbody id="personelListesi"></tbody></table>
+        </div>
+
     </div>
 </div>
 
 <div id="basvuruModal" class="modal">
     <div class="modal-content">
-        <h2 id="m_isim"></h2>
-        <div id="m_cevaplar" style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;"></div>
-        <div style="margin-top:20px;">
-            <textarea id="redSebebi" placeholder="Red sebebi (Opsiyonel)"></textarea>
-            <button onclick="basvuruKarar('Onaylandı')" class="btn btn-green">ONAYLA</button>
-            <button onclick="basvuruKarar('Reddedildi')" class="btn btn-red">REDDET</button>
-            <button onclick="modalKapat()" class="btn">KAPAT</button>
+        <div class="modal-header">
+            <h3>Başvuru İnceleme</h3>
+            <span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="basvuruDetayIcerik"></div>
+            <hr style="border-color:var(--border); margin:20px 0;">
+            <div id="basvuruIslemButtonlari" class="grid-3">
+                </div>
+            <div id="redSebebiDiv" style="display:none; margin-top:15px;">
+                <textarea id="redSebebiText" placeholder="Reddetme sebebini yazın..." style="background:rgba(255,0,0,0.1); border-color:var(--danger);"></textarea>
+                <button onclick="redOnayla()" class="btn btn-red" style="width:100%">REDDET VE KAYDET</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="config.js"></script>
 <script>
-    let aktifKullanici = ""; let seciliBasvuruKey = "";
+    let aktifKullanici = "";
+    let seciliBasvuruId = "";
+    let seciliBasvuruData = {};
 
+    // GİRİŞ İŞLEMİ
     function girisYap() {
-        const k = document.getElementById('kadi').value;
-        const s = document.getElementById('sifre').value;
-        // Basit kontrol (Firebase'deki personel tablosuna göre geliştirilebilir)
-        if(k === "admin" && s === "1234") {
-            basariliGiris(k, "Müdür");
-        } else {
-            document.getElementById('loginMsg').innerText = "Hatalı Giriş!";
+        const k = document.getElementById('kadi').value.trim();
+        const s = document.getElementById('sifre').value.trim();
+
+        // Arka kapı (Development için) veya Veritabanı kontrolü
+        if (k === "admin" && s === "admin") {
+            basariliGiris(k);
+            return;
         }
+
+        database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => {
+            let found = false;
+            sn.forEach(c => {
+                if(c.val().sifre === s) found = true;
+            });
+            if(found) basariliGiris(k);
+            else document.getElementById('loginMsg').innerText = "Hatalı Kullanıcı Adı veya Şifre!";
+        });
     }
 
-    function basariliGiris(k, r) {
+    function basariliGiris(k) {
         aktifKullanici = k;
+        document.getElementById('aktifKullaniciAdi').innerText = "Sicil: " + k;
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
-        document.getElementById('aktifKullaniciAdi').innerText = k;
-        document.getElementById('aktifRutbeGoster').innerText = r;
         verileriYukle();
+        basvurulariDinle();
     }
 
+    // VERİLERİ YÜKLEME VE DİNLEME
     function verileriYukle() {
-        // Başvuruları Getir
-        database.ref('basvurular').on('value', s => {
-            const tbody = document.getElementById('basvuruListesi');
-            tbody.innerHTML = "";
-            let bekleyen = 0;
+        // Personel Listesi
+        database.ref('personel').on('value', s => {
+            const tb = document.getElementById('personelListesi');
+            tb.innerHTML = "";
+            let count = 0;
             s.forEach(c => {
-                const d = c.val();
-                if(d.durum === 'Beklemede') bekleyen++;
-                tbody.innerHTML += `<tr>
-                    <td>${d.ic_isim}</td>
-                    <td>${d.discord_id}</td>
-                    <td>${d.ooc_yas}</td>
-                    <td>${d.durum}</td>
-                    <td><button onclick="basvuruDetay('${c.key}')" class="btn btn-blue">İNCELE</button></td>
-                </tr>`;
+                count++;
+                tb.innerHTML += `<tr><td>${c.val().kadi}</td><td>****</td><td><button onclick="dbSil('personel/${c.key}')" class="btn btn-red btn-sm">SİL</button></td></tr>`;
             });
-            document.getElementById('statBasvuru').innerText = bekleyen;
+            document.getElementById('statAktifPersonel').innerText = count;
         });
 
-        // Diğer İstatistikler
-        database.ref('gbt').on('value', s => {
-            let aranan = 0;
-            if(s.exists()) s.forEach(c => { if(c.val().not.includes("Aranıyor")) aranan++; });
-            document.getElementById('statAranan').innerText = aranan;
+        // Kara Liste
+        database.ref('blacklist').on('value', s => {
+            const div = document.getElementById('blacklistContainer');
+            div.innerHTML = "";
+            s.forEach(c => {
+                div.innerHTML += `<div style="background:rgba(0,0,0,0.3); padding:8px; margin-bottom:5px; border-radius:4px; display:flex; justify-content:space-between;">
+                    <span>${c.val().discord_id} (${c.val().sebep})</span>
+                    <button onclick="dbSil('blacklist/${c.key}')" class="btn btn-red" style="padding:2px 8px;">X</button>
+                </div>`;
+            });
         });
     }
 
-    function basvuruDetay(key) {
-        seciliBasvuruKey = key;
-        database.ref('basvurular/' + key).once('value', s => {
-            const d = s.val();
-            document.getElementById('m_isim').innerText = d.ic_isim;
-            let html = "";
-            for(let f in d.cevaplar) {
-                html += `<p><strong>${f}:</strong> ${d.cevaplar[f]}</p>`;
+    // BAŞVURULARI DİNLE (ANA ÖZELLİK)
+    function basvurulariDinle() {
+        database.ref('basvurular').on('value', s => {
+            const tb = document.getElementById('basvuruListesi');
+            tb.innerHTML = "";
+            let bekleyenSayisi = 0;
+            
+            // Verileri diziye çevirip ters çevirelim (En yeni en üstte)
+            let arr = [];
+            s.forEach(c => arr.push({key: c.key, val: c.val()}));
+            arr.reverse();
+
+            arr.forEach(item => {
+                const d = item.val;
+                let durumBadge = `<span class="badge badge-warn">Beklemede</span>`;
+                if(d.durum === 'Onaylandı') durumBadge = `<span class="badge badge-green">Onaylandı</span>`;
+                else if(d.durum === 'Reddedildi') durumBadge = `<span class="badge badge-red">Reddedildi</span>`;
+
+                if(d.durum === 'Beklemede') bekleyenSayisi++;
+
+                tb.innerHTML += `
+                    <tr>
+                        <td>${new Date(d.tarih).toLocaleDateString()}</td>
+                        <td>${d.discord_id}</td>
+                        <td>${d.ic_isim}</td>
+                        <td>${d.ooc_yas}</td>
+                        <td>${durumBadge}</td>
+                        <td>
+                            <button onclick="basvuruIncele('${item.key}')" class="btn btn-blue">İNCELE</button>
+                            <button onclick="dbSil('basvurular/${item.key}')" class="btn btn-dark"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Badge güncelle
+            const badge = document.getElementById('basvuruBadge');
+            document.getElementById('statBasvuru').innerText = bekleyenSayisi;
+            if(bekleyenSayisi > 0) {
+                badge.style.display = 'inline-block';
+                badge.innerText = bekleyenSayisi;
+            } else {
+                badge.style.display = 'none';
             }
-            document.getElementById('m_cevaplar').innerHTML = html;
+        });
+    }
+
+    // BAŞVURU İŞLEMLERİ
+    function basvuruIncele(key) {
+        database.ref('basvurular/' + key).once('value', s => {
+            seciliBasvuruId = key;
+            seciliBasvuruData = s.val();
+            const d = seciliBasvuruData;
+            
+            let html = `
+                <div class="grid-2">
+                    <div><strong>Discord ID:</strong> ${d.discord_id}</div>
+                    <div><strong>IC İsim:</strong> ${d.ic_isim}</div>
+                    <div><strong>OOC Yaş:</strong> ${d.ooc_yas}</div>
+                    <div><strong>Durum:</strong> ${d.durum}</div>
+                </div>
+                <hr style="border-color:var(--border); margin:15px 0;">
+                <h4>Cevaplar:</h4>
+            `;
+
+            // Cevapları ve Soruları Eşleştirerek Yazdır
+            for(let k in d.cevaplar) {
+                if(k !== 'discord_id' && k !== 'ic_isim' && k !== 'ooc_yas') {
+                    let soruMetni = d.soru_detaylari && d.soru_detaylari[k] ? d.soru_detaylari[k] : k;
+                    // Sabit alanları düzelt
+                    if(k === 'aktiflik') soruMetni = "Günlük Aktiflik";
+                    if(k === 'karakter_hikaye') soruMetni = "Karakter Hikayesi";
+                    
+                    html += `<span class="basvuru-soru">${soruMetni}</span>
+                             <div class="basvuru-cevap">${d.cevaplar[k]}</div>`;
+                }
+            }
+
+            document.getElementById('basvuruDetayIcerik').innerHTML = html;
+            
+            // Butonları Ayarla
+            const btnDiv = document.getElementById('basvuruIslemButtonlari');
+            btnDiv.innerHTML = `
+                <button onclick="basvuruDurumGuncelle('Onaylandı')" class="btn btn-green">✅ ONAYLA</button>
+                <button onclick="document.getElementById('redSebebiDiv').style.display='block'" class="btn btn-red">❌ REDDET</button>
+                <button onclick="karaListeyeEkle('${d.discord_id}')" class="btn btn-dark">🚫 KARA LİSTE</button>
+            `;
+            document.getElementById('redSebebiDiv').style.display = 'none';
+            
             document.getElementById('basvuruModal').style.display = 'flex';
         });
     }
 
-    function basvuruKarar(durum) {
-        const sebep = document.getElementById('redSebebi').value;
-        database.ref('basvurular/' + seciliBasvuruKey).update({
-            durum: durum,
-            red_sebebi: sebep
+    function basvuruDurumGuncelle(durum, sebep="") {
+        let updateData = { durum: durum };
+        if(sebep) updateData.red_sebebi = sebep;
+        
+        database.ref('basvurular/' + seciliBasvuruId).update(updateData, err => {
+            if(!err) {
+                modalKapat();
+                // Opsiyonel: Discord webhook'a bildirim gönderilebilir.
+            }
         });
-        modalKapat();
     }
 
-    function modalKapat() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+    function redOnayla() {
+        const sebep = document.getElementById('redSebebiText').value;
+        if(!sebep) return alert("Lütfen bir red sebebi girin.");
+        basvuruDurumGuncelle('Reddedildi', sebep);
+    }
+
+    function karaListeyeEkle(id = null) {
+        const discordId = id || document.getElementById('bl_id').value;
+        const sebep = id ? "Başvuru Panelinden Banlandı" : document.getElementById('bl_sebep').value;
+        
+        if(!discordId) return alert("ID Giriniz");
+
+        database.ref('blacklist').push({
+            discord_id: discordId,
+            sebep: sebep,
+            tarih: Date.now(),
+            admin: aktifKullanici
+        });
+        
+        if(!id) { // Manuel ekleme ise inputları temizle
+            document.getElementById('bl_id').value = "";
+            document.getElementById('bl_sebep').value = "";
+        } else {
+            alert(discordId + " kara listeye alındı.");
+            basvuruDurumGuncelle('Reddedildi', 'Kara Liste');
+        }
+    }
+
+    // DİĞER FONKSİYONLAR
+    function personelEkle() {
+        const k = document.getElementById('yeniKadi').value;
+        const s = document.getElementById('yeniSifre').value;
+        if(k && s) {
+            database.ref('personel').push({kadi:k, sifre:s});
+            document.getElementById('yeniKadi').value = "";
+            document.getElementById('yeniSifre').value = "";
+        }
+    }
+
+    function gbtSorgula() {
+        // Basit simülasyon, gerçekte veritabanından 'gbt' node'undan çekilebilir.
+        const val = document.getElementById('gbtInput').value;
+        document.getElementById('gbtSonuc').innerHTML = `<div class="card"><h3>${val}</h3><p>Sabıka kaydı temiz.</p></div>`;
+    }
+
+    function plakaSorgula() {
+        const p = document.getElementById('plakaInput').value;
+        const r = document.getElementById('aracSonuc');
+        r.innerHTML = "";
+        database.ref('araclar').orderByChild('plaka').equalTo(p).once('value', s => {
+            if(s.exists()) {
+                s.forEach(c => {
+                    let d = c.val();
+                    r.innerHTML = `<div class="card" style="text-align:center; border-left:5px solid ${d.durum=='Çalıntı'?'red':'green'}"><h1>${d.durum}</h1><p>${d.sahip}</p></div>`;
+                });
+            } else {
+                r.innerHTML = `<div class="card" style="text-align:center;"><h1>KAYIT YOK</h1></div>`;
+            }
+        });
+    }
+
+    function ohalDegistir() {
+        database.ref('sistem/ohal').once('value', s => {
+            let yeniDurum = !s.val();
+            database.ref('sistem/ohal').set(yeniDurum);
+        });
+    }
+
+    // Yardımcılar
+    function dbSil(path) { if(confirm("Bu veriyi silmek istediğinize emin misiniz?")) database.ref(path).remove(); }
+    function modalKapat() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
     function tabDegistir(id, el) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active-tab'));
         document.getElementById(id).classList.add('active');
         el.classList.add('active-tab');
     }
+    function tabloAra(inputId, tableId) {
+        let val = document.getElementById(inputId).value.toLowerCase();
+        let rows = document.querySelectorAll('#' + tableId + ' tr');
+        rows.forEach(r => {
+            r.style.display = r.innerText.toLowerCase().includes(val) ? '' : 'none';
+        });
+    }
+
+    // OHAL Dinleyici
+    database.ref('sistem/ohal').on('value', s => {
+        if(s.val()) {
+            document.body.classList.add('ohal-active');
+            document.getElementById('ohalAlertBar').style.display = 'block';
+        } else {
+            document.body.classList.remove('ohal-active');
+            document.getElementById('ohalAlertBar').style.display = 'none';
+        }
+    });
+
 </script>
 </body>
 </html>
