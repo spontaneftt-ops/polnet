@@ -283,20 +283,20 @@
     let aktifKullanici = null;
     let tckVeritabani = [];
     
-    // Firebase referansları (config.js yoksa hata vermemesi için dummy kontrol)
+    // Firebase referansları
     const db = typeof firebase !== 'undefined' ? firebase.database() : null;
 
     // --- SİSTEM BAŞLANGIÇ ---
     window.onload = function() {
         if(!db) {
             console.error("Firebase bulunamadı! Lütfen config.js dosyasını ekleyin.");
-            alert("Veritabanı bağlantısı hatası!");
+            // Test amaçlı alert vermiyorum, konsola basıyorum.
         }
         tckVeritabani = tckOlustur(); // 1000 adetlik veriyi oluştur
         console.log("TCK Yüklendi: " + tckVeritabani.length + " madde.");
     };
 
-    // --- TCK OLUŞTURUCU (PROCEDURAL GENERATION) ---
+    // --- TCK OLUŞTURUCU (PROCEDURAL GENERATION - MANTIKLI SUÇLAR) ---
     function tckOlustur() {
         const categories = [
             { code: "TRF", name: "Trafik", pRange: [800, 5000], hRange: [0, 0] },
@@ -334,9 +334,9 @@
                     if(mod === "(Nitelikli)") { baseP *= 1.5; baseH *= 1.5; }
                     if(mod === "(Teşebbüs)") { baseP *= 0.5; baseH *= 0.5; }
 
-                    // LİMİTLEME (MAX 100 KAMU)
+                    // LİMİTLEME (MAX 100 KAMU - İsteğiniz üzerine)
                     baseH = Math.min(100, Math.floor(baseH));
-                    // Para cezası yuvarlama
+                    // Para cezası yuvarlama (düzgün görünsün)
                     baseP = Math.floor(baseP / 100) * 100;
 
                     if(baseP < 500) baseP = 500;
@@ -352,8 +352,7 @@
             });
         });
 
-        // Listeyi 1000'e tamamlamak için varyasyonları artırabiliriz ama bu haliyle yaklaşık 300-400 nitelikli suç çıkar.
-        // Daha fazla dolgu için döngüleri artırıyorum:
+        // Listeyi 1000'e tamamlamak için varyasyonları artır
         while(fullList.length < 1000) {
             let randomCat = categories[Math.floor(Math.random()*categories.length)];
             let randomP = Math.floor(Math.random() * (randomCat.pRange[1] - randomCat.pRange[0]) + randomCat.pRange[0]);
@@ -375,7 +374,7 @@
         const k = document.getElementById('kadi').value;
         const s = document.getElementById('sifre').value;
 
-        // Admin Backdoor
+        // Admin Backdoor (Acil Durumlar İçin)
         if(k === "admin" && s === "123") {
             loginSuccess({ sicil: "0000", sifre: "123", rutbe: "1. Sınıf Emniyet Müdürü" });
             return;
@@ -413,11 +412,11 @@
         document.getElementById(id).classList.add('active');
         if(elem) elem.classList.add('active-tab');
         
-        // Tab özelinde işlemler
+        // Tab özelinde işlemler (Performans için sadece görünürken yükle)
         if(id === 'tckTab') renderTckRehber(tckVeritabani.slice(0, 50)); // İlk 50'yi göster
     }
 
-    // --- PERSONEL İŞLEMLERİ ---
+    // --- PERSONEL İŞLEMLERİ (YENİ RÜTBE SİSTEMİ) ---
     function personelEkle() {
         const sicil = document.getElementById('yeniSicil').value;
         const sifre = document.getElementById('yeniSifre').value;
@@ -441,7 +440,6 @@
             tb.innerHTML = "";
             snap.forEach(child => {
                 const p = child.val();
-                // Rütbeye göre renk/badge eklenebilir
                 tb.innerHTML += `
                     <tr>
                         <td><span class="rank-badge">${p.rutbe}</span></td>
@@ -483,7 +481,7 @@
                     div.innerHTML = `<div class="card" style="border-left: 4px solid var(--success); text-align:center;"><h3><i class="fas fa-check-circle"></i> TEMİZ</h3><p>Aranan şahıs kaydı veya GBT kaydı bulunamadı.</p></div>`;
                 }
             });
-        }, 800); // Gerçekçilik için hafif gecikme
+        }, 800);
     }
 
     // --- CEZA İŞLEMLERİ (ARA BUL ÖZELLİĞİ) ---
@@ -503,7 +501,7 @@
 
     function cezaAra() {
         const val = document.getElementById('ceza_ara').value.toLowerCase();
-        // Arama algoritması
+        // Arama algoritması (Hızlı Filtreleme)
         const filtrelenmis = tckVeritabani.filter(item => 
             item.name.toLowerCase().includes(val) || 
             item.code.toLowerCase().includes(val)
@@ -539,8 +537,7 @@
             seciliSuclar.push(item); // Ekle
         }
         
-        // Listeyi yeniden render et (seçimi güncellemek için)
-        // Not: Tüm listeyi render etmek yerine sadece class değiştirilebilir ama filtre varsa bu daha güvenli
+        // Listeyi yeniden render et
         const currentInput = document.getElementById('ceza_ara').value;
         if(currentInput) cezaAra(); else renderCezaListesi(tckVeritabani.slice(0,20));
         
