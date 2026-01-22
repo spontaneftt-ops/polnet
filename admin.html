@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v5.1 - Gelişmiş TCK Sistemi</title>
+    <title>POLNET v5.2 - Personel Güvenlik Modülü</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -104,13 +104,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v5.1</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v5.2</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v5.1 Stable - Updated TCK Database</p>
+        <p style="font-size:10px; color:#555;">v5.2 Stable - Granular Security Module</p>
     </div>
 </div>
 
@@ -148,12 +148,8 @@
                 <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Devriye</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-shield-alt"></i> TCK Veritabanı Güncellemesi v5.1</h3>
-                <p>Adalet Bakanlığı onayı ile <strong>100 yeni suç tanımı</strong> sisteme işlendi. Trafik, Narkotik, Organize Suçlar ve Mali Suçlar kategorileri genişletildi.</p>
-                <ul>
-                    <li>Maksimum Hapis Cezası: <strong>120 Ay (Kamu)</strong></li>
-                    <li>Maksimum Para Cezası: <strong>400.000 TL</strong></li>
-                </ul>
+                <h3><i class="fas fa-shield-alt"></i> Güvenlik Güncellemesi v5.2</h3>
+                <p><strong>Personel Kovma Koruması:</strong> 'Personel Yönetimi' yetkisine sahip olunsa bile, personele özel olarak <strong>'Personel Kovma Yetkisi'</strong> tanımlanmadığı sürece SİL butonu görünmeyecek ve silme işlemi yapılamayacaktır.</p>
             </div>
         </div>
 
@@ -229,138 +225,39 @@
 <div id="basvuruModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Başvuru İnceleme</h3><span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem;">&times;</span></div><div class="modal-body"><div id="basvuruDetayIcerik"></div><hr style="border-color:var(--border); margin:20px 0;"><div id="basvuruIslemButtonlari" class="grid-3"></div></div></div></div>
 <div id="ruhsatEkleModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Yeni Silah Ruhsatı</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body"><input id="ruh_sahip" placeholder="Ruhsat Sahibi (Ad Soyad)"><select id="ruh_tip"><option value="Silah Taşıma">Silah Taşıma Ruhsatı</option><option value="Silah Bulundurma">Silah Bulundurma Ruhsatı</option><option value="Av Tüfeği">Av Tüfeği Ruhsatı</option></select><label style="color:var(--text-muted); font-size:0.8rem;">Geçerlilik Tarihi:</label><input type="date" id="ruh_tarih"><button onclick="ruhsatKaydet()" class="btn btn-green" style="width:100%; margin-top:10px;">RUHSATI OLUŞTUR</button></div></div></div>
 <div id="cezaModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Adalet Bakanlığı Ceza Sistemi</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body"><input id="ceza_sahis" placeholder="Suçlu Adı Soyadı..." style="border:2px solid var(--accent);"><div class="grid-2"><input id="ceza_ara" placeholder="Suç Kodu veya Adı Ara..." onkeyup="cezaFiltrele()"><button onclick="cezaSifirla()" class="btn btn-dark">Seçimleri Temizle</button></div><div style="height:400px; overflow-y:auto; border:1px solid #334155; padding:10px; margin-bottom:15px;" id="cezaListesiContainer"></div><div style="background:#0f172a; padding:15px; text-align:center; border-radius:8px;"><h2 id="toplamTutar" style="color:var(--danger); margin:0;">0 TL / 0 Kamu (Hapis)</h2></div><button onclick="cezayiKes()" class="btn btn-red" style="width:100%; margin-top:15px; padding:15px;">CEZAYI ONAYLA VE İŞLE</button></div></div></div>
-<div id="kisiselYetkiModal" class="modal"><div class="modal-content" style="width: 500px;"><div class="modal-header"><h3><i class="fas fa-user-shield"></i> Özel Yetki Yapılandırması</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body"><h4 id="yetkiModalUserTitle" style="margin-top:0; color:var(--accent);">Kullanıcı: ...</h4><p style="color:var(--text-muted); font-size:0.9rem;"><strong>Dikkat:</strong> Aşağıdaki yetkiler seçildiğinde, kullanıcının rütbesi yetersiz olsa bile işlemi yapmasına izin verilir.</p><div class="perm-list-container"><div class="perm-item" onclick="togglePermCheckbox('perm_basvuru_yonet')"><input type="checkbox" id="perm_basvuru_yonet" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-clipboard-list"></i> Başvuru Yönetimi</span><span class="perm-desc">Başvuruları onaylayabilir/reddedebilir.</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_ruhsat_ver')"><input type="checkbox" id="perm_ruhsat_ver" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-id-card"></i> Silah Ruhsatı Verme</span><span class="perm-desc">Yeni ruhsat tanımlayabilir.</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_ceza_yaz')"><input type="checkbox" id="perm_ceza_yaz" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-gavel"></i> Ceza Yazma Yetkisi</span><span class="perm-desc">Ceza kesebilir ve sisteme işleyebilir.</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_personel_yonet')"><input type="checkbox" id="perm_personel_yonet" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-users-cog"></i> Personel Yönetimi</span><span class="perm-desc">Personel ekleme/silme (KRİTİK!).</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_kara_liste')"><input type="checkbox" id="perm_kara_liste" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-ban"></i> Kara Liste Yönetimi</span><span class="perm-desc">Kişileri banlayabilir.</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_ohal')"><input type="checkbox" id="perm_ohal" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-radiation-alt"></i> OHAL Yetkisi</span><span class="perm-desc">OHAL durumunu değiştirebilir.</span></div></div><div class="perm-item" onclick="togglePermCheckbox('perm_ceza_sil')"><input type="checkbox" id="perm_ceza_sil" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-eraser"></i> Kayıt Silme</span><span class="perm-desc">Ruhsat veya sabıka silebilir.</span></div></div></div><button onclick="kisiselYetkiKaydet()" class="btn btn-green" style="width:100%; margin-top:20px; padding:15px;">YETKİLERİ GÜNCELLE</button></div></div></div>
+
+<div id="kisiselYetkiModal" class="modal"><div class="modal-content" style="width: 500px;"><div class="modal-header"><h3><i class="fas fa-user-shield"></i> Özel Yetki Yapılandırması</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body"><h4 id="yetkiModalUserTitle" style="margin-top:0; color:var(--accent);">Kullanıcı: ...</h4><p style="color:var(--text-muted); font-size:0.9rem;"><strong>Dikkat:</strong> Aşağıdaki yetkiler seçildiğinde, kullanıcının rütbesi yetersiz olsa bile işlemi yapmasına izin verilir.</p>
+<div class="perm-list-container">
+    <div class="perm-item" onclick="togglePermCheckbox('perm_basvuru_yonet')"><input type="checkbox" id="perm_basvuru_yonet" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-clipboard-list"></i> Başvuru Yönetimi</span><span class="perm-desc">Başvuruları onaylayabilir/reddedebilir.</span></div></div>
+    <div class="perm-item" onclick="togglePermCheckbox('perm_ruhsat_ver')"><input type="checkbox" id="perm_ruhsat_ver" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-id-card"></i> Silah Ruhsatı Verme</span><span class="perm-desc">Yeni ruhsat tanımlayabilir.</span></div></div>
+    <div class="perm-item" onclick="togglePermCheckbox('perm_ceza_yaz')"><input type="checkbox" id="perm_ceza_yaz" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-gavel"></i> Ceza Yazma Yetkisi</span><span class="perm-desc">Ceza kesebilir ve sisteme işleyebilir.</span></div></div>
+    <div class="perm-item" onclick="togglePermCheckbox('perm_personel_yonet')"><input type="checkbox" id="perm_personel_yonet" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-users-cog"></i> Personel Yönetimi (Ekle/Düzenle)</span><span class="perm-desc">Personel ekleyebilir ve rütbe düzenleyebilir.</span></div></div>
+    
+    <div class="perm-item" onclick="togglePermCheckbox('perm_personel_sil')"><input type="checkbox" id="perm_personel_sil" class="perm-checkbox"><div class="perm-info"><span class="perm-title" style="color:var(--danger);"><i class="fas fa-user-times"></i> Personel Kovma Yetkisi</span><span class="perm-desc">Personeli sistemden kalıcı olarak SİLEBİLİR.</span></div></div>
+    
+    <div class="perm-item" onclick="togglePermCheckbox('perm_kara_liste')"><input type="checkbox" id="perm_kara_liste" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-ban"></i> Kara Liste Yönetimi</span><span class="perm-desc">Kişileri banlayabilir.</span></div></div>
+    <div class="perm-item" onclick="togglePermCheckbox('perm_ohal')"><input type="checkbox" id="perm_ohal" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-radiation-alt"></i> OHAL Yetkisi</span><span class="perm-desc">OHAL durumunu değiştirebilir.</span></div></div>
+    <div class="perm-item" onclick="togglePermCheckbox('perm_ceza_sil')"><input type="checkbox" id="perm_ceza_sil" class="perm-checkbox"><div class="perm-info"><span class="perm-title"><i class="fas fa-eraser"></i> Kayıt Silme</span><span class="perm-desc">Ruhsat veya sabıka silebilir.</span></div></div>
+</div>
+<button onclick="kisiselYetkiKaydet()" class="btn btn-green" style="width:100%; margin-top:20px; padding:15px;">YETKİLERİ GÜNCELLE</button></div></div></div>
 
 <script src="config.js"></script>
 <script>
     const sirenAudio = new Audio('siren.mp3'); sirenAudio.loop = true; sirenAudio.volume = 0.5;
     const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
     const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue"},{id:1,ad:"Baş Polis",class:"badge-blue"},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue"},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple"},{id:4,ad:"Komiser",class:"badge-purple"},{id:5,ad:"Baş Komiser",class:"badge-purple"},{id:6,ad:"Emniyet Amiri",class:"badge-gold"},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red"}];
-    const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_ohal': 10, 'perm_personel_gor': 5};
+    
+    // GEREKSİNİMLERİ GÜNCELLEDİM: perm_personel_sil için default sadece rank 10
+    const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_personel_sil': 10, 'perm_ohal': 10, 'perm_personel_gor': 5};
+    
     let aktifKullanici = "", aktifRutbeId = 0, aktifOzelYetkiler = {}, seciliBasvuruId = "", seciliBasvuruData = null, myShiftStart = null, myShiftTimer = null, tckDb = [], yetkiDuzenlenenPersonelKey = "";
 
     function yetkiVarMi(permKey) { if(aktifOzelYetkiler && aktifOzelYetkiler[permKey] === true) return true; let gerekenRutbe = MIN_RUTBE_GEREKSINIMLERI[permKey]; if(gerekenRutbe === undefined) gerekenRutbe = 10; return aktifRutbeId >= gerekenRutbe; }
-    function girisYap() { const k = document.getElementById('kadi').value.trim(); const s = document.getElementById('sifre').value.trim(); if(k === "Spontaneftt" && s === "GökSancak1881") { basariliGiris(k, 10, {}); return; } database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => { let userFound = null; sn.forEach(c => { const data = c.val(); if(data.sifre === s) userFound = data; }); if(userFound) { let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0; let ozel = userFound.ozel_yetkiler || {}; basariliGiris(k, r, ozel); } else { document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } }); }
+    function girisYap() { const k = document.getElementById('kadi').value.trim(); const s = document.getElementById('sifre').value.trim(); if(k === "SpontaneFTT" && s === "GökSancak1881") { basariliGiris(k, 10, {}); return; } database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => { let userFound = null; sn.forEach(c => { const data = c.val(); if(data.sifre === s) userFound = data; }); if(userFound) { let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0; let ozel = userFound.ozel_yetkiler || {}; basariliGiris(k, r, ozel); } else { document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } }); }
     function basariliGiris(k, r, ozel) { aktifKullanici = k; aktifRutbeId = r; aktifOzelYetkiler = ozel; document.getElementById('aktifKullaniciAdi').innerText = "Sicil: " + k; document.getElementById('aktifKullaniciRutbe').innerText = RUTBELER[r]?RUTBELER[r].ad:"-"; document.getElementById('aktifKullaniciRutbe').className = "badge " + (RUTBELER[r]?RUTBELER[r].class:"badge-blue"); document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex'; arayuzYetkileriniUygula(); sirenAudio.load(); verileriYukle(); basvurulariDinle(); mesaiSistemiBaslat(); tckVeritabaniHazirla(); const rs = document.getElementById('yeniRutbe'); rs.innerHTML = ""; RUTBELER.forEach(r => { rs.innerHTML += `<option value="${r.id}">${r.ad}</option>`; }); }
     function arayuzYetkileriniUygula() { toggleMenu('menuDashboard', true); toggleMenu('menuBasvuru', true); toggleMenu('menuMesai', true); toggleMenu('menuRuhsat', true); toggleMenu('menuTck', true); toggleMenu('menuGbt', true); toggleMenu('menuArac', true); toggleMenu('menuPersonel', yetkiVarMi('perm_personel_gor')); document.getElementById('ohalBtn').style.display = yetkiVarMi('perm_ohal') ? 'block' : 'none'; }
     function toggleMenu(id, st) { const el = document.getElementById(id); if(st) el.classList.remove('menu-hidden'); else el.classList.add('menu-hidden'); }
-
-    // --- 100 ADET GERÇEKÇİ TCK LİSTESİ ---
-    const REALISTIC_TCK = [
-        // TRAFİK (TRF) - 25 Adet
-        {code: "TRF-01", ad: "Hatalı Park", p: 2500, h: 0},
-        {code: "TRF-02", ad: "Kırmızı Işık İhlali", p: 3500, h: 0},
-        {code: "TRF-03", ad: "Hız Sınırı İhlali (%10-30)", p: 4000, h: 0},
-        {code: "TRF-04", ad: "Hız Sınırı İhlali (%50+)", p: 10000, h: 0},
-        {code: "TRF-05", ad: "Emniyet Kemeri Takmamak", p: 1500, h: 0},
-        {code: "TRF-06", ad: "Seyir Halinde Telefon Kullanımı", p: 3000, h: 0},
-        {code: "TRF-07", ad: "Ters Yön İhlali", p: 5000, h: 0},
-        {code: "TRF-08", ad: "Tehlikeli Makas Atmak", p: 12000, h: 5},
-        {code: "TRF-09", ad: "Drift Yapmak / Topluma Tehlike", p: 30000, h: 10},
-        {code: "TRF-10", ad: "Abartı Egzoz / Gürültü", p: 5000, h: 0},
-        {code: "TRF-11", ad: "Ehliyetsiz Araç Kullanımı", p: 25000, h: 0},
-        {code: "TRF-12", ad: "Ehliyet Yanında Bulunmaması", p: 1000, h: 0},
-        {code: "TRF-13", ad: "Ruhsatsız Araç Kullanımı", p: 15000, h: 0},
-        {code: "TRF-14", ad: "Sigortasız Araç", p: 5000, h: 0},
-        {code: "TRF-15", ad: "Muayenesiz Araç", p: 4000, h: 0},
-        {code: "TRF-16", ad: "Alkollü Araç (Yasal Sınır Altı)", p: 15000, h: 0},
-        {code: "TRF-17", ad: "Alkollü Araç (Yasal Sınır Üstü)", p: 40000, h: 10},
-        {code: "TRF-18", ad: "Uyuşturucu Etkisinde Araç", p: 80000, h: 30},
-        {code: "TRF-19", ad: "Kazaya Sebebiyet Vermek", p: 10000, h: 5},
-        {code: "TRF-20", ad: "Dur İhtarına Uymamak", p: 20000, h: 15},
-        {code: "TRF-21", ad: "Polisten Kaçmak (Araçla)", p: 50000, h: 30},
-        {code: "TRF-22", ad: "Yaya Geçidi İhlali", p: 2000, h: 0},
-        {code: "TRF-23", ad: "Ağır Hasarlı Araç Kullanımı", p: 6000, h: 0},
-        {code: "TRF-24", ad: "Cam Filmi / Görüş Kısıtlama", p: 2000, h: 0},
-        {code: "TRF-25", ad: "Trafik Memuruna Hakaret", p: 15000, h: 10},
-
-        // ASAYİŞ (ASY) - 15 Adet
-        {code: "ASY-01", ad: "Kimlik Beyan Etmemek", p: 5000, h: 5},
-        {code: "ASY-02", ad: "Maske ile Kimlik Gizleme", p: 10000, h: 5},
-        {code: "ASY-03", ad: "Çevreyi Rahatsız Etmek", p: 3000, h: 0},
-        {code: "ASY-04", ad: "Sokak Kavgası", p: 8000, h: 5},
-        {code: "ASY-05", ad: "Sarhoşluk ve Taşkınlık", p: 4000, h: 0},
-        {code: "ASY-06", ad: "Mala Zarar Verme", p: 15000, h: 10},
-        {code: "ASY-07", ad: "Haneye Tecavüz", p: 40000, h: 30},
-        {code: "ASY-08", ad: "Tehdit ve Şantaj", p: 25000, h: 20},
-        {code: "ASY-09", ad: "Yalan İhbar / Polisi Meşgul", p: 10000, h: 5},
-        {code: "ASY-10", ad: "İllegal Kumar Oynamak", p: 20000, h: 5},
-        {code: "ASY-11", ad: "İllegal Yarış Düzenlemek", p: 60000, h: 40},
-        {code: "ASY-12", ad: "Kamu Malına Zarar Verme", p: 50000, h: 40},
-        {code: "ASY-13", ad: "Polise Mukavemet", p: 40000, h: 30},
-        {code: "ASY-14", ad: "Polise Yalan Beyan", p: 15000, h: 10},
-        {code: "ASY-15", ad: "Yasaklı Bölge İhlali", p: 30000, h: 20},
-
-        // HIRSIZLIK (HRS) - 10 Adet
-        {code: "HRS-01", ad: "Yankesicilik / Kapkaç", p: 10000, h: 15},
-        {code: "HRS-02", ad: "Mağaza Hırsızlığı", p: 8000, h: 10},
-        {code: "HRS-03", ad: "Araç Hırsızlığı (Düz Kontak)", p: 40000, h: 40},
-        {code: "HRS-04", ad: "Araç Parçalamak (Chop Shop)", p: 60000, h: 60},
-        {code: "HRS-05", ad: "Ev Soygunu", p: 80000, h: 70},
-        {code: "HRS-06", ad: "Gasp (Silahsız)", p: 30000, h: 30},
-        {code: "HRS-07", ad: "Gasp (Silahlı)", p: 70000, h: 80},
-        {code: "HRS-08", ad: "Kişisel Eşya Hırsızlığı", p: 15000, h: 15},
-        {code: "HRS-09", ad: "Kamu Malı Hırsızlığı", p: 50000, h: 50},
-        {code: "HRS-10", ad: "Suç Aleti/Delil Çalmak", p: 100000, h: 100},
-
-        // ŞİDDET (SDT) - 15 Adet
-        {code: "SDT-01", ad: "Basit Yaralama (Darp)", p: 20000, h: 20},
-        {code: "SDT-02", ad: "Silahlı Yaralama", p: 80000, h: 80},
-        {code: "SDT-03", ad: "Bıçaklı Yaralama", p: 60000, h: 60},
-        {code: "SDT-04", ad: "Adam Öldürmeye Teşebbüs", p: 150000, h: 100},
-        {code: "SDT-05", ad: "Taksirle Adam Öldürme", p: 100000, h: 80},
-        {code: "SDT-06", ad: "Kasten Adam Öldürme", p: 300000, h: 120},
-        {code: "SDT-07", ad: "Kamu Görevlisini Yaralama", p: 120000, h: 100},
-        {code: "SDT-08", ad: "Kamu Görevlisini Öldürme", p: 400000, h: 120},
-        {code: "SDT-09", ad: "Adam Kaçırma / Rehin Alma", p: 150000, h: 110},
-        {code: "SDT-10", ad: "İşkence", p: 200000, h: 120},
-        {code: "SDT-11", ad: "Özel Hayatın Gizliliği İhlali", p: 25000, h: 10},
-        {code: "SDT-12", ad: "Kundakçılık", p: 100000, h: 90},
-        {code: "SDT-13", ad: "Toplu Saldırı", p: 80000, h: 70},
-        {code: "SDT-14", ad: "Hayvana Şiddet", p: 50000, h: 40},
-        {code: "SDT-15", ad: "Nefret Suçları", p: 60000, h: 50},
-
-        // NARKOTİK (NRK) - 15 Adet
-        {code: "NRK-01", ad: "Uyuşturucu Kullanımı (Esrar)", p: 15000, h: 10},
-        {code: "NRK-02", ad: "Uyuşturucu Bulundurma (Az Miktar)", p: 25000, h: 20},
-        {code: "NRK-03", ad: "Uyuşturucu Ticareti (Torbacılık)", p: 80000, h: 80},
-        {code: "NRK-04", ad: "Uyuşturucu İmalatı (Yetiştirme)", p: 150000, h: 100},
-        {code: "NRK-05", ad: "Metamfetamin Bulundurma", p: 40000, h: 30},
-        {code: "NRK-06", ad: "Metamfetamin Ticareti", p: 100000, h: 90},
-        {code: "NRK-07", ad: "Kokain Bulundurma", p: 50000, h: 40},
-        {code: "NRK-08", ad: "Kokain Ticareti", p: 120000, h: 100},
-        {code: "NRK-09", ad: "Sentetik Hap Bulundurma", p: 20000, h: 15},
-        {code: "NRK-10", ad: "Uyuşturucu Nakliyesi (Kuryelik)", p: 70000, h: 60},
-        {code: "NRK-11", ad: "Uyuşturucu Madde Tesiri Altında Suç", p: 60000, h: 50},
-        {code: "NRK-12", ad: "Laboratuvar Kurmak (İmalathane)", p: 250000, h: 120},
-        {code: "NRK-13", ad: "Reçeteli İlaç Ticareti", p: 30000, h: 20},
-        {code: "NRK-14", ad: "Uyuşturucu Satışına Aracılık", p: 50000, h: 40},
-        {code: "NRK-15", ad: "Toplu Uyuşturucu Partisi", p: 40000, h: 30},
-
-        // SİLAHLAR (SLH) - 10 Adet
-        {code: "SLH-01", ad: "Ruhsatsız Tabanca Bulundurma", p: 50000, h: 40},
-        {code: "SLH-02", ad: "Ruhsatsız Tabanca Ticareti", p: 100000, h: 90},
-        {code: "SLH-03", ad: "Kesici Alet Taşıma (Sustalı vb.)", p: 15000, h: 10},
-        {code: "SLH-04", ad: "Uzun Namlulu Silah (SMG/Rifle)", p: 150000, h: 100},
-        {code: "SLH-05", ad: "Ağır Silah Bulundurma (RPG/C4)", p: 300000, h: 120},
-        {code: "SLH-06", ad: "Meskun Mahalde Ateş Etme", p: 40000, h: 30},
-        {code: "SLH-07", ad: "Silah Teşhiri (Korkutma)", p: 25000, h: 20},
-        {code: "SLH-08", ad: "Polis Ekipmanları Bulundurma", p: 60000, h: 50},
-        {code: "SLH-09", ad: "Çalıntı Silah Bulundurma", p: 70000, h: 60},
-        {code: "SLH-10", ad: "Seri Numarası Silinmiş Silah", p: 80000, h: 70},
-
-        // ORGANİZE VE MALİ (ORG) - 10 Adet
-        {code: "ORG-01", ad: "Suç Örgütü Kurmak/Yönetmek", p: 300000, h: 120},
-        {code: "ORG-02", ad: "Suç Örgütü Üyeliği", p: 100000, h: 80},
-        {code: "ORG-03", ad: "Kara Para Aklama", p: 200000, h: 90},
-        {code: "ORG-04", ad: "Market Soygunu", p: 60000, h: 50},
-        {code: "ORG-05", ad: "Banka Soygunu (Küçük)", p: 150000, h: 100},
-        {code: "ORG-06", ad: "Merkez Bankası Soygunu", p: 400000, h: 120},
-        {code: "ORG-07", ad: "Kuyumcu Soygunu", p: 120000, h: 90},
-        {code: "ORG-08", ad: "Zırhlı Araç Soygunu", p: 180000, h: 110},
-        {code: "ORG-09", ad: "Rüşvet Vermek/Almak", p: 100000, h: 80},
-        {code: "ORG-10", ad: "Devlet Düzenine Karşı Suçlar (Terör)", p: 400000, h: 120}
-    ];
+    const REALISTIC_TCK = [{code: "TRF-01", ad: "Hatalı Park", p: 2500, h: 0}, {code: "TRF-02", ad: "Kırmızı Işık İhlali", p: 3500, h: 0}, {code: "TRF-03", ad: "Hız Sınırı İhlali (%10-30)", p: 4000, h: 0}, {code: "TRF-04", ad: "Hız Sınırı İhlali (%50+)", p: 10000, h: 0}, {code: "TRF-05", ad: "Emniyet Kemeri Takmamak", p: 1500, h: 0}, {code: "TRF-06", ad: "Seyir Halinde Telefon Kullanımı", p: 3000, h: 0}, {code: "TRF-07", ad: "Ters Yön İhlali", p: 5000, h: 0}, {code: "TRF-08", ad: "Tehlikeli Makas Atmak", p: 12000, h: 5}, {code: "TRF-09", ad: "Drift Yapmak / Topluma Tehlike", p: 30000, h: 10}, {code: "TRF-10", ad: "Abartı Egzoz / Gürültü", p: 5000, h: 0}, {code: "TRF-11", ad: "Ehliyetsiz Araç Kullanımı", p: 25000, h: 0}, {code: "TRF-12", ad: "Ehliyet Yanında Bulunmaması", p: 1000, h: 0}, {code: "TRF-13", ad: "Ruhsatsız Araç Kullanımı", p: 15000, h: 0}, {code: "TRF-14", ad: "Sigortasız Araç", p: 5000, h: 0}, {code: "TRF-15", ad: "Muayenesiz Araç", p: 4000, h: 0}, {code: "TRF-16", ad: "Alkollü Araç (Yasal Sınır Altı)", p: 15000, h: 0}, {code: "TRF-17", ad: "Alkollü Araç (Yasal Sınır Üstü)", p: 40000, h: 10}, {code: "TRF-18", ad: "Uyuşturucu Etkisinde Araç", p: 80000, h: 30}, {code: "TRF-19", ad: "Kazaya Sebebiyet Vermek", p: 10000, h: 5}, {code: "TRF-20", ad: "Dur İhtarına Uymamak", p: 20000, h: 15}, {code: "TRF-21", ad: "Polisten Kaçmak (Araçla)", p: 50000, h: 30}, {code: "TRF-22", ad: "Yaya Geçidi İhlali", p: 2000, h: 0}, {code: "TRF-23", ad: "Ağır Hasarlı Araç Kullanımı", p: 6000, h: 0}, {code: "TRF-24", ad: "Cam Filmi / Görüş Kısıtlama", p: 2000, h: 0}, {code: "TRF-25", ad: "Trafik Memuruna Hakaret", p: 15000, h: 10}, {code: "ASY-01", ad: "Kimlik Beyan Etmemek", p: 5000, h: 5}, {code: "ASY-02", ad: "Maske ile Kimlik Gizleme", p: 10000, h: 5}, {code: "ASY-03", ad: "Çevreyi Rahatsız Etmek", p: 3000, h: 0}, {code: "ASY-04", ad: "Sokak Kavgası", p: 8000, h: 5}, {code: "ASY-05", ad: "Sarhoşluk ve Taşkınlık", p: 4000, h: 0}, {code: "ASY-06", ad: "Mala Zarar Verme", p: 15000, h: 10}, {code: "ASY-07", ad: "Haneye Tecavüz", p: 40000, h: 30}, {code: "ASY-08", ad: "Tehdit ve Şantaj", p: 25000, h: 20}, {code: "ASY-09", ad: "Yalan İhbar / Polisi Meşgul", p: 10000, h: 5}, {code: "ASY-10", ad: "İllegal Kumar Oynamak", p: 20000, h: 5}, {code: "ASY-11", ad: "İllegal Yarış Düzenlemek", p: 60000, h: 40}, {code: "ASY-12", ad: "Kamu Malına Zarar Verme", p: 50000, h: 40}, {code: "ASY-13", ad: "Polise Mukavemet", p: 40000, h: 30}, {code: "ASY-14", ad: "Polise Yalan Beyan", p: 15000, h: 10}, {code: "ASY-15", ad: "Yasaklı Bölge İhlali", p: 30000, h: 20}, {code: "HRS-01", ad: "Yankesicilik / Kapkaç", p: 10000, h: 15}, {code: "HRS-02", ad: "Mağaza Hırsızlığı", p: 8000, h: 10}, {code: "HRS-03", ad: "Araç Hırsızlığı (Düz Kontak)", p: 40000, h: 40}, {code: "HRS-04", ad: "Araç Parçalamak (Chop Shop)", p: 60000, h: 60}, {code: "HRS-05", ad: "Ev Soygunu", p: 80000, h: 70}, {code: "HRS-06", ad: "Gasp (Silahsız)", p: 30000, h: 30}, {code: "HRS-07", ad: "Gasp (Silahlı)", p: 70000, h: 80}, {code: "HRS-08", ad: "Kişisel Eşya Hırsızlığı", p: 15000, h: 15}, {code: "HRS-09", ad: "Kamu Malı Hırsızlığı", p: 50000, h: 50}, {code: "HRS-10", ad: "Suç Aleti/Delil Çalmak", p: 100000, h: 100}, {code: "SDT-01", ad: "Basit Yaralama (Darp)", p: 20000, h: 20}, {code: "SDT-02", ad: "Silahlı Yaralama", p: 80000, h: 80}, {code: "SDT-03", ad: "Bıçaklı Yaralama", p: 60000, h: 60}, {code: "SDT-04", ad: "Adam Öldürmeye Teşebbüs", p: 150000, h: 100}, {code: "SDT-05", ad: "Taksirle Adam Öldürme", p: 100000, h: 80}, {code: "SDT-06", ad: "Kasten Adam Öldürme", p: 300000, h: 120}, {code: "SDT-07", ad: "Kamu Görevlisini Yaralama", p: 120000, h: 100}, {code: "SDT-08", ad: "Kamu Görevlisini Öldürme", p: 400000, h: 120}, {code: "SDT-09", ad: "Adam Kaçırma / Rehin Alma", p: 150000, h: 110}, {code: "SDT-10", ad: "İşkence", p: 200000, h: 120}, {code: "SDT-11", ad: "Özel Hayatın Gizliliği İhlali", p: 25000, h: 10}, {code: "SDT-12", ad: "Kundakçılık", p: 100000, h: 90}, {code: "SDT-13", ad: "Toplu Saldırı", p: 80000, h: 70}, {code: "SDT-14", ad: "Hayvana Şiddet", p: 50000, h: 40}, {code: "SDT-15", ad: "Nefret Suçları", p: 60000, h: 50}, {code: "NRK-01", ad: "Uyuşturucu Kullanımı (Esrar)", p: 15000, h: 10}, {code: "NRK-02", ad: "Uyuşturucu Bulundurma (Az Miktar)", p: 25000, h: 20}, {code: "NRK-03", ad: "Uyuşturucu Ticareti (Torbacılık)", p: 80000, h: 80}, {code: "NRK-04", ad: "Uyuşturucu İmalatı (Yetiştirme)", p: 150000, h: 100}, {code: "NRK-05", ad: "Metamfetamin Bulundurma", p: 40000, h: 30}, {code: "NRK-06", ad: "Metamfetamin Ticareti", p: 100000, h: 90}, {code: "NRK-07", ad: "Kokain Bulundurma", p: 50000, h: 40}, {code: "NRK-08", ad: "Kokain Ticareti", p: 120000, h: 100}, {code: "NRK-09", ad: "Sentetik Hap Bulundurma", p: 20000, h: 15}, {code: "NRK-10", ad: "Uyuşturucu Nakliyesi (Kuryelik)", p: 70000, h: 60}, {code: "NRK-11", ad: "Uyuşturucu Madde Tesiri Altında Suç", p: 60000, h: 50}, {code: "NRK-12", ad: "Laboratuvar Kurmak (İmalathane)", p: 250000, h: 120}, {code: "NRK-13", ad: "Reçeteli İlaç Ticareti", p: 30000, h: 20}, {code: "NRK-14", ad: "Uyuşturucu Satışına Aracılık", p: 50000, h: 40}, {code: "NRK-15", ad: "Toplu Uyuşturucu Partisi", p: 40000, h: 30}, {code: "SLH-01", ad: "Ruhsatsız Tabanca Bulundurma", p: 50000, h: 40}, {code: "SLH-02", ad: "Ruhsatsız Tabanca Ticareti", p: 100000, h: 90}, {code: "SLH-03", ad: "Kesici Alet Taşıma (Sustalı vb.)", p: 15000, h: 10}, {code: "SLH-04", ad: "Uzun Namlulu Silah (SMG/Rifle)", p: 150000, h: 100}, {code: "SLH-05", ad: "Ağır Silah Bulundurma (RPG/C4)", p: 300000, h: 120}, {code: "SLH-06", ad: "Meskun Mahalde Ateş Etme", p: 40000, h: 30}, {code: "SLH-07", ad: "Silah Teşhiri (Korkutma)", p: 25000, h: 20}, {code: "SLH-08", ad: "Polis Ekipmanları Bulundurma", p: 60000, h: 50}, {code: "SLH-09", ad: "Çalıntı Silah Bulundurma", p: 70000, h: 60}, {code: "SLH-10", ad: "Seri Numarası Silinmiş Silah", p: 80000, h: 70}, {code: "ORG-01", ad: "Suç Örgütü Kurmak/Yönetmek", p: 300000, h: 120}, {code: "ORG-02", ad: "Suç Örgütü Üyeliği", p: 100000, h: 80}, {code: "ORG-03", ad: "Kara Para Aklama", p: 200000, h: 90}, {code: "ORG-04", ad: "Market Soygunu", p: 60000, h: 50}, {code: "ORG-05", ad: "Banka Soygunu (Küçük)", p: 150000, h: 100}, {code: "ORG-06", ad: "Merkez Bankası Soygunu", p: 400000, h: 120}, {code: "ORG-07", ad: "Kuyumcu Soygunu", p: 120000, h: 90}, {code: "ORG-08", ad: "Zırhlı Araç Soygunu", p: 180000, h: 110}, {code: "ORG-09", ad: "Rüşvet Vermek/Almak", p: 100000, h: 80}, {code: "ORG-10", ad: "Devlet Düzenine Karşı Suçlar (Terör)", p: 400000, h: 120}];
 
     function tckVeritabaniHazirla() { tckDb = REALISTIC_TCK; cezaListesiniOlustur(); const tb = document.getElementById('tckEditListesi'); tb.innerHTML=""; tckDb.forEach(i => tb.innerHTML+=`<tr><td>${i.code}</td><td>${i.ad}</td><td>${i.p.toLocaleString()} TL</td><td>${i.h} Kamu</td></tr>`); }
     function cezaListesiniOlustur() { renderCezaListesi(tckDb); }
@@ -376,12 +273,51 @@
         database.ref('gbt').push({ isim: s, tarih: new Date().toISOString(), suc: `TOPLAM: ${tp.toLocaleString()} TL, ${ta} Kamu`, memur: aktifKullanici }); alert("İşlendi!"); modalKapat(); 
     }
 
-    function verileriYukle() { database.ref('personel').on('value', s => { const tb = document.getElementById('personelListesi'); tb.innerHTML = ""; s.forEach(c => { const p = c.val(); let rId = p.rutbe !== undefined ? parseInt(p.rutbe) : 0; let btnDuzenle = yetkiVarMi('perm_personel_yonet') ? `<button onclick="rutbeGuncellePrompt('${c.key}', ${rId})" class="btn btn-yellow btn-sm" style="margin-right:5px;">DÜZENLE</button>` : ""; let btnSil = yetkiVarMi('perm_personel_yonet') ? `<button onclick="personelSil('${c.key}')" class="btn btn-red btn-sm">SİL</button>` : ""; let btnOzelYetki = aktifRutbeId === 10 ? `<button onclick="yetkiModalAc('${c.key}', '${p.kadi}')" class="btn btn-purple btn-sm" style="margin-right:5px;" title="Özel Yetkiler"><i class="fas fa-user-shield"></i> YETKİ</button>` : ""; tb.innerHTML += `<tr><td>${p.kadi}</td><td><span class="badge ${RUTBELER[rId]?RUTBELER[rId].class:"badge-blue"}">${RUTBELER[rId]?RUTBELER[rId].ad:"-"}</span></td><td>****</td><td style="display:flex; justify-content:center;">${btnOzelYetki}${btnDuzenle}${btnSil}</td></tr>`; }); }); database.ref('blacklist').on('value', s => { const d = document.getElementById('blacklistContainer'); d.innerHTML = ""; s.forEach(c => { let btnSil = yetkiVarMi('perm_kara_liste') ? `<button onclick="karaListeSil('${c.key}')" class="btn btn-red btn-sm">X</button>` : ''; d.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333;">${c.val().discord_id} (${c.val().sebep}) ${btnSil}</div>`; }); }); ruhsatlariDinle(); database.ref('gbt').on('value', s => { if(s.exists()) document.getElementById('statAranan').innerText = Object.keys(s.val()).length; }); }
+    function verileriYukle() { 
+        database.ref('personel').on('value', s => { 
+            const tb = document.getElementById('personelListesi'); 
+            tb.innerHTML = ""; 
+            s.forEach(c => { 
+                const p = c.val(); 
+                let rId = p.rutbe !== undefined ? parseInt(p.rutbe) : 0; 
+                let btnDuzenle = yetkiVarMi('perm_personel_yonet') ? `<button onclick="rutbeGuncellePrompt('${c.key}', ${rId})" class="btn btn-yellow btn-sm" style="margin-right:5px;">DÜZENLE</button>` : ""; 
+                
+                // YENİ KONTROL: SADECE 'perm_personel_sil' YETKİSİ VARSA SİL BUTONU GÖRÜNÜR
+                let btnSil = yetkiVarMi('perm_personel_sil') ? `<button onclick="personelSil('${c.key}')" class="btn btn-red btn-sm">SİL</button>` : ""; 
+                
+                let btnOzelYetki = aktifRutbeId === 10 ? `<button onclick="yetkiModalAc('${c.key}', '${p.kadi}')" class="btn btn-purple btn-sm" style="margin-right:5px;" title="Özel Yetkiler"><i class="fas fa-user-shield"></i> YETKİ</button>` : ""; 
+                tb.innerHTML += `<tr><td>${p.kadi}</td><td><span class="badge ${RUTBELER[rId]?RUTBELER[rId].class:"badge-blue"}">${RUTBELER[rId]?RUTBELER[rId].ad:"-"}</span></td><td>****</td><td style="display:flex; justify-content:center;">${btnOzelYetki}${btnDuzenle}${btnSil}</td></tr>`; 
+            }); 
+        }); 
+        database.ref('blacklist').on('value', s => { const d = document.getElementById('blacklistContainer'); d.innerHTML = ""; s.forEach(c => { let btnSil = yetkiVarMi('perm_kara_liste') ? `<button onclick="karaListeSil('${c.key}')" class="btn btn-red btn-sm">X</button>` : ''; d.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333;">${c.val().discord_id} (${c.val().sebep}) ${btnSil}</div>`; }); }); ruhsatlariDinle(); database.ref('gbt').on('value', s => { if(s.exists()) document.getElementById('statAranan').innerText = Object.keys(s.val()).length; }); 
+    }
+    
     function yetkiModalAc(key, name) { yetkiDuzenlenenPersonelKey = key; document.getElementById('yetkiModalUserTitle').innerText = "Kullanıcı: " + name; document.querySelectorAll('.perm-checkbox').forEach(cb => cb.checked = false); database.ref('personel/' + key + '/ozel_yetkiler').once('value', s => { if(s.exists()) { const yetkiler = s.val(); for (const [permKey, val] of Object.entries(yetkiler)) { const cb = document.getElementById(permKey); if(cb) cb.checked = val; } } modalAc('kisiselYetkiModal'); }); }
     function togglePermCheckbox(id) { const el = document.getElementById(id); el.checked = !el.checked; } document.querySelectorAll('.perm-checkbox').forEach(el => { el.onclick = function(e) { e.stopPropagation(); } });
-    function kisiselYetkiKaydet() { if(!yetkiDuzenlenenPersonelKey) return; const yeniYetkiler = { perm_basvuru_yonet: document.getElementById('perm_basvuru_yonet').checked, perm_ruhsat_ver: document.getElementById('perm_ruhsat_ver').checked, perm_personel_yonet: document.getElementById('perm_personel_yonet').checked, perm_kara_liste: document.getElementById('perm_kara_liste').checked, perm_ohal: document.getElementById('perm_ohal').checked, perm_ceza_sil: document.getElementById('perm_ceza_sil').checked, perm_ceza_yaz: document.getElementById('perm_ceza_yaz').checked }; database.ref('personel/' + yetkiDuzenlenenPersonelKey).update({ ozel_yetkiler: yeniYetkiler }).then(() => { alert("Yetkiler güncellendi!"); modalKapat(); }); }
+    
+    function kisiselYetkiKaydet() { 
+        if(!yetkiDuzenlenenPersonelKey) return; 
+        const yeniYetkiler = { 
+            perm_basvuru_yonet: document.getElementById('perm_basvuru_yonet').checked, 
+            perm_ruhsat_ver: document.getElementById('perm_ruhsat_ver').checked, 
+            perm_personel_yonet: document.getElementById('perm_personel_yonet').checked, 
+            perm_personel_sil: document.getElementById('perm_personel_sil').checked, // YENİ EKLENDİ
+            perm_kara_liste: document.getElementById('perm_kara_liste').checked, 
+            perm_ohal: document.getElementById('perm_ohal').checked, 
+            perm_ceza_sil: document.getElementById('perm_ceza_sil').checked, 
+            perm_ceza_yaz: document.getElementById('perm_ceza_yaz').checked 
+        }; 
+        database.ref('personel/' + yetkiDuzenlenenPersonelKey).update({ ozel_yetkiler: yeniYetkiler }).then(() => { alert("Yetkiler güncellendi!"); modalKapat(); }); 
+    }
+    
     function personelEkle() { if(!yetkiVarMi('perm_personel_yonet')) return alert("Rütbeniz veya yetkiniz yetersiz!"); const k = document.getElementById('yeniKadi').value; const s = document.getElementById('yeniSifre').value; const r = document.getElementById('yeniRutbe').value; if(!k || !s) return alert("Eksik bilgi!"); database.ref('personel').push({ kadi: k, sifre: s, rutbe: parseInt(r) }); alert("Eklendi!"); document.getElementById('yeniKadi').value=""; document.getElementById('yeniSifre').value=""; }
-    function personelSil(key) { if(!yetkiVarMi('perm_personel_yonet')) return alert("Yetkisiz!"); if(confirm("Silinecek?")) database.ref('personel/'+key).remove(); }
+    
+    // YENİ SİLME FONKSİYONU: ÖZEL YETKİ KONTROLÜ
+    function personelSil(key) { 
+        if(!yetkiVarMi('perm_personel_sil')) return alert("YETKİSİZ İŞLEM: Personel kovma yetkiniz bulunmamaktadır!"); 
+        if(confirm("Bu personeli kalıcı olarak kovmak/silmek istediğinize emin misiniz?")) database.ref('personel/'+key).remove(); 
+    }
+    
     function rutbeGuncellePrompt(key, r) { if(!yetkiVarMi('perm_personel_yonet')) return alert("Yetkisiz!"); let n = prompt("Yeni Rütbe ID (0-10):", r); if(n) database.ref('personel/'+key).update({rutbe: parseInt(n)}); }
     function basvuruSil(key) { if(!yetkiVarMi('perm_basvuru_yonet')) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref('basvurular/'+key).remove(); }
     function basvuruIncele(key) { seciliBasvuruId = key; database.ref('basvurular/'+key).once('value', s => { const d = s.val(); seciliBasvuruData = d; let h = `<div class="grid-2"><div>ID: ${d.discord_id}</div><div>İsim: ${d.ic_isim}</div></div><hr><h4>Cevaplar:</h4>`; for(let k in d.cevaplar) if(!['discord_id','ic_isim','ooc_yas'].includes(k)) h += `<p style="color:#aaa;margin:2px;">${d.soru_detaylari?d.soru_detaylari[k]:k}</p><div style="background:rgba(0,0,0,0.2);padding:10px;margin-bottom:10px;">${d.cevaplar[k]}</div>`; document.getElementById('basvuruDetayIcerik').innerHTML = h; let btns = ""; if(yetkiVarMi('perm_basvuru_yonet')) { btns += `<button onclick="durumGuncelle('Onaylandı')" class="btn btn-green">ONAYLA</button><button onclick="durumGuncelle('Reddedildi')" class="btn btn-red">REDDET</button>`; } if(yetkiVarMi('perm_kara_liste')) btns += `<button onclick="karaListeyeEkle('${d.discord_id}')" class="btn btn-dark">BANLA</button>`; document.getElementById('basvuruIslemButtonlari').innerHTML = btns; modalAc('basvuruModal'); }); }
