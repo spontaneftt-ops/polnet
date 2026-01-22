@@ -9,7 +9,5 @@ const firebaseConfig = {
 };
 
 // Uygulamayı Başlat
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
