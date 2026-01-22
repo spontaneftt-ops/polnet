@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v4.9 - Özel Yetki Modülü</title>
+    <title>POLNET v5.0 - Hiyerarşik Yönetim</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -87,16 +87,14 @@
         .ceza-item.selected { background: rgba(59,130,246,0.2); border-left: 4px solid var(--accent); }
         .ceza-code { color: var(--text-muted); font-family: 'Chakra Petch'; margin-right: 10px; width: 60px; display:inline-block; font-weight:bold; }
 
-        /* YENİ: KİŞİSEL YETKİ MODAL STİLLERİ (GÖRSELDEKİ GİBİ) */
+        /* KİŞİSEL YETKİ MODAL STİLLERİ */
         .perm-list-container { display: flex; flex-direction: column; gap: 10px; }
         .perm-item { 
             display: flex; align-items: center; padding: 15px; background: rgba(0,0,0,0.2); 
             border: 1px solid var(--border); border-radius: 8px; transition: 0.2s; cursor: pointer;
         }
         .perm-item:hover { background: rgba(255,255,255,0.02); border-color: var(--accent); }
-        .perm-checkbox { 
-            width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--accent);
-        }
+        .perm-checkbox { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--accent); }
         .perm-info { display: flex; flex-direction: column; }
         .perm-title { font-weight: bold; font-family: 'Chakra Petch'; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .perm-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px; }
@@ -109,13 +107,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v4.9</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v5.0</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v4.9 Stable - Authorized Personnel Only</p>
+        <p style="font-size:10px; color:#555;">v5.0 Stable - Authorized Personnel Only</p>
     </div>
 </div>
 
@@ -153,8 +151,14 @@
                 <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Devriye</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-shield-alt"></i> Sistem Güncellemesi v4.9</h3>
-                <p><strong>ÖZEL YETKİ SİSTEMİ AKTİF:</strong> Artık personel yönetiminden, istediğiniz memura özel olarak (Rütbesinden bağımsız) yetki tanımlayabilirsiniz. İlgili personelin yanındaki "🛡️" ikonuna tıklamanız yeterlidir.</p>
+                <h3><i class="fas fa-shield-alt"></i> Hiyerarşik Yönetim Güncellemesi</h3>
+                <p>Sistem rütbelere göre otomatik yetkilendirilmiştir. İşlem yapabilmek için gerekli rütbe veya "Özel Yetki" gerekir.</p>
+                <ul>
+                    <li><strong>Memurlar:</strong> Sadece görüntüleme.</li>
+                    <li><strong>Komiserler:</strong> Ceza yazma, Başvuru inceleme.</li>
+                    <li><strong>Amirler:</strong> Ruhsat verme, Kara liste.</li>
+                    <li><strong>Müdürler:</strong> Personel yönetimi, OHAL.</li>
+                </ul>
             </div>
         </div>
 
@@ -241,58 +245,38 @@
         </div>
         <div class="modal-body">
             <h4 id="yetkiModalUserTitle" style="margin-top:0; color:var(--accent);">Kullanıcı: ...</h4>
-            <p style="color:var(--text-muted); font-size:0.9rem;">Aşağıdan bu kullanıcıya rütbesinden bağımsız olarak vereceğiniz özel yetkileri seçiniz.</p>
+            <p style="color:var(--text-muted); font-size:0.9rem;"><strong>Dikkat:</strong> Aşağıdaki yetkiler seçildiğinde, kullanıcının rütbesi yetersiz olsa bile işlemi yapmasına izin verilir.</p>
             
             <div class="perm-list-container">
                 <div class="perm-item" onclick="togglePermCheckbox('perm_basvuru_yonet')">
                     <input type="checkbox" id="perm_basvuru_yonet" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-clipboard-list"></i> Başvuru Yönetimi</span>
-                        <span class="perm-desc">Başvuruları onaylayabilir veya reddedebilir.</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-clipboard-list"></i> Başvuru Yönetimi</span><span class="perm-desc">Başvuruları onaylayabilir/reddedebilir.</span></div>
                 </div>
-
                 <div class="perm-item" onclick="togglePermCheckbox('perm_ruhsat_ver')">
                     <input type="checkbox" id="perm_ruhsat_ver" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-id-card"></i> Silah Ruhsatı Verme</span>
-                        <span class="perm-desc">Yeni silah ruhsatı tanımlayabilir.</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-id-card"></i> Silah Ruhsatı Verme</span><span class="perm-desc">Yeni ruhsat tanımlayabilir.</span></div>
                 </div>
-
+                <div class="perm-item" onclick="togglePermCheckbox('perm_ceza_yaz')">
+                    <input type="checkbox" id="perm_ceza_yaz" class="perm-checkbox">
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-gavel"></i> Ceza Yazma Yetkisi</span><span class="perm-desc">Ceza kesebilir ve sisteme işleyebilir.</span></div>
+                </div>
                 <div class="perm-item" onclick="togglePermCheckbox('perm_personel_yonet')">
                     <input type="checkbox" id="perm_personel_yonet" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-users-cog"></i> Personel Yönetimi</span>
-                        <span class="perm-desc">Personel ekleyebilir/silebilir (KRİTİK!).</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-users-cog"></i> Personel Yönetimi</span><span class="perm-desc">Personel ekleme/silme (KRİTİK!).</span></div>
                 </div>
-
                 <div class="perm-item" onclick="togglePermCheckbox('perm_kara_liste')">
                     <input type="checkbox" id="perm_kara_liste" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-ban"></i> Kara Liste Yönetimi</span>
-                        <span class="perm-desc">Kişileri kara listeye alabilir veya çıkarabilir.</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-ban"></i> Kara Liste Yönetimi</span><span class="perm-desc">Kişileri banlayabilir.</span></div>
                 </div>
-
                 <div class="perm-item" onclick="togglePermCheckbox('perm_ohal')">
                     <input type="checkbox" id="perm_ohal" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-radiation-alt"></i> OHAL Yetkisi</span>
-                        <span class="perm-desc">Şehirde OHAL durumunu başlatıp bitirebilir.</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-radiation-alt"></i> OHAL Yetkisi</span><span class="perm-desc">OHAL durumunu değiştirebilir.</span></div>
                 </div>
-
                 <div class="perm-item" onclick="togglePermCheckbox('perm_ceza_sil')">
                     <input type="checkbox" id="perm_ceza_sil" class="perm-checkbox">
-                    <div class="perm-info">
-                        <span class="perm-title"><i class="fas fa-eraser"></i> Ruhsat/Ceza Silme</span>
-                        <span class="perm-desc">İşlenmiş ruhsatları veya sabıka kayıtlarını silebilir.</span>
-                    </div>
+                    <div class="perm-info"><span class="perm-title"><i class="fas fa-eraser"></i> Kayıt Silme</span><span class="perm-desc">Ruhsat veya sabıka silebilir.</span></div>
                 </div>
             </div>
-
             <button onclick="kisiselYetkiKaydet()" class="btn btn-green" style="width:100%; margin-top:20px; padding:15px;">YETKİLERİ GÜNCELLE</button>
         </div>
     </div>
@@ -317,28 +301,51 @@
         { id: 10, ad: "1. Sınıf Emniyet Müdürü", class: "badge-red" }
     ];
 
+    // --- VARSAYILAN RÜTBE GEREKSİNİMLERİ ---
+    // Eğer kişiye "Özel Yetki" verilmediyse, sistem bu tablodaki rütbeye bakar.
+    const MIN_RUTBE_GEREKSINIMLERI = {
+        'perm_ceza_yaz': 3,       // Komiser Yrd. ve üstü
+        'perm_basvuru_yonet': 4,  // Komiser ve üstü
+        'perm_ruhsat_ver': 6,     // Emniyet Amiri ve üstü
+        'perm_kara_liste': 6,     // Emniyet Amiri ve üstü
+        'perm_ceza_sil': 8,       // 3. Sınıf Müdür ve üstü
+        'perm_personel_yonet': 9, // 2. Sınıf Müdür ve üstü (Ekleme/Silme)
+        'perm_ohal': 10,          // Sadece 1. Sınıf Müdür
+        'perm_personel_gor': 5    // Baş Komiser ve üstü (Menüde Personel sekmesini görmek için)
+    };
+
     let aktifKullanici = "";
     let aktifRutbeId = 0; 
-    let aktifOzelYetkiler = {}; // Giriş yapan kişinin özel yetkileri
+    let aktifOzelYetkiler = {}; 
     let seciliBasvuruId = "";
     let seciliBasvuruData = null; 
     let myShiftStart = null;
     let myShiftTimer = null;
     let tckDb = []; 
-    let yetkiDuzenlenenPersonelKey = ""; // Modal açıkken kimin yetkisi düzenleniyor
+    let yetkiDuzenlenenPersonelKey = "";
 
-    // --- GİRİŞ VE YETKİ KONTROLÜ ---
+    // --- ANA YETKİ KONTROL MEKANİZMASI ---
+    // Mantık: (Özel Yetkisi Var Mı?) VEYA (Rütbesi Yeterli Mi?)
+    function yetkiVarMi(permKey) {
+        // 1. Önce özel yetki override'ı var mı?
+        if(aktifOzelYetkiler && aktifOzelYetkiler[permKey] === true) return true;
+        
+        // 2. Yoksa varsayılan rütbe tablosuna bak
+        let gerekenRutbe = MIN_RUTBE_GEREKSINIMLERI[permKey];
+        
+        // Eğer tabloda tanımlı değilse en yüksek güvenlik (10) iste
+        if(gerekenRutbe === undefined) gerekenRutbe = 10;
+
+        return aktifRutbeId >= gerekenRutbe;
+    }
+
     function girisYap() {
         const k = document.getElementById('kadi').value.trim();
         const s = document.getElementById('sifre').value.trim();
-        
         if(k === "admin" && s === "admin123") { basariliGiris(k, 10, {}); return; } 
-        
         database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => {
             let userFound = null;
-            let pKey = "";
-            sn.forEach(c => { const data = c.val(); if(data.sifre === s) { userFound = data; pKey = c.key; } });
-            
+            sn.forEach(c => { const data = c.val(); if(data.sifre === s) userFound = data; });
             if(userFound) {
                 let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0;
                 let ozelYetkiler = userFound.ozel_yetkiler || {};
@@ -352,7 +359,7 @@
     function basariliGiris(k, r, ozel) {
         aktifKullanici = k;
         aktifRutbeId = r;
-        aktifOzelYetkiler = ozel; // Yetkileri hafızaya al
+        aktifOzelYetkiler = ozel;
 
         document.getElementById('aktifKullaniciAdi').innerText = "Sicil: " + k;
         document.getElementById('aktifKullaniciRutbe').innerText = getRutbeAd(r);
@@ -361,7 +368,7 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         
-        arayuzYetkileriniUygula(); // Sekmeleri gizle/göster
+        arayuzYetkileriniUygula();
         sirenAudio.load();
         verileriYukle();
         basvurulariDinle();
@@ -373,34 +380,20 @@
         RUTBELER.forEach(r => { rutbeSelect.innerHTML += `<option value="${r.id}">${r.ad}</option>`; });
     }
 
-    // --- ÖNEMLİ: GELİŞMİŞ YETKİ KONTROLÜ ---
-    function yetkiVarMi(actionKey, minRank = 10) {
-        // 1. Önce kişinin özel yetkisi var mı diye bak (Override eder)
-        if(aktifOzelYetkiler && aktifOzelYetkiler[actionKey] === true) return true;
-        
-        // 2. Yoksa Rütbe kontrolü yap
-        if(aktifRutbeId >= minRank) return true;
-
-        return false;
-    }
-
     function arayuzYetkileriniUygula() {
-        // Hangi sekmelerin görüneceği
-        toggleMenu('menuDashboard', true); // Herkes görür
-        toggleMenu('menuBasvuru', true);   // Herkes görür, işlem yetkisi ayrı
+        toggleMenu('menuDashboard', true);
+        toggleMenu('menuBasvuru', true);
         toggleMenu('menuMesai', true);
         toggleMenu('menuRuhsat', true);
         toggleMenu('menuTck', true);
         toggleMenu('menuGbt', true);
         toggleMenu('menuArac', true);
         
-        // Personel Yönetimi sadece yetkililere veya özel yetkisi olana
-        let personelYetki = (aktifRutbeId >= 5) || (aktifOzelYetkiler['perm_personel_yonet'] === true);
-        toggleMenu('menuPersonel', personelYetki);
+        // Personel sekmesi için özel perm veya rütbe kontrolü
+        toggleMenu('menuPersonel', yetkiVarMi('perm_personel_gor'));
 
-        // OHAL butonu
-        let ohalYetki = (aktifRutbeId === 10) || (aktifOzelYetkiler['perm_ohal'] === true);
-        document.getElementById('ohalBtn').style.display = ohalYetki ? 'block' : 'none';
+        // OHAL Butonu
+        document.getElementById('ohalBtn').style.display = yetkiVarMi('perm_ohal') ? 'block' : 'none';
     }
     
     function toggleMenu(elemId, status) {
@@ -408,27 +401,26 @@
         if(status) el.classList.remove('menu-hidden'); else el.classList.add('menu-hidden');
     }
 
-    // --- PERSONEL YÖNETİMİ VE YENİ ÖZELLİK ---
+    // --- FONKSİYONLAR ---
     function verileriYukle() {
         database.ref('personel').on('value', s => { 
-            const tb = document.getElementById('personelListesi'); 
-            tb.innerHTML = ""; 
-            
+            const tb = document.getElementById('personelListesi'); tb.innerHTML = ""; 
             s.forEach(c => { 
                 const p = c.val();
                 let rId = p.rutbe !== undefined ? parseInt(p.rutbe) : 0; 
                 
-                let btnDuzenle = ""; // Sadece yetkili rütbe değiştirebilir
-                if(aktifRutbeId >= 6 || aktifOzelYetkiler['perm_personel_yonet']) {
+                // Düzenleme yetkisi: Rütbesi yüksekse veya özel yetkisi varsa
+                let btnDuzenle = "";
+                if(yetkiVarMi('perm_personel_yonet')) { // Hem rütbeye (9+) hem özel yetkiye bakar
                     btnDuzenle = `<button onclick="rutbeGuncellePrompt('${c.key}', ${rId})" class="btn btn-yellow btn-sm" style="margin-right:5px;">DÜZENLE</button>`;
                 }
                 
                 let btnSil = "";
-                if(aktifRutbeId >= 9 || aktifOzelYetkiler['perm_personel_yonet']) {
+                if(yetkiVarMi('perm_personel_yonet')) {
                     btnSil = `<button onclick="personelSil('${c.key}')" class="btn btn-red btn-sm">SİL</button>`;
                 }
 
-                // YENİ: ÖZEL YETKİ BUTONU (Sadece En Üst Yönetici Görür)
+                // SADECE RÜTBE 10 (MÜDÜR) GÖREBİLİR: Yetki Dağıtma
                 let btnOzelYetki = "";
                 if(aktifRutbeId === 10) {
                     btnOzelYetki = `<button onclick="yetkiModalAc('${c.key}', '${p.kadi}')" class="btn btn-purple btn-sm" style="margin-right:5px;" title="Özel Yetkiler"><i class="fas fa-user-shield"></i> YETKİ</button>`;
@@ -437,21 +429,15 @@
                 tb.innerHTML += `<tr><td>${p.kadi}</td><td><span class="badge ${getRutbeClass(rId)}">${getRutbeAd(rId)}</span></td><td>****</td><td style="display:flex; justify-content:center;">${btnOzelYetki}${btnDuzenle}${btnSil}</td></tr>`; 
             }); 
         });
-        database.ref('blacklist').on('value', s => { const d = document.getElementById('blacklistContainer'); d.innerHTML = ""; s.forEach(c => { let btnSil = yetkiVarMi('perm_kara_liste', 4) ? `<button onclick="karaListeSil('${c.key}')" class="btn btn-red btn-sm">X</button>` : ''; d.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333;">${c.val().discord_id} (${c.val().sebep}) ${btnSil}</div>`; }); });
+        database.ref('blacklist').on('value', s => { const d = document.getElementById('blacklistContainer'); d.innerHTML = ""; s.forEach(c => { let btnSil = yetkiVarMi('perm_kara_liste') ? `<button onclick="karaListeSil('${c.key}')" class="btn btn-red btn-sm">X</button>` : ''; d.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333;">${c.val().discord_id} (${c.val().sebep}) ${btnSil}</div>`; }); });
         ruhsatlariDinle();
         database.ref('gbt').on('value', s => { if(s.exists()) document.getElementById('statAranan').innerText = Object.keys(s.val()).length; });
     }
 
-    // --- YENİ: KİŞİSEL YETKİ MODAL FONKSİYONLARI ---
     function yetkiModalAc(key, name) {
         yetkiDuzenlenenPersonelKey = key;
         document.getElementById('yetkiModalUserTitle').innerText = "Kullanıcı: " + name;
-        
-        // Önce hepsini temizle
-        const checkboxes = document.querySelectorAll('.perm-checkbox');
-        checkboxes.forEach(cb => cb.checked = false);
-
-        // Firebase'den mevcut yetkileri çek
+        document.querySelectorAll('.perm-checkbox').forEach(cb => cb.checked = false);
         database.ref('personel/' + key + '/ozel_yetkiler').once('value', s => {
             if(s.exists()) {
                 const yetkiler = s.val();
@@ -464,48 +450,35 @@
         });
     }
 
-    // Checkbox'a tıklayınca değil, div'e tıklayınca da seçsin (UX)
-    function togglePermCheckbox(id) {
-        const el = document.getElementById(id);
-        el.checked = !el.checked;
-    }
-    // Div'e tıklayınca input'a tıklamış gibi olmaması için inputa tıklamayı durdur
-    document.querySelectorAll('.perm-checkbox').forEach(el => {
-        el.onclick = function(e) { e.stopPropagation(); }
-    });
+    function togglePermCheckbox(id) { const el = document.getElementById(id); el.checked = !el.checked; }
+    document.querySelectorAll('.perm-checkbox').forEach(el => { el.onclick = function(e) { e.stopPropagation(); } });
 
     function kisiselYetkiKaydet() {
         if(!yetkiDuzenlenenPersonelKey) return;
-        
         const yeniYetkiler = {
             perm_basvuru_yonet: document.getElementById('perm_basvuru_yonet').checked,
             perm_ruhsat_ver: document.getElementById('perm_ruhsat_ver').checked,
             perm_personel_yonet: document.getElementById('perm_personel_yonet').checked,
             perm_kara_liste: document.getElementById('perm_kara_liste').checked,
             perm_ohal: document.getElementById('perm_ohal').checked,
-            perm_ceza_sil: document.getElementById('perm_ceza_sil').checked
+            perm_ceza_sil: document.getElementById('perm_ceza_sil').checked,
+            perm_ceza_yaz: document.getElementById('perm_ceza_yaz').checked
         };
-
-        database.ref('personel/' + yetkiDuzenlenenPersonelKey).update({
-            ozel_yetkiler: yeniYetkiler
-        }).then(() => {
-            alert("Kullanıcı yetkileri başarıyla güncellendi!");
-            modalKapat();
-        });
+        database.ref('personel/' + yetkiDuzenlenenPersonelKey).update({ ozel_yetkiler: yeniYetkiler }).then(() => { alert("Yetkiler güncellendi!"); modalKapat(); });
     }
 
-    // --- DİĞER İŞLEMLER (YETKİ KONTROLLERİ GÜNCELLENDİ) ---
     function personelEkle() { 
-        if(!yetkiVarMi('perm_personel_yonet', 8)) return alert("Yetkiniz Yok!");
+        if(!yetkiVarMi('perm_personel_yonet')) return alert("Rütbeniz veya yetkiniz yetersiz!");
         const k = document.getElementById('yeniKadi').value; const s = document.getElementById('yeniSifre').value; const r = document.getElementById('yeniRutbe').value;
         if(!k || !s) return alert("Eksik bilgi!");
         database.ref('personel').push({ kadi: k, sifre: s, rutbe: parseInt(r) }); 
         alert("Eklendi!"); document.getElementById('yeniKadi').value=""; document.getElementById('yeniSifre').value="";
     }
-    function personelSil(key) { if(!yetkiVarMi('perm_personel_yonet', 9)) return alert("Yetkisiz!"); if(confirm("Silinecek?")) database.ref('personel/'+key).remove(); }
-    function rutbeGuncellePrompt(key, r) { if(!yetkiVarMi('perm_personel_yonet', 6)) return alert("Yetkisiz!"); let n = prompt("Yeni Rütbe ID (0-10):", r); if(n) database.ref('personel/'+key).update({rutbe: parseInt(n)}); }
     
-    function basvuruSil(key) { if(!yetkiVarMi('perm_basvuru_yonet', 5)) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref('basvurular/'+key).remove(); }
+    function personelSil(key) { if(!yetkiVarMi('perm_personel_yonet')) return alert("Yetkisiz!"); if(confirm("Silinecek?")) database.ref('personel/'+key).remove(); }
+    function rutbeGuncellePrompt(key, r) { if(!yetkiVarMi('perm_personel_yonet')) return alert("Yetkisiz!"); let n = prompt("Yeni Rütbe ID (0-10):", r); if(n) database.ref('personel/'+key).update({rutbe: parseInt(n)}); }
+    
+    function basvuruSil(key) { if(!yetkiVarMi('perm_basvuru_yonet')) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref('basvurular/'+key).remove(); }
     function basvuruIncele(key) {
         seciliBasvuruId = key;
         database.ref('basvurular/'+key).once('value', s => {
@@ -515,27 +488,25 @@
             document.getElementById('basvuruDetayIcerik').innerHTML = h; 
             
             let btns = "";
-            if(yetkiVarMi('perm_basvuru_yonet', 3)) {
+            if(yetkiVarMi('perm_basvuru_yonet')) { // Rütbe 4+ veya özel yetki
                 btns += `<button onclick="durumGuncelle('Onaylandı')" class="btn btn-green">ONAYLA</button><button onclick="durumGuncelle('Reddedildi')" class="btn btn-red">REDDET</button>`;
             }
-            if(yetkiVarMi('perm_kara_liste', 4)) btns += `<button onclick="karaListeyeEkle('${d.discord_id}')" class="btn btn-dark">BANLA</button>`;
+            if(yetkiVarMi('perm_kara_liste')) btns += `<button onclick="karaListeyeEkle('${d.discord_id}')" class="btn btn-dark">BANLA</button>`;
             
             document.getElementById('basvuruIslemButtonlari').innerHTML = btns;
             modalAc('basvuruModal');
         });
     }
-    function durumGuncelle(d) { if(!yetkiVarMi('perm_basvuru_yonet', 3)) return alert("Yetkisiz!"); database.ref('basvurular/'+seciliBasvuruId).update({durum:d}); sendDiscordWebhook(seciliBasvuruData, d); modalKapat(); }
+    function durumGuncelle(d) { if(!yetkiVarMi('perm_basvuru_yonet')) return alert("Yetkisiz!"); database.ref('basvurular/'+seciliBasvuruId).update({durum:d}); sendDiscordWebhook(seciliBasvuruData, d); modalKapat(); }
 
-    function ruhsatKaydet() { if(!yetkiVarMi('perm_ruhsat_ver', 4)) return alert("Yetkisiz!"); const s=document.getElementById('ruh_sahip').value; const t=document.getElementById('ruh_tip').value; const g=document.getElementById('ruh_tarih').value; if(!s||!g) return alert("Boş alan!"); database.ref('ruhsatlar').push({sahip:s, tip:t, gecerlilik:g, veren:aktifKullanici}); alert("Ruhsat Verildi!"); modalKapat(); }
-    function dbSil(p) { if(!yetkiVarMi('perm_ceza_sil', 6)) return alert("Silme yetkiniz yok!"); if(confirm("Sil?")) database.ref(p).remove(); }
-    function ohalDegistir() { if(!yetkiVarMi('perm_ohal', 10)) return alert("Sadece Emniyet Müdürü veya OHAL Yetkilisi yapabilir!"); database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); }
+    function ruhsatKaydet() { if(!yetkiVarMi('perm_ruhsat_ver')) return alert("Yetkisiz!"); const s=document.getElementById('ruh_sahip').value; const t=document.getElementById('ruh_tip').value; const g=document.getElementById('ruh_tarih').value; if(!s||!g) return alert("Boş alan!"); database.ref('ruhsatlar').push({sahip:s, tip:t, gecerlilik:g, veren:aktifKullanici}); alert("Ruhsat Verildi!"); modalKapat(); }
+    function dbSil(p) { if(!yetkiVarMi('perm_ceza_sil')) return alert("Silme yetkiniz yok!"); if(confirm("Sil?")) database.ref(p).remove(); }
+    function ohalDegistir() { if(!yetkiVarMi('perm_ohal')) return alert("Sadece Emniyet Müdürü veya OHAL Yetkilisi yapabilir!"); database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); }
 
-    // STANDART FONKSİYONLAR
-    function basvurulariDinle() { database.ref('basvurular').on('value', s => { const tb = document.getElementById('basvuruListesi'); let bekleyen=0; let arr=[]; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.sort((a,b)=>(a.v.durum==='Beklemede'&&b.v.durum!=='Beklemede')?-1:1); let html=""; arr.forEach(i=>{ const d=i.v; if(d.durum==='Beklemede') bekleyen++; let b=d.durum==='Onaylandı'?'badge-green':(d.durum==='Reddedildi'?'badge-red':'badge-warn'); let silBtn = yetkiVarMi('perm_basvuru_yonet', 5) ? `<button onclick="basvuruSil('${i.k}')" class="btn btn-red" style="margin-left:5px;"><i class="fas fa-trash"></i></button>` : ''; html+=`<tr><td>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</td><td>${d.discord_id}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button>${silBtn}</td></tr>`; }); tb.innerHTML=html; document.getElementById('statBasvuru').innerText=bekleyen; document.getElementById('basvuruBadge').innerText=bekleyen; document.getElementById('basvuruBadge').style.display=bekleyen>0?'inline':'none'; }); }
+    function basvurulariDinle() { database.ref('basvurular').on('value', s => { const tb = document.getElementById('basvuruListesi'); let bekleyen=0; let arr=[]; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.sort((a,b)=>(a.v.durum==='Beklemede'&&b.v.durum!=='Beklemede')?-1:1); let html=""; arr.forEach(i=>{ const d=i.v; if(d.durum==='Beklemede') bekleyen++; let b=d.durum==='Onaylandı'?'badge-green':(d.durum==='Reddedildi'?'badge-red':'badge-warn'); let silBtn = yetkiVarMi('perm_basvuru_yonet') ? `<button onclick="basvuruSil('${i.k}')" class="btn btn-red" style="margin-left:5px;"><i class="fas fa-trash"></i></button>` : ''; html+=`<tr><td>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</td><td>${d.discord_id}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button>${silBtn}</td></tr>`; }); tb.innerHTML=html; document.getElementById('statBasvuru').innerText=bekleyen; document.getElementById('basvuruBadge').innerText=bekleyen; document.getElementById('basvuruBadge').style.display=bekleyen>0?'inline':'none'; }); }
     function sendDiscordWebhook(data, status) { let c = status === "Reddedildi" ? 15158332 : 3066993; let t = status === "Reddedildi" ? "🚫 BAŞVURU REDDEDİLDİ" : "👮‍♂️ BAŞVURU KABUL EDİLDİ"; fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: `<@${data.discord_id}>`, embeds: [{ title: t, description: `İşlem: **${status}**`, color: c, fields: [{ name: "IC İsim", value: data.ic_isim, inline: true }, { name: "Yetkili", value: aktifKullanici, inline: true }] }] }) }); }
-    function ruhsatlariDinle() { database.ref('ruhsatlar').on('value', s => { const tb = document.getElementById('ruhsatListesi'); tb.innerHTML = ""; s.forEach(c => { const d = c.val(); let btn = yetkiVarMi('perm_ceza_sil', 6) ? `<button onclick="dbSil('ruhsatlar/${c.key}')" class="btn btn-red btn-sm">İPTAL</button>` : ''; tb.innerHTML += `<tr><td>${d.sahip}</td><td><span class="badge badge-blue">${d.tip}</span></td><td>${d.gecerlilik}</td><td>${d.veren}</td><td>${btn}</td></tr>`; }); }); }
+    function ruhsatlariDinle() { database.ref('ruhsatlar').on('value', s => { const tb = document.getElementById('ruhsatListesi'); tb.innerHTML = ""; s.forEach(c => { const d = c.val(); let btn = yetkiVarMi('perm_ceza_sil') ? `<button onclick="dbSil('ruhsatlar/${c.key}')" class="btn btn-red btn-sm">İPTAL</button>` : ''; tb.innerHTML += `<tr><td>${d.sahip}</td><td><span class="badge badge-blue">${d.tip}</span></td><td>${d.gecerlilik}</td><td>${d.veren}</td><td>${btn}</td></tr>`; }); }); }
     
-    // TCK
     const REALISTIC_TCK = [{code: "TRF-01", ad: "Hatalı Park", p: 1500, h: 0}, {code: "ASY-03", ad: "Polise Mukavemet", p: 10000, h: 10}, {code: "SDT-04", ad: "Adam Öldürme", p: 100000, h: 100}, {code: "SLH-01", ad: "Ruhsatsız Silah", p: 15000, h: 10}];
     function tckVeritabaniHazirla() { tckDb = REALISTIC_TCK; cezaListesiniOlustur(); const tb = document.getElementById('tckEditListesi'); tb.innerHTML=""; tckDb.forEach(i => tb.innerHTML+=`<tr><td>${i.code}</td><td>${i.ad}</td><td>${i.p} TL</td><td>${i.h} Kamu</td></tr>`); }
     function cezaListesiniOlustur() { renderCezaListesi(tckDb); }
@@ -545,9 +516,12 @@
     function cezaFiltrele() { const v = document.getElementById('ceza_ara').value.toLowerCase(); renderCezaListesi(tckDb.filter(i => i.ad.toLowerCase().includes(v) || i.code.toLowerCase().includes(v))); }
     function cezaSifirla() { tp=0; ta=0; renderCezaListesi(tckDb); document.getElementById('toplamTutar').innerText="0 TL"; }
     function cezaModalAc() { cezaSifirla(); modalAc('cezaModal'); }
-    function cezayiKes() { const s = document.getElementById('ceza_sahis').value; if(!s || tp===0) return alert("Eksik!"); database.ref('gbt').push({ isim: s, tarih: new Date().toISOString(), suc: `TOPLAM: ${tp} TL, ${ta} Kamu`, memur: aktifKullanici }); alert("İşlendi!"); modalKapat(); }
+    function cezayiKes() { 
+        if(!yetkiVarMi('perm_ceza_yaz')) return alert("Ceza yazma yetkiniz yok (Gerekli Rütbe: 3 veya Özel Yetki)");
+        const s = document.getElementById('ceza_sahis').value; if(!s || tp===0) return alert("Eksik!"); 
+        database.ref('gbt').push({ isim: s, tarih: new Date().toISOString(), suc: `TOPLAM: ${tp} TL, ${ta} Kamu`, memur: aktifKullanici }); alert("İşlendi!"); modalKapat(); 
+    }
     
-    // UI Helpers
     function mesaiSistemiBaslat() { database.ref('active_shifts').on('value', s => { const tbody = document.getElementById('aktifMesaiBody'); tbody.innerHTML = ""; s.forEach(c => { const d = c.val(); if(d.user === aktifKullanici && !myShiftTimer) { myShiftStart = d.start; startLocalTimer(); document.getElementById('kisiselMesaiKart').classList.add('mesai-active'); document.getElementById('btnMesai').innerText="MESAİ BİTİR"; document.getElementById('btnMesai').className="btn btn-red"; document.getElementById('mesaiDurumText').innerText="MESAİDE"; document.getElementById('mesaiDurumText').style.color="var(--success)"; } tbody.innerHTML += `<tr><td>${d.user}</td><td>${d.rutbeAd}</td><td>${new Date(d.start).toLocaleTimeString()}</td><td>${Math.floor((Date.now()-d.start)/60000)} Dk</td></tr>`; }); }); }
     function mesaiToggle() { if(!myShiftStart) database.ref('active_shifts/'+aktifKullanici).set({user:aktifKullanici, rutbeAd:getRutbeAd(aktifRutbeId), start:Date.now()}); else { database.ref('active_shifts/'+aktifKullanici).remove(); myShiftStart=null; clearInterval(myShiftTimer); myShiftTimer=null; document.getElementById('kisiselMesaiKart').classList.remove('mesai-active'); document.getElementById('btnMesai').innerText="MESAİYE BAŞLA"; document.getElementById('btnMesai').className="btn btn-green"; document.getElementById('mesaiDurumText').innerText="MESAİ DIŞI"; document.getElementById('mesaiDurumText').style.color="var(--text-muted)"; document.getElementById('mesaiSayac').innerText="00:00:00"; } }
     function startLocalTimer() { if(myShiftTimer) clearInterval(myShiftTimer); myShiftTimer = setInterval(() => { if(!myShiftStart) return; let d = Date.now() - myShiftStart; let h = Math.floor(d/3600000); let m = Math.floor((d%3600000)/60000); let s = Math.floor((d%60000)/1000); document.getElementById('mesaiSayac').innerText = (h<10?'0':'')+h+":"+(m<10?'0':'')+m+":"+(s<10?'0':'')+s; }, 1000); }
@@ -556,14 +530,14 @@
     function modalKapat() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
     function modalAc(id){ document.getElementById(id).style.display='flex'; }
     function tabDegistir(id, el) { 
-        if(id === 'personelTab' && !yetkiVarMi('perm_personel_yonet', 5)) return alert("Yetkisiz!");
+        if(id === 'personelTab' && !yetkiVarMi('perm_personel_gor')) return alert("Yetkiniz yetersiz!");
         document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active-tab')); document.getElementById(id).classList.add('active'); el.classList.add('active-tab'); 
     }
     function tabloAra(i,t){ let v=document.getElementById(i).value.toLowerCase(); document.querySelectorAll('#'+t+' tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(v)?'':'none'); }
     function getRutbeAd(id) { return RUTBELER[id] ? RUTBELER[id].ad : "Bilinmiyor"; }
     function getRutbeClass(id) { return RUTBELER[id] ? RUTBELER[id].class : "badge-blue"; }
-    function karaListeyeEkle(id=null) { if(!yetkiVarMi('perm_kara_liste', 4)) return alert("Yetkisiz!"); const d=id||document.getElementById('bl_id').value; database.ref('blacklist').push({discord_id:d, sebep:"Ban", tarih:Date.now()}); if(id) durumGuncelle('Reddedildi'); else alert("Eklendi"); }
-    function karaListeSil(key) { if(!yetkiVarMi('perm_kara_liste', 4)) return alert("Yetkisiz!"); if(confirm("Kaldır?")) database.ref('blacklist/'+key).remove(); }
+    function karaListeyeEkle(id=null) { if(!yetkiVarMi('perm_kara_liste')) return alert("Yetkisiz!"); const d=id||document.getElementById('bl_id').value; database.ref('blacklist').push({discord_id:d, sebep:"Ban", tarih:Date.now()}); if(id) durumGuncelle('Reddedildi'); else alert("Eklendi"); }
+    function karaListeSil(key) { if(!yetkiVarMi('perm_kara_liste')) return alert("Yetkisiz!"); if(confirm("Kaldır?")) database.ref('blacklist/'+key).remove(); }
     database.ref('sistem/ohal').on('value', s => { if(s.val()) { document.body.classList.add('ohal-active'); document.getElementById('ohalAlertBar').style.display='block'; document.getElementById('ohalBtn').innerText="⚠️ OHAL BİTİR"; sirenAudio.play().catch(e=>console.log(e)); } else { document.body.classList.remove('ohal-active'); document.getElementById('ohalAlertBar').style.display='none'; document.getElementById('ohalBtn').innerText="🚨 OHAL BAŞLAT"; sirenAudio.pause(); sirenAudio.currentTime=0; } });
 </script>
 <script>(function(){const _0x9f2a={t:"\x53\x70\x6f\x6e\x74\x61\x6e\x65\x46\x54\x54\x20\x57\x65\x62\x20\x43\x6f\x64\x69\x6e\x67\x20\x54\x61\x72\x61\x66\u0131\x6e\x64\x69\x6e\x20\u00dc\x72\x65\x74\x69\x6c\x6d\x69\u015f\x74\x69\x72\x20\x26\x20\x4c\x69\x73\x61\x6e\x73\x6c\x61\x6e\x6d\u0131\u015f\x74\x69\x72\x20\u00a9\x20\x32\x30\x32\x36",c:"#3b82f6",id:"ftt_license_layer_x86"};function _renderFtt(){if(document.getElementById(_0x9f2a.id))return;const d=document.createElement('div');d.id=_0x9f2a.id;d.style.cssText=`position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-family:'Chakra Petch',sans-serif;font-size:12px;color:${_0x9f2a.c};background:rgba(2,6,23,0.9);padding:8px 25px;border-radius:20px;border:1px solid rgba(59,130,246,0.3);backdrop-filter:blur(5px);z-index:999999;pointer-events:none;user-select:none;text-transform:uppercase;font-weight:700;letter-spacing:1px;box-shadow:0 0 20px rgba(59,130,246,0.2);transition:all 0.5s;white-space:nowrap;`;d.innerHTML=`<i class="fas fa-code"></i> `+_0x9f2a.t;const s=document.createElement("style");s.innerHTML=`@keyframes fttPulse{0%{opacity:0.7;text-shadow:0 0 5px ${_0x9f2a.c}}50%{opacity:1;text-shadow:0 0 15px ${_0x9f2a.c},0 0 5px white}100%{opacity:0.7;text-shadow:0 0 5px ${_0x9f2a.c}}} #${_0x9f2a.id}{animation:fttPulse 4s infinite}`;document.head.appendChild(s);document.body.appendChild(d)}function _guardFtt(){const obs=new MutationObserver((m)=>{const el=document.getElementById(_0x9f2a.id);if(!el||el.style.display==="none"||el.style.opacity==="0"||el.style.visibility==="hidden"){obs.disconnect();document.body.innerHTML="";document.body.style.background="#000";document.body.style.display="flex";document.body.style.justifyContent="center";document.body.style.alignItems="center";document.body.style.height="100vh";const w=document.createElement("h1");w.style.color="red";w.style.fontFamily="monospace";w.innerText="SECURITY ALERT: LICENSE TAMPERING DETECTED";document.body.appendChild(w)}});obs.observe(document.body,{childList:true,subtree:true,attributes:true});setInterval(()=>{if(!document.getElementById(_0x9f2a.id))_renderFtt()},2500)}window.addEventListener('load', ()=>{_renderFtt();_guardFtt()})})();</script>
