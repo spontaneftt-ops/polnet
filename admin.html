@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v6.0 - Ultimate Edition</title>
+    <title>POLNET v6.2 - Management Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -90,12 +90,10 @@
         .ceza-item.selected { background: rgba(59,130,246,0.2); border-left: 4px solid var(--accent); }
         .ceza-code { color: var(--text-muted); font-family: 'Chakra Petch'; margin-right: 10px; width: 60px; display:inline-block; font-weight:bold; }
         
-        /* BOLO SCROLL BAR */
         #boloContainer::-webkit-scrollbar { height: 8px; }
         #boloContainer::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
         #boloContainer::-webkit-scrollbar-thumb { background: var(--danger); border-radius: 4px; }
         
-        /* LOG TABLO STİLİ */
         .log-row { font-family: monospace; font-size: 0.85rem; }
         .log-action { font-weight: bold; color: var(--accent); }
     </style>
@@ -109,13 +107,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v6.0</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v6.2</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="sesCal('click'); girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v6.0 Ultimate Edition</p>
+        <p style="font-size:10px; color:#555;">v6.2 Management Update</p>
     </div>
 </div>
 
@@ -220,7 +218,9 @@
                 <div class="card" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
                     <h3><i class="fas fa-coins"></i> Muhasebe</h3>
                     <p style="text-align:center; color:#aaa;">Ay sonu prim ve maaş hesaplamaları için.</p>
-                    <button onclick="maasModalAc()" class="btn btn-yellow" style="width:80%;">MAAŞLARI HESAPLA</button>
+                    <button onclick="maasModalAc()" class="btn btn-yellow" style="width:80%; margin-bottom:10px;">MAAŞLARI HESAPLA</button>
+                    <button id="btnMaasDuzenle" onclick="maasDuzenleModalAc()" class="btn btn-purple menu-hidden" style="width:80%; font-size:0.8rem; margin-bottom:10px;"><i class="fas fa-edit"></i> MAAŞ AYARLARI</button>
+                    <button id="btnMesaiSifirla" onclick="mesaiSifirla()" class="btn btn-red menu-hidden" style="width:80%; font-size:0.8rem;"><i class="fas fa-trash"></i> MESAİ GEÇMİŞİNİ SIFIRLA</button>
                 </div>
             </div>
             
@@ -277,11 +277,16 @@
 </div></div></div>
 
 <div id="maasModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Maaş Hesaplama Tablosu</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body">
-    <p>Aşağıdaki tablo, sistemdeki kayıtlı mesai sürelerine göre hesaplanmıştır.</p>
+    <p>Aşağıdaki tablo, sistemdeki rütbe katsayılarına göre hesaplanmıştır.</p>
     <table style="font-size:0.9rem;"><thead><tr><th>Personel</th><th>Rütbe</th><th>Toplam Süre (Dk)</th><th>Saatlik Ücret</th><th>Hak Ediş</th></tr></thead><tbody id="maasTabloBody"></tbody></table>
     <div style="background:rgba(255,255,255,0.05); padding:10px; margin-top:10px; text-align:right;">
         <strong>Toplam Dağıtılacak: </strong> <span id="maasToplamTutar" style="color:var(--success); font-size:1.2rem;">0 TL</span>
     </div>
+</div></div></div>
+
+<div id="maasDuzenleModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Rütbe Maaşlarını Düzenle</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body">
+    <div id="maasInputContainer" style="height:400px; overflow-y:auto;"></div>
+    <button onclick="maaslariKaydet()" class="btn btn-green" style="width:100%; margin-top:10px;">KAYDET VE GÜNCELLE</button>
 </div></div></div>
 
 <div id="basvuruModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Başvuru İnceleme</h3><span onclick="modalKapat()" style="cursor:pointer; font-size:1.5rem;">&times;</span></div><div class="modal-body"><div id="basvuruDetayIcerik"></div><hr style="border-color:var(--border); margin:20px 0;"><div id="basvuruIslemButtonlari" class="grid-3"></div></div></div></div>
@@ -318,11 +323,15 @@
     function sesCal(tip) { if(sounds[tip]) { sounds[tip].currentTime = 0; sounds[tip].play().catch(e => console.log("Audio error", e)); } }
 
     const sirenAudio = new Audio('siren.mp3'); sirenAudio.loop = true; sirenAudio.volume = 0.5;
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
-    const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue",maas:5000},{id:1,ad:"Baş Polis",class:"badge-blue",maas:6000},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue",maas:7000},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple",maas:8500},{id:4,ad:"Komiser",class:"badge-purple",maas:10000},{id:5,ad:"Baş Komiser",class:"badge-purple",maas:12000},{id:6,ad:"Emniyet Amiri",class:"badge-gold",maas:15000},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold",maas:20000},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold",maas:25000},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold",maas:30000},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red",maas:50000}];
+    
+    const DISCORD_APP_WEBHOOK = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
+    const DISCORD_SHIFT_WEBHOOK = "https://discord.com/api/webhooks/1464022469433229409/jw4_BOviCKI1suE7JSBgae4o2xi-sl48Io8NdnN1UopDOq3YP5SW5gT-wEa25t28yGaR";
+    
+    const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue",defMaas:5000},{id:1,ad:"Baş Polis",class:"badge-blue",defMaas:6000},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue",defMaas:7000},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple",defMaas:8500},{id:4,ad:"Komiser",class:"badge-purple",defMaas:10000},{id:5,ad:"Baş Komiser",class:"badge-purple",defMaas:12000},{id:6,ad:"Emniyet Amiri",class:"badge-gold",defMaas:15000},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:20000},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:25000},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:30000},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red",defMaas:50000}];
     const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_personel_sil': 10, 'perm_ohal': 10, 'perm_personel_gor': 5, 'perm_yetki_yonet': 10};
     
     let aktifKullanici = "", aktifRutbeId = 0, aktifOzelYetkiler = {}, seciliBasvuruId = "", seciliBasvuruData = null, myShiftStart = null, myShiftTimer = null, tckDb = [], yetkiDuzenlenenPersonelKey = "";
+    let globalMaaslar = {};
 
     function showToast(msg, type = 'success') {
         const container = document.getElementById('toastContainer');
@@ -361,17 +370,94 @@
         basvurulariDinle(); 
         mesaiSistemiBaslat(); 
         tckVeritabaniHazirla(); 
+        maaslariGetir();
         boloDinle(); 
-        loglariDinle(); // Yeni Log sistemi
+        loglariDinle(); 
         const rs = document.getElementById('yeniRutbe'); rs.innerHTML = ""; RUTBELER.forEach(r => { rs.innerHTML += `<option value="${r.id}">${r.ad}</option>`; }); 
         showToast(`Hoşgeldiniz, ${k}`);
         if(aktifRutbeId >= 10) toggleMenu('menuTckEdit', true);
-        if(aktifRutbeId >= 8) toggleMenu('menuLogs', true); // Logs rütbe 8+
+        if(aktifRutbeId >= 8) toggleMenu('menuLogs', true);
+        if(aktifRutbeId >= 10) { toggleMenu('btnMaasDuzenle', true); toggleMenu('btnMesaiSifirla', true); }
     }
 
     function arayuzYetkileriniUygula() { toggleMenu('menuDashboard', true); toggleMenu('menuBasvuru', true); toggleMenu('menuMesai', true); toggleMenu('menuRuhsat', true); toggleMenu('menuTck', true); toggleMenu('menuGbt', true); toggleMenu('menuArac', true); toggleMenu('menuPersonel', yetkiVarMi('perm_personel_gor')); document.getElementById('ohalBtn').style.display = yetkiVarMi('perm_ohal') ? 'block' : 'none'; }
     function toggleMenu(id, st) { const el = document.getElementById(id); if(st) el.classList.remove('menu-hidden'); else el.classList.add('menu-hidden'); }
     
+    // --- MAAŞ YÖNETİMİ ---
+    function maaslariGetir() {
+        database.ref('sistem/maas_config').on('value', s => {
+            if(s.exists()) {
+                globalMaaslar = s.val();
+            } else {
+                RUTBELER.forEach(r => globalMaaslar[r.id] = r.defMaas);
+                database.ref('sistem/maas_config').set(globalMaaslar);
+            }
+        });
+    }
+
+    function maasDuzenleModalAc() {
+        if(aktifRutbeId < 10) return alert("Sadece 1. Sınıf Emniyet Müdürü erişebilir!");
+        const div = document.getElementById('maasInputContainer'); div.innerHTML = "";
+        RUTBELER.forEach(r => {
+            let val = globalMaaslar[r.id] || r.defMaas;
+            div.innerHTML += `
+            <div style="margin-bottom:10px; background:rgba(0,0,0,0.2); padding:10px; border-radius:5px;">
+                <label style="color:var(--accent); font-weight:bold;">${r.ad}</label>
+                <input type="number" id="maas_inp_${r.id}" value="${val}" style="margin-top:5px;">
+            </div>`;
+        });
+        modalAc('maasDuzenleModal');
+    }
+
+    function maaslariKaydet() {
+        let yeniMaaslar = {};
+        RUTBELER.forEach(r => {
+            let val = parseInt(document.getElementById(`maas_inp_${r.id}`).value);
+            yeniMaaslar[r.id] = val;
+        });
+        database.ref('sistem/maas_config').set(yeniMaaslar).then(() => {
+            showToast("Maaşlar güncellendi!");
+            logEkle("Maaş tablosu güncellendi.");
+            modalKapat();
+        });
+    }
+
+    function maasModalAc() {
+        if(!yetkiVarMi('perm_personel_gor')) return alert("Yetkisiz!");
+        modalAc('maasModal');
+        const tbody = document.getElementById('maasTabloBody'); tbody.innerHTML = "<tr><td colspan='5'>Hesaplanıyor...</td></tr>";
+        let toplamOdenecek = 0;
+        
+        tbody.innerHTML = "";
+        database.ref('personel').once('value', ps => {
+            ps.forEach(p => {
+                const pd = p.val();
+                const rId = pd.rutbe || 0;
+                const rAd = RUTBELER[rId].ad;
+                const saatlikUcret = globalMaaslar[rId] || RUTBELER[rId].defMaas;
+                
+                const toplamDk = Math.floor(Math.random() * 3000); // Demo süresi
+                const toplamSaat = (toplamDk / 60).toFixed(1);
+                const hakedis = Math.floor(toplamSaat * saatlikUcret);
+                
+                toplamOdenecek += hakedis;
+                tbody.innerHTML += `<tr><td>${pd.kadi}</td><td>${rAd}</td><td>${toplamSaat} Saat</td><td>${saatlikUcret} TL</td><td>${hakedis.toLocaleString()} TL</td></tr>`;
+            });
+            document.getElementById('maasToplamTutar').innerText = toplamOdenecek.toLocaleString() + " TL";
+        });
+    }
+
+    // --- YENİ: MESAİ SIFIRLAMA ---
+    function mesaiSifirla() {
+        if(aktifRutbeId < 10) return alert("Sadece 1. Sınıf Emniyet Müdürü!");
+        if(confirm("DİKKAT: Tüm personelin mesai kayıtları ve aktif mesai durumları SIFIRLANACAK.\n\nBu işlem geri alınamaz. Onaylıyor musunuz?")) {
+            database.ref('active_shifts').remove();
+            // Eğer gelecekte personel_logs içinde mesai geçmişi tutulursa o da buradan silinir.
+            logEkle("TÜM MESAİ KAYITLARI SIFIRLANDI!");
+            showToast("Mesai veritabanı temizlendi.", "warning");
+        }
+    }
+
     // --- BOLO SİSTEMİ ---
     function boloEklePrompt() {
         const tip = prompt("Aranan Nedir? (Araç / Şahıs / Eşkal)");
@@ -394,152 +480,26 @@
     }
     function boloKaldir(key) { if(confirm("BOLO kaldırılıyor?")) { database.ref('bolo/'+key).remove(); showToast("BOLO Kaldırıldı."); logEkle("BOLO kaldırıldı."); } }
 
-    // --- MAAŞ HESAPLAMA ---
-    function maasModalAc() {
-        if(!yetkiVarMi('perm_personel_gor')) return alert("Yetkisiz!");
-        modalAc('maasModal');
-        const tbody = document.getElementById('maasTabloBody'); tbody.innerHTML = "<tr><td colspan='5'>Hesaplanıyor...</td></tr>";
-        let toplamOdenecek = 0;
-
-        database.ref('personel_logs').once('value', logs => {
-            // Basit bir hesaplama: Sistemde kayıtlı "Shift" loglarını toplayabiliriz
-            // Veya şu anki demoda personel listesini baz alıp rastgele saat atayalım (Demo Amaçlı)
-            // Gerçek sistemde: 'shift_history' tablosu tutulmalıdır.
-            tbody.innerHTML = "";
-            database.ref('personel').once('value', ps => {
-                ps.forEach(p => {
-                    const pd = p.val();
-                    const rutbe = RUTBELER[pd.rutbe || 0];
-                    // Gerçekçi olması için rastgele süre uyduruyoruz (Demo)
-                    const toplamDk = Math.floor(Math.random() * 3000); 
-                    const toplamSaat = (toplamDk / 60).toFixed(1);
-                    const hakedis = Math.floor(toplamSaat * (rutbe.maas / 60)); // Saatlik ücreti baz al
-                    
-                    toplamOdenecek += hakedis;
-                    tbody.innerHTML += `<tr><td>${pd.kadi}</td><td>${rutbe.ad}</td><td>${toplamSaat} Saat</td><td>${rutbe.maas} TL</td><td>${hakedis.toLocaleString()} TL</td></tr>`;
-                });
-                document.getElementById('maasToplamTutar').innerText = toplamOdenecek.toLocaleString() + " TL";
-            });
-        });
-    }
-
     // --- LOG SİSTEMİ ---
     function logEkle(msg) { database.ref('sistem/logs').push({memur: aktifKullanici, mesaj: msg, tarih: Date.now()}); }
     function loglariDinle() {
-        if(aktifRutbeId < 8) return;
         database.ref('sistem/logs').limitToLast(50).on('value', s => {
             const tb = document.getElementById('logListesi'); tb.innerHTML = "";
-            const arr = []; s.forEach(c => arr.unshift(c.val())); // En yeni en üstte
+            let arr = [];
+            s.forEach(c => arr.push(c.val())); 
+            arr.reverse(); 
             arr.forEach(l => {
                 tb.innerHTML += `<tr class="log-row"><td>${new Date(l.tarih).toLocaleTimeString()}</td><td class="log-action">${l.memur}</td><td>${l.mesaj}</td></tr>`;
             });
         });
     }
 
-    // --- REALISTIC TCK (100+ MADDE) ---
-    const REALISTIC_TCK = [
-        // TRAFİK (TRF)
-        {code: "TRF-01", ad: "Hatalı Park", p: 2500, h: 0},
-        {code: "TRF-02", ad: "Kırmızı Işık İhlali", p: 3500, h: 0},
-        {code: "TRF-03", ad: "Hız Sınırı İhlali (%10-30)", p: 4000, h: 0},
-        {code: "TRF-04", ad: "Hız Sınırı İhlali (%50+)", p: 10000, h: 0},
-        {code: "TRF-05", ad: "Emniyet Kemeri Takmamak", p: 1500, h: 0},
-        {code: "TRF-06", ad: "Seyir Halinde Telefon", p: 3000, h: 0},
-        {code: "TRF-07", ad: "Ters Yön İhlali", p: 5000, h: 0},
-        {code: "TRF-08", ad: "Tehlikeli Sürüş (Makas)", p: 12000, h: 5},
-        {code: "TRF-09", ad: "Drift / Topluma Tehlike", p: 30000, h: 10},
-        {code: "TRF-10", ad: "Abartı Egzoz", p: 5000, h: 0},
-        {code: "TRF-11", ad: "Ehliyetsiz Araç", p: 25000, h: 0},
-        {code: "TRF-12", ad: "Ehliyet Bulundurmama", p: 1000, h: 0},
-        {code: "TRF-13", ad: "Ruhsatsız Araç", p: 15000, h: 0},
-        {code: "TRF-14", ad: "Sigortasız Araç", p: 5000, h: 0},
-        {code: "TRF-15", ad: "Muayenesiz Araç", p: 4000, h: 0},
-        {code: "TRF-16", ad: "Alkollü Araç (Yasal Altı)", p: 15000, h: 0},
-        {code: "TRF-17", ad: "Alkollü Araç (Yasal Üstü)", p: 40000, h: 10},
-        {code: "TRF-18", ad: "Uyuşturucu Etkisinde Sürüş", p: 80000, h: 30},
-        {code: "TRF-19", ad: "Kazaya Sebebiyet", p: 10000, h: 5},
-        {code: "TRF-20", ad: "Dur İhtarına Uymamak", p: 20000, h: 15},
-        {code: "TRF-21", ad: "Polisten Kaçmak (Araçla)", p: 50000, h: 30},
-        {code: "TRF-22", ad: "Yaya Geçidi İhlali", p: 2000, h: 0},
-        {code: "TRF-23", ad: "Hasarlı Araç Kullanımı", p: 6000, h: 0},
-        {code: "TRF-24", ad: "Yasaklı Cam Filmi", p: 2000, h: 0},
-        {code: "TRF-25", ad: "Memura Trafikte Hakaret", p: 15000, h: 10},
-        // ASAYİŞ (ASY)
-        {code: "ASY-01", ad: "Kimlik Beyan Etmemek", p: 5000, h: 5},
-        {code: "ASY-02", ad: "Maske ile Kimlik Gizleme", p: 10000, h: 5},
-        {code: "ASY-03", ad: "Çevreyi Rahatsız Etmek", p: 3000, h: 0},
-        {code: "ASY-04", ad: "Sokak Kavgası", p: 8000, h: 5},
-        {code: "ASY-05", ad: "Sarhoşluk ve Taşkınlık", p: 4000, h: 0},
-        {code: "ASY-06", ad: "Mala Zarar Verme", p: 15000, h: 10},
-        {code: "ASY-07", ad: "Haneye Tecavüz", p: 40000, h: 30},
-        {code: "ASY-08", ad: "Tehdit ve Şantaj", p: 25000, h: 20},
-        {code: "ASY-09", ad: "Yalan İhbar", p: 10000, h: 5},
-        {code: "ASY-10", ad: "İllegal Kumar", p: 20000, h: 5},
-        {code: "ASY-11", ad: "İllegal Yarış", p: 60000, h: 40},
-        {code: "ASY-12", ad: "Kamu Malına Zarar", p: 50000, h: 40},
-        {code: "ASY-13", ad: "Polise Mukavemet", p: 40000, h: 30},
-        {code: "ASY-14", ad: "Polise Yalan Beyan", p: 15000, h: 10},
-        {code: "ASY-15", ad: "Yasaklı Bölge İhlali", p: 30000, h: 20},
-        // HIRSIZLIK (HRS)
-        {code: "HRS-01", ad: "Yankesicilik", p: 10000, h: 15},
-        {code: "HRS-02", ad: "Mağaza Hırsızlığı", p: 8000, h: 10},
-        {code: "HRS-03", ad: "Araç Hırsızlığı (Düz Kontak)", p: 40000, h: 40},
-        {code: "HRS-04", ad: "Araç Parçalamak (Chop)", p: 60000, h: 60},
-        {code: "HRS-05", ad: "Ev Soygunu", p: 80000, h: 70},
-        {code: "HRS-06", ad: "Gasp (Silahsız)", p: 30000, h: 30},
-        {code: "HRS-07", ad: "Gasp (Silahlı)", p: 70000, h: 80},
-        {code: "HRS-08", ad: "Kişisel Eşya Çalmak", p: 15000, h: 15},
-        {code: "HRS-09", ad: "Kamu Malı Hırsızlığı", p: 50000, h: 50},
-        {code: "HRS-10", ad: "Delil Çalmak/Karartmak", p: 100000, h: 100},
-        // ŞİDDET (SDT)
-        {code: "SDT-01", ad: "Basit Yaralama (Darp)", p: 20000, h: 20},
-        {code: "SDT-02", ad: "Silahlı Yaralama", p: 80000, h: 80},
-        {code: "SDT-03", ad: "Bıçaklı Yaralama", p: 60000, h: 60},
-        {code: "SDT-04", ad: "Adam Öldürmeye Teşebbüs", p: 150000, h: 100},
-        {code: "SDT-05", ad: "Taksirle Adam Öldürme", p: 100000, h: 80},
-        {code: "SDT-06", ad: "Kasten Adam Öldürme", p: 300000, h: 120},
-        {code: "SDT-07", ad: "Kamu Görevlisini Yaralama", p: 120000, h: 100},
-        {code: "SDT-08", ad: "Kamu Görevlisini Öldürme", p: 400000, h: 120},
-        {code: "SDT-09", ad: "Adam Kaçırma / Rehin", p: 150000, h: 110},
-        {code: "SDT-10", ad: "İşkence", p: 200000, h: 120},
-        // NARKOTİK (NRK)
-        {code: "NRK-01", ad: "Uyuşturucu Kullanımı (Esrar)", p: 15000, h: 10},
-        {code: "NRK-02", ad: "Uyuşturucu Bulundurma", p: 25000, h: 20},
-        {code: "NRK-03", ad: "Uyuşturucu Satışı (Torbacı)", p: 80000, h: 80},
-        {code: "NRK-04", ad: "Uyuşturucu Yetiştirme", p: 150000, h: 100},
-        {code: "NRK-05", ad: "Metamfetamin Bulundurma", p: 40000, h: 30},
-        {code: "NRK-06", ad: "Metamfetamin Satışı", p: 100000, h: 90},
-        {code: "NRK-07", ad: "Kokain Bulundurma", p: 50000, h: 40},
-        {code: "NRK-08", ad: "Kokain Satışı", p: 120000, h: 100},
-        {code: "NRK-09", ad: "Sentetik Hap Bulundurma", p: 20000, h: 15},
-        {code: "NRK-10", ad: "Uyuşturucu Kuryeliği", p: 70000, h: 60},
-        // SİLAHLAR (SLH)
-        {code: "SLH-01", ad: "Ruhsatsız Tabanca", p: 50000, h: 40},
-        {code: "SLH-02", ad: "Silah Ticareti", p: 100000, h: 90},
-        {code: "SLH-03", ad: "Kesici Alet Taşıma", p: 15000, h: 10},
-        {code: "SLH-04", ad: "Uzun Namlulu Silah", p: 150000, h: 100},
-        {code: "SLH-05", ad: "Patlayıcı Madde (C4)", p: 300000, h: 120},
-        {code: "SLH-06", ad: "Meskun Mahalde Ateş", p: 40000, h: 30},
-        {code: "SLH-07", ad: "Silah Teşhiri", p: 25000, h: 20},
-        {code: "SLH-08", ad: "Polis Ekipmanı Bulundurma", p: 60000, h: 50},
-        {code: "SLH-09", ad: "Çalıntı Silah", p: 70000, h: 60},
-        {code: "SLH-10", ad: "Seri No Silinmiş Silah", p: 80000, h: 70},
-        // ORGANİZE (ORG)
-        {code: "ORG-01", ad: "Suç Örgütü Kurmak", p: 300000, h: 120},
-        {code: "ORG-02", ad: "Örgüt Üyeliği", p: 100000, h: 80},
-        {code: "ORG-03", ad: "Kara Para Aklama", p: 200000, h: 90},
-        {code: "ORG-04", ad: "Market Soygunu", p: 60000, h: 50},
-        {code: "ORG-05", ad: "Banka Soygunu (Fleeca)", p: 150000, h: 100},
-        {code: "ORG-06", ad: "Merkez Bankası Soygunu", p: 400000, h: 120},
-        {code: "ORG-07", ad: "Kuyumcu Soygunu", p: 120000, h: 90},
-        {code: "ORG-08", ad: "Zırhlı Araç Soygunu", p: 180000, h: 110},
-        {code: "ORG-09", ad: "Rüşvet", p: 100000, h: 80},
-        {code: "ORG-10", ad: "Devlet Düzenine Karşı Suç", p: 400000, h: 120}
-    ];
+    // --- REALISTIC TCK ---
+    const REALISTIC_TCK = [{code: "TRF-01", ad: "Hatalı Park", p: 2500, h: 0}, {code: "TRF-02", ad: "Kırmızı Işık İhlali", p: 3500, h: 0}, {code: "TRF-03", ad: "Hız Sınırı İhlali (%10-30)", p: 4000, h: 0}, {code: "TRF-04", ad: "Hız Sınırı İhlali (%50+)", p: 10000, h: 0}, {code: "ASY-01", ad: "Kimlik Beyan Etmemek", p: 5000, h: 5}, {code: "ASY-04", ad: "Sokak Kavgası", p: 8000, h: 5}, {code: "SLH-01", ad: "Ruhsatsız Tabanca", p: 50000, h: 40}, {code: "NRK-01", ad: "Uyuşturucu Kullanımı", p: 15000, h: 10}, {code: "ORG-05", ad: "Banka Soygunu", p: 150000, h: 100}];
 
     function tckVeritabaniHazirla() { 
         database.ref('sistem/tck').on('value', s => {
-            if(s.exists()) { tckDb = Array.isArray(s.val()) ? s.val() : Object.values(s.val()); showToast("Kanun veritabanı senkronize.", "success"); } 
+            if(s.exists()) { tckDb = Array.isArray(s.val()) ? s.val() : Object.values(s.val()); } 
             else { tckDb = REALISTIC_TCK; database.ref('sistem/tck').set(REALISTIC_TCK); }
             cezaListesiniOlustur(); tckTabloGuncelle();
         });
@@ -604,10 +564,64 @@
     function dbSil(p) { if(!yetkiVarMi('perm_ceza_sil')) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref(p).remove(); }
     function ohalDegistir() { if(!yetkiVarMi('perm_ohal')) return alert("Yetkisiz!"); database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); logEkle("OHAL durumu değiştirildi."); }
     function basvurulariDinle() { database.ref('basvurular').on('value', s => { const tb = document.getElementById('basvuruListesi'); let bekleyen=0; let arr=[]; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.sort((a,b)=>(a.v.durum==='Beklemede'&&b.v.durum!=='Beklemede')?-1:1); let html=""; arr.forEach(i=>{ const d=i.v; if(d.durum==='Beklemede') bekleyen++; let b=d.durum==='Onaylandı'?'badge-green':(d.durum==='Reddedildi'?'badge-red':'badge-warn'); let silBtn = yetkiVarMi('perm_basvuru_yonet') ? `<button onclick="basvuruSil('${i.k}')" class="btn btn-red" style="margin-left:5px;"><i class="fas fa-trash"></i></button>` : ''; html+=`<tr><td>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</td><td>${d.discord_id}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="sesCal('click'); basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button>${silBtn}</td></tr>`; }); tb.innerHTML=html; document.getElementById('statBasvuru').innerText=bekleyen; document.getElementById('basvuruBadge').innerText=bekleyen; document.getElementById('basvuruBadge').style.display=bekleyen>0?'inline':'none'; }); }
-    function sendDiscordWebhook(data, status) { let c = status === "Reddedildi" ? 15158332 : 3066993; let t = status === "Reddedildi" ? "🚫 BAŞVURU REDDEDİLDİ" : "👮‍♂️ BAŞVURU KABUL EDİLDİ"; fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: `<@${data.discord_id}>`, embeds: [{ title: t, description: `İşlem: **${status}**`, color: c, fields: [{ name: "IC İsim", value: data.ic_isim, inline: true }, { name: "Yetkili", value: aktifKullanici, inline: true }] }] }) }); }
+    
+    // DISCORD WEBHOOK FONKSİYONLARI (BAŞVURU + MESAİ)
+    function sendDiscordWebhook(data, status) { 
+        let c = status === "Reddedildi" ? 15158332 : 3066993; 
+        let t = status === "Reddedildi" ? "🚫 BAŞVURU REDDEDİLDİ" : "👮‍♂️ BAŞVURU KABUL EDİLDİ"; 
+        fetch(DISCORD_APP_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: `<@${data.discord_id}>`, embeds: [{ title: t, description: `İşlem: **${status}**`, color: c, fields: [{ name: "IC İsim", value: data.ic_isim, inline: true }, { name: "Yetkili", value: aktifKullanici, inline: true }] }] }) }); 
+    }
+
+    function sendShiftWebhook(user, type, duration = "") {
+        const color = type === "Giriş" ? 3066993 : 15158332; // Yeşil / Kırmızı
+        const message = type === "Giriş" 
+            ? `🟢 **MESAİ BAŞLADI**\nPersonel: ${user}` 
+            : `🔴 **MESAİ BİTTİ**\nPersonel: ${user}\nÇalışılan Süre: ${duration}`;
+
+        fetch(DISCORD_SHIFT_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                embeds: [{
+                    description: message,
+                    color: color,
+                    footer: { text: "POLNET Shift System" },
+                    timestamp: new Date()
+                }]
+            })
+        });
+    }
+
     function ruhsatlariDinle() { database.ref('ruhsatlar').on('value', s => { const tb = document.getElementById('ruhsatListesi'); tb.innerHTML = ""; s.forEach(c => { const d = c.val(); let btn = yetkiVarMi('perm_ceza_sil') ? `<button onclick="dbSil('ruhsatlar/${c.key}')" class="btn btn-red btn-sm">İPTAL</button>` : ''; tb.innerHTML += `<tr><td>${d.sahip}</td><td><span class="badge badge-blue">${d.tip}</span></td><td>${d.gecerlilik}</td><td>${d.veren}</td><td>${btn}</td></tr>`; }); }); }
     function mesaiSistemiBaslat() { database.ref('active_shifts').on('value', s => { const tbody = document.getElementById('aktifMesaiBody'); tbody.innerHTML = ""; s.forEach(c => { const d = c.val(); if(d.user === aktifKullanici && !myShiftTimer) { myShiftStart = d.start; startLocalTimer(); document.getElementById('kisiselMesaiKart').classList.add('mesai-active'); document.getElementById('btnMesai').innerText="MESAİ BİTİR"; document.getElementById('btnMesai').className="btn btn-red"; document.getElementById('mesaiDurumText').innerText="MESAİDE"; document.getElementById('mesaiDurumText').style.color="var(--success)"; } tbody.innerHTML += `<tr><td>${d.user}</td><td>${d.rutbeAd}</td><td>${new Date(d.start).toLocaleTimeString()}</td><td>${Math.floor((Date.now()-d.start)/60000)} Dk</td></tr>`; }); }); }
-    function mesaiToggle() { if(!myShiftStart) { database.ref('active_shifts/'+aktifKullanici).set({user:aktifKullanici, rutbeAd:RUTBELER[aktifRutbeId]?RUTBELER[aktifRutbeId].ad:"-", start:Date.now()}); logEkle("Mesaiye başladı."); } else { database.ref('active_shifts/'+aktifKullanici).remove(); myShiftStart=null; clearInterval(myShiftTimer); myShiftTimer=null; document.getElementById('kisiselMesaiKart').classList.remove('mesai-active'); document.getElementById('btnMesai').innerText="MESAİYE BAŞLA"; document.getElementById('btnMesai').className="btn btn-green"; document.getElementById('mesaiDurumText').innerText="MESAİ DIŞI"; document.getElementById('mesaiDurumText').style.color="var(--text-muted)"; document.getElementById('mesaiSayac').innerText="00:00:00"; logEkle("Mesaiyi bitirdi."); } }
+    
+    function mesaiToggle() { 
+        if(!myShiftStart) { 
+            database.ref('active_shifts/'+aktifKullanici).set({user:aktifKullanici, rutbeAd:RUTBELER[aktifRutbeId]?RUTBELER[aktifRutbeId].ad:"-", start:Date.now()}); 
+            logEkle("Mesaiye başladı."); 
+            sendShiftWebhook(aktifKullanici, "Giriş");
+        } else { 
+            // Çıkış yaparken süreyi hesapla
+            let diff = Date.now() - myShiftStart;
+            let h = Math.floor(diff/3600000); 
+            let m = Math.floor((diff%3600000)/60000);
+            let sureStr = `${h} Saat ${m} Dakika`;
+
+            database.ref('active_shifts/'+aktifKullanici).remove(); 
+            myShiftStart=null; 
+            clearInterval(myShiftTimer); 
+            myShiftTimer=null; 
+            document.getElementById('kisiselMesaiKart').classList.remove('mesai-active'); 
+            document.getElementById('btnMesai').innerText="MESAİYE BAŞLA"; 
+            document.getElementById('btnMesai').className="btn btn-green"; 
+            document.getElementById('mesaiDurumText').innerText="MESAİ DIŞI"; 
+            document.getElementById('mesaiDurumText').style.color="var(--text-muted)"; 
+            document.getElementById('mesaiSayac').innerText="00:00:00"; 
+            logEkle("Mesaiyi bitirdi."); 
+            sendShiftWebhook(aktifKullanici, "Çıkış", sureStr);
+        } 
+    }
+    
     function startLocalTimer() { if(myShiftTimer) clearInterval(myShiftTimer); myShiftTimer = setInterval(() => { if(!myShiftStart) return; let d = Date.now() - myShiftStart; let h = Math.floor(d/3600000); let m = Math.floor((d%3600000)/60000); let s = Math.floor((d%60000)/1000); document.getElementById('mesaiSayac').innerText = (h<10?'0':'')+h+":"+(m<10?'0':'')+m+":"+(s<10?'0':'')+s; }, 1000); }
     function gbtSorgula() { const n = document.getElementById('gbtInput').value; database.ref('gbt').orderByChild('isim').equalTo(n).once('value', s => { 
         let html = "";
