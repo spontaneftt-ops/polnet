@@ -5,10 +5,10 @@
     <title>EGM Personel Daire Başkanlığı</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; position: relative; }
-        .card { background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+        body { background: linear-gradient(135deg, #0f172a 0%, #162447 100%); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; margin: 0; position: relative; overflow: hidden; }
+        .card { background: rgba(22, 36, 71, 0.9); padding: 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 5; transition: opacity 0.3s; }
         .logo { width: 120px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3)); }
         h1 { color: #ffd700; font-size: 1.5rem; text-transform: uppercase; margin: 10px 0; }
         input { padding: 15px; width: 90%; border-radius: 5px; border: 1px solid #333; margin-bottom: 15px; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem; }
@@ -21,31 +21,11 @@
 
         .secret-admin { position: fixed; bottom: 10px; right: 10px; opacity: 0.3; text-decoration: none; color: white; font-size: 12px; z-index: 20; }
         .secret-admin:hover { opacity: 1; }
-
-        /* YENİ EKLENEN İMZA STİLİ */
-        .footer-signature {
-            position: fixed;
-            bottom: 15px;
-            width: 100%;
-            text-align: center;
-            font-family: 'Orbitron', sans-serif; /* Teknolojik font */
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
-            pointer-events: none; /* Tıklamaları engellemez */
-            z-index: 10;
-        }
-        .footer-signature span {
-            color: #00d2ff; /* Marka ismini hafif mavi neon yaptım */
-            font-weight: 700;
-        }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="mainCardPanel">
     <img src="egmm.png" class="logo" alt="EGM Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
     
     <h1>BAŞVURU SORGULAMA</h1>
@@ -62,22 +42,17 @@
 
 <a href="admin.html" class="secret-admin">Yönetim Paneli</a>
 
-<div class="footer-signature">
-    <span>SpontaneFTT Web Coding</span> Tarafından Üretilmiştir & Lisanslanmıştır © 2026
-</div>
-
 <script src="config.js"></script>
 <script>
+    // MEVCUT SORGULAMA FONKSİYONU
     function sorgula() {
         const id = document.getElementById('sorguDiscordId').value.trim();
         const sonucDiv = document.getElementById('sonuc');
         if(!id) { alert("Lütfen Discord ID girin!"); return; }
         sonucDiv.style.display = 'none';
         
-        // ID'ye göre son başvuruyu bul
         database.ref('basvurular').orderByChild('discord_id').equalTo(id).limitToLast(1).once('value', snapshot => {
             if (snapshot.exists()) {
-                // Obje döndüğü için value'larını alıp ilkini seçiyoruz
                 const data = Object.values(snapshot.val())[0];
                 let mesaj = "DEĞERLENDİRİLİYOR ⏳";
                 let renk = "#ffc107";
@@ -100,6 +75,69 @@
             }
         });
     }
+
+    // --- KORUMA MODÜLÜ (SPONTANEFTT SECURITY) ---
+    (function(){
+        const devName = "SpontaneFTT Web Coding";
+        const licenseYear = "2026";
+        const footerId = "sys_integrity_layer_" + Math.random().toString(36).substr(2, 9); // Rastgele ID üretimi
+
+        function renderSignature() {
+            let el = document.getElementById(footerId);
+            if (!el) {
+                el = document.createElement("div");
+                el.id = footerId;
+                el.style.cssText = `
+                    position: fixed;
+                    bottom: 15px;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 11px;
+                    color: rgba(255, 255, 255, 0.5);
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    z-index: 9999;
+                    pointer-events: none;
+                    user-select: none;
+                    text-shadow: 0 0 8px rgba(0, 210, 255, 0.2);
+                `;
+                el.innerHTML = `<span style="color:#00e5ff; font-weight:800; text-shadow:0 0 10px #00e5ff;">${devName}</span> TARAFINDAN ÜRETİLMİŞTİR & LİSANSLANMIŞTIR © ${licenseYear}`;
+                document.body.appendChild(el);
+            }
+            
+            // Görünmez yapılırsa zorla görünür yap
+            if (el.style.display === 'none' || el.style.visibility === 'hidden' || el.style.opacity == 0) {
+                el.style.display = 'block';
+                el.style.visibility = 'visible';
+                el.style.opacity = 1;
+            }
+        }
+
+        // SÜREKLİ KONTROL (LOOP)
+        setInterval(() => {
+            const signature = document.getElementById(footerId);
+            const mainPanel = document.getElementById("mainCardPanel");
+            
+            // 1. Yazı silinmiş mi?
+            if (!signature) {
+                renderSignature(); // Yeniden oluştur
+                // İsteğe bağlı: Yazı silinirse paneli gizle (Ceza)
+                if(mainPanel) mainPanel.style.opacity = '0.1'; 
+            } else {
+                // Yazı yerindeyse paneli normal göster
+                if(mainPanel) mainPanel.style.opacity = '1';
+                
+                // 2. Yazının içeriği değiştirilmiş mi?
+                if (!signature.innerHTML.includes(devName)) {
+                    signature.innerHTML = `<span style="color:#00e5ff; font-weight:800; text-shadow:0 0 10px #00e5ff;">${devName}</span> TARAFINDAN ÜRETİLMİŞTİR & LİSANSLANMIŞTIR © ${licenseYear}`;
+                }
+            }
+        }, 200); // 200 milisaniyede bir kontrol eder
+        
+        renderSignature();
+    })();
 </script>
 </body>
 </html>
