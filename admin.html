@@ -469,31 +469,36 @@
         }
     }
 
-    // --- BAŞVURU SİSTEMİ & WEBHOOK (YENİ SIRALAMA) ---
+    // --- BAŞVURU SİSTEMİ & WEBHOOK (GÜNCELLENMİŞ VERSİYON) ---
     function basvurulariDinle() {
         database.ref('basvurular').on('value', s => {
-            const tb = document.getElementById('basvuruListesi'); tb.innerHTML = ""; let bekleyen = 0;
+            const tb = document.getElementById('basvuruListesi'); 
+            let bekleyen = 0;
             let arr = []; 
+            
+            // Veriyi diziye çevir
             s.forEach(c => arr.push({k:c.key, v:c.val()}));
             
-            // YENİ AKILLI SIRALAMA
+            // 1. SIRALAMA: Bekleyenler en üste, sonra tarih sırası
             arr.sort((a, b) => {
                 const aBekliyor = a.v.durum === 'Beklemede';
                 const bBekliyor = b.v.durum === 'Beklemede';
-                if (aBekliyor && !bBekliyor) return -1; // a öne
-                if (!aBekliyor && bBekliyor) return 1; // b öne
-                return new Date(b.v.tarih || 0) - new Date(a.v.tarih || 0); // Tarihe göre
+                if (aBekliyor && !bBekliyor) return -1;
+                if (!aBekliyor && bBekliyor) return 1;
+                return new Date(b.v.tarih || 0) - new Date(a.v.tarih || 0);
             });
-            
+
+            // 2. HTML BİRİKTİRME (Üst üste binme sorununu çözen yer)
+            let tumSatirlar = ""; 
+
             arr.forEach(i => { 
                 const d = i.v; 
                 if(d.durum==='Beklemede') bekleyen++; 
                 let b = d.durum==='Onaylandı' ? 'badge-green' : (d.durum==='Reddedildi' ? 'badge-red' : 'badge-warn'); 
                 
-                // Discord ID'yi Linke Çevirme
                 let discordLink = `<a href="https://discord.com/users/${d.discord_id}" target="_blank" style="color:#5865F2; text-decoration:none; font-weight:bold;"><i class="fab fa-discord"></i> ${d.discord_id}</a>`;
 
-                tb.innerHTML += `<tr>
+                tumSatirlar += `<tr>
                     <td>${d.tarih ? new Date(d.tarih).toLocaleDateString() : '-'}</td>
                     <td>${discordLink}</td>
                     <td>${d.ic_isim}</td>
@@ -504,6 +509,11 @@
                     </td>
                 </tr>`; 
             });
+
+            // 3. TEK SEFERDE YAZDIRMA
+            tb.innerHTML = tumSatirlar;
+            
+            // İstatistikler
             document.getElementById('statBasvuru').innerText = bekleyen; 
             document.getElementById('basvuruBadge').style.display = bekleyen > 0 ? 'inline-block' : 'none'; 
             document.getElementById('basvuruBadge').innerText = bekleyen;
