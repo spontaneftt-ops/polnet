@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v6.2 - Management Update</title>
+    <title>POLNET v6.3 - Salary System Fix</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -107,13 +107,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v6.2</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v6.3</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="sesCal('click'); girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v6.2 Management Update</p>
+        <p style="font-size:10px; color:#555;">v6.3 Salary System Fix</p>
     </div>
 </div>
 
@@ -277,8 +277,8 @@
 </div></div></div>
 
 <div id="maasModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Maaş Hesaplama Tablosu</h3><span onclick="modalKapat()" style="cursor:pointer;">&times;</span></div><div class="modal-body">
-    <p>Aşağıdaki tablo, sistemdeki rütbe katsayılarına göre hesaplanmıştır.</p>
-    <table style="font-size:0.9rem;"><thead><tr><th>Personel</th><th>Rütbe</th><th>Toplam Süre (Dk)</th><th>Saatlik Ücret</th><th>Hak Ediş</th></tr></thead><tbody id="maasTabloBody"></tbody></table>
+    <p>Aşağıdaki tablo, sistemdeki kayıtlı tamamlanmış mesai sürelerine göre hesaplanmıştır.</p>
+    <table style="font-size:0.9rem;"><thead><tr><th>Personel</th><th>Rütbe</th><th>Toplam Süre (Saat)</th><th>Saatlik Ücret</th><th>Hak Ediş</th></tr></thead><tbody id="maasTabloBody"></tbody></table>
     <div style="background:rgba(255,255,255,0.05); padding:10px; margin-top:10px; text-align:right;">
         <strong>Toplam Dağıtılacak: </strong> <span id="maasToplamTutar" style="color:var(--success); font-size:1.2rem;">0 TL</span>
     </div>
@@ -428,33 +428,57 @@
         const tbody = document.getElementById('maasTabloBody'); tbody.innerHTML = "<tr><td colspan='5'>Hesaplanıyor...</td></tr>";
         let toplamOdenecek = 0;
         
-        tbody.innerHTML = "";
-        database.ref('personel').once('value', ps => {
-            ps.forEach(p => {
-                const pd = p.val();
-                const rId = pd.rutbe || 0;
-                const rAd = RUTBELER[rId].ad;
-                const saatlikUcret = globalMaaslar[rId] || RUTBELER[rId].defMaas;
+        // ÖNCE MESAİ GEÇMİŞİNİ ÇEK
+        database.ref('shift_history').once('value', historySnapshot => {
+            const history = historySnapshot.val() || {};
+            
+            // SONRA PERSONEL LİSTESİNİ ÇEK VE HESAPLA
+            database.ref('personel').once('value', ps => {
+                tbody.innerHTML = "";
+                ps.forEach(p => {
+                    const pd = p.val();
+                    const rId = pd.rutbe || 0;
+                    const rAd = RUTBELER[rId].ad;
+                    const saatlikUcret = globalMaaslar[rId] || RUTBELER[rId].defMaas;
+                    
+                    // KULLANICININ TOPLAM SÜRESİNİ HESAPLA
+                    let totalMs = 0;
+                    if(history[pd.kadi]) {
+                        // Kullanıcının tüm geçmiş kayıtlarını topla
+                        Object.values(history[pd.kadi]).forEach(record => {
+                            if(record.duration) totalMs += record.duration;
+                        });
+                    }
+                    
+                    const totalHours = (totalMs / 3600000); // Milisaniyeyi saate çevir
+                    const displayHours = totalHours.toFixed(2); // Ekranda görünecek (28.4 gibi)
+                    
+                    const hakedis = Math.floor(totalHours * saatlikUcret);
+                    
+                    if(hakedis > 0) {
+                        toplamOdenecek += hakedis;
+                        tbody.innerHTML += `<tr><td>${pd.kadi}</td><td>${rAd}</td><td>${displayHours} Saat</td><td>${saatlikUcret} TL</td><td>${hakedis.toLocaleString()} TL</td></tr>`;
+                    }
+                });
                 
-                const toplamDk = Math.floor(Math.random() * 3000); // Demo süresi
-                const toplamSaat = (toplamDk / 60).toFixed(1);
-                const hakedis = Math.floor(toplamSaat * saatlikUcret);
+                if(toplamOdenecek === 0) {
+                     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>Henüz tamamlanmış mesai kaydı bulunmamaktadır.</td></tr>";
+                }
                 
-                toplamOdenecek += hakedis;
-                tbody.innerHTML += `<tr><td>${pd.kadi}</td><td>${rAd}</td><td>${toplamSaat} Saat</td><td>${saatlikUcret} TL</td><td>${hakedis.toLocaleString()} TL</td></tr>`;
+                document.getElementById('maasToplamTutar').innerText = toplamOdenecek.toLocaleString() + " TL";
             });
-            document.getElementById('maasToplamTutar').innerText = toplamOdenecek.toLocaleString() + " TL";
         });
     }
 
-    // --- YENİ: MESAİ SIFIRLAMA ---
+    // --- MESAİ SIFIRLAMA ---
     function mesaiSifirla() {
         if(aktifRutbeId < 10) return alert("Sadece 1. Sınıf Emniyet Müdürü!");
-        if(confirm("DİKKAT: Tüm personelin mesai kayıtları ve aktif mesai durumları SIFIRLANACAK.\n\nBu işlem geri alınamaz. Onaylıyor musunuz?")) {
-            database.ref('active_shifts').remove();
-            // Eğer gelecekte personel_logs içinde mesai geçmişi tutulursa o da buradan silinir.
-            logEkle("TÜM MESAİ KAYITLARI SIFIRLANDI!");
-            showToast("Mesai veritabanı temizlendi.", "warning");
+        if(confirm("DİKKAT: Tüm personelin mesai kayıtları (GEÇMİŞ DAHİL) ve aktif durumları SIFIRLANACAK.\n\nBu işlem maaşlar dağıtıldıktan sonra yapılmalıdır. Onaylıyor musunuz?")) {
+            database.ref('active_shifts').remove(); // Aktifleri sil
+            database.ref('shift_history').remove(); // Geçmişi sil (Maaş tablosunu sıfırlar)
+            
+            logEkle("TÜM MESAİ VE MAAŞ GEÇMİŞİ SIFIRLANDI!");
+            showToast("Mesai veritabanı tamamen temizlendi.", "warning");
         }
     }
 
@@ -597,26 +621,42 @@
     
     function mesaiToggle() { 
         if(!myShiftStart) { 
+            // 1. MESAİYE GİRİŞ
             database.ref('active_shifts/'+aktifKullanici).set({user:aktifKullanici, rutbeAd:RUTBELER[aktifRutbeId]?RUTBELER[aktifRutbeId].ad:"-", start:Date.now()}); 
             logEkle("Mesaiye başladı."); 
             sendShiftWebhook(aktifKullanici, "Giriş");
         } else { 
-            // Çıkış yaparken süreyi hesapla
-            let diff = Date.now() - myShiftStart;
-            let h = Math.floor(diff/3600000); 
-            let m = Math.floor((diff%3600000)/60000);
+            // 2. MESAİ ÇIKIŞ (SÜREYİ KAYDET)
+            const bitisZamani = Date.now();
+            const sureMs = bitisZamani - myShiftStart; // Milisaniye cinsinden süre
+            
+            // Geçmişe kaydet (Maaş hesaplaması için)
+            database.ref('shift_history/' + aktifKullanici).push({
+                start: myShiftStart,
+                end: bitisZamani,
+                duration: sureMs
+            });
+
+            // Süre Gösterimi (Webhook için)
+            let h = Math.floor(sureMs/3600000); 
+            let m = Math.floor((sureMs%3600000)/60000);
             let sureStr = `${h} Saat ${m} Dakika`;
 
+            // Aktif mesaiyi sil
             database.ref('active_shifts/'+aktifKullanici).remove(); 
+            
             myShiftStart=null; 
             clearInterval(myShiftTimer); 
             myShiftTimer=null; 
+            
+            // UI Güncelleme
             document.getElementById('kisiselMesaiKart').classList.remove('mesai-active'); 
             document.getElementById('btnMesai').innerText="MESAİYE BAŞLA"; 
             document.getElementById('btnMesai').className="btn btn-green"; 
             document.getElementById('mesaiDurumText').innerText="MESAİ DIŞI"; 
             document.getElementById('mesaiDurumText').style.color="var(--text-muted)"; 
             document.getElementById('mesaiSayac').innerText="00:00:00"; 
+            
             logEkle("Mesaiyi bitirdi."); 
             sendShiftWebhook(aktifKullanici, "Çıkış", sureStr);
         } 
