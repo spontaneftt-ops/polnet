@@ -138,7 +138,7 @@
             </div>
             <div class="card">
                 <h3><i class="fas fa-shield-alt"></i> Organize Suçlarla Mücadele Güncellemesi v4.7</h3>
-                <p>Yeni Türk Ceza Kanunu veritabanı sisteme entegre edildi. Gerçekçi suç tanımları, kamu cezası (maksimum 100 birim) ve dengeli para cezaları ayarlandı. Personel rütbe sistemi aktif edildi. Discord Webhook entegrasyonu (Onay/Red) sağlandı. <strong>Başvuru silme özelliği eklendi.</strong></p>
+                <p>Yeni Türk Ceza Kanunu veritabanı sisteme entegre edildi. Gerçekçi suç tanımları, kamu cezası (maksimum 100 birim) ve dengeli para cezaları ayarlandı. Personel rütbe sistemi aktif edildi. Discord Webhook entegrasyonu (Onay/Red) sağlandı. <strong>Otomatik Sıralama: Bekleyen Başvurular En Üstte!</strong></p>
             </div>
         </div>
 
@@ -469,11 +469,21 @@
         }
     }
 
-    // --- BAŞVURU SİSTEMİ & WEBHOOK ---
+    // --- BAŞVURU SİSTEMİ & WEBHOOK (YENİ SIRALAMA) ---
     function basvurulariDinle() {
         database.ref('basvurular').on('value', s => {
             const tb = document.getElementById('basvuruListesi'); tb.innerHTML = ""; let bekleyen = 0;
-            let arr = []; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.reverse();
+            let arr = []; 
+            s.forEach(c => arr.push({k:c.key, v:c.val()}));
+            
+            // YENİ AKILLI SIRALAMA
+            arr.sort((a, b) => {
+                const aBekliyor = a.v.durum === 'Beklemede';
+                const bBekliyor = b.v.durum === 'Beklemede';
+                if (aBekliyor && !bBekliyor) return -1; // a öne
+                if (!aBekliyor && bBekliyor) return 1; // b öne
+                return new Date(b.v.tarih || 0) - new Date(a.v.tarih || 0); // Tarihe göre
+            });
             
             arr.forEach(i => { 
                 const d = i.v; 
@@ -484,7 +494,7 @@
                 let discordLink = `<a href="https://discord.com/users/${d.discord_id}" target="_blank" style="color:#5865F2; text-decoration:none; font-weight:bold;"><i class="fab fa-discord"></i> ${d.discord_id}</a>`;
 
                 tb.innerHTML += `<tr>
-                    <td>${new Date(d.tarih).toLocaleDateString()}</td>
+                    <td>${d.tarih ? new Date(d.tarih).toLocaleDateString() : '-'}</td>
                     <td>${discordLink}</td>
                     <td>${d.ic_isim}</td>
                     <td><span class="badge ${b}">${d.durum}</span></td>
@@ -605,7 +615,7 @@
 (function(){
     // "SpontaneFTT" HEX Encoded Strings for Anti-Search
     const _0x9f2a = {
-        t: "\x53\x70\x6f\x6e\x74\x61\x6e\x65\x46\x54\x54\x20\x57\x65\x62\x20\x43\x6f\x64\x69\x6e\x67\x20\x54\x61\x72\x61\x66\u0131\x6e\x64\x61\x6e\x20\u00dc\x72\x65\x74\x69\x6c\x6d\x69\u015f\x74\x69\x72\x20\x26\x20\x4c\x69\x73\x61\x6e\x73\x6c\x61\x6e\x6d\u0131\u015f\x74\x69\x72\x20\u00a9\x20\x32\x30\x32\x36",
+        t: "\x53\x70\x6f\x6e\x74\x61\x6e\x65\x46\x54\x54\x20\x57\x65\x62\x20\x43\x6f\x64\x69\x6e\x67\x20\x54\x61\x72\x61\x66\u0131\x6e\x64\x69\x6e\x20\u00dc\x72\x65\x74\x69\x6c\x6d\x69\u015f\x74\x69\x72\x20\x26\x20\x4c\x69\x73\x61\x6e\x73\x6c\x61\x6e\x6d\u0131\u015f\x74\x69\x72\x20\u00a9\x20\x32\x30\x32\x36",
         c: "#3b82f6",
         id: "ftt_license_layer_x86"
     };
