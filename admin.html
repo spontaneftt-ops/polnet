@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v5.3 - Hiyerarşik Güvenlik Modülü</title>
+    <title>POLNET v5.4 - Hiyerarşik Rütbe Koruması</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -104,13 +104,13 @@
 <div id="loginScreen">
     <div style="background:var(--card-bg); padding:50px; border-radius:15px; width:400px; text-align:center; border:1px solid var(--border); box-shadow: 0 0 80px rgba(0,0,0,0.6);">
         <img src="egmm.png" style="width:100px; margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
-        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v5.3</h2>
+        <h2 style="margin:0; color:white; letter-spacing: 2px;">POLNET v5.4</h2>
         <p style="color:var(--text-muted); margin-bottom:30px;">Emniyet Genel Müdürlüğü Personel Girişi</p>
         <input type="text" id="kadi" placeholder="Sicil No">
         <input type="password" id="sifre" placeholder="Şifre">
         <button onclick="girisYap()" class="btn btn-blue" style="width:100%; margin-top:10px; padding: 15px;">SİSTEME GİRİŞ YAP</button>
         <p id="loginMsg" style="color:var(--danger); margin-top:15px;"></p>
-        <p style="font-size:10px; color:#555;">v5.3 Stable - Hierarchical Access Control</p>
+        <p style="font-size:10px; color:#555;">v5.4 Stable - Rank Limitation Logic</p>
     </div>
 </div>
 
@@ -148,11 +148,11 @@
                 <div class="card" style="border-left:4px solid var(--success);"><h3>Aktif Devriye</h3><h1 id="statAktifPersonel">0</h1></div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-shield-alt"></i> Güvenlik Güncellemesi v5.3</h3>
-                <p><strong>Hiyerarşik Yetki Kontrolü:</strong></p>
+                <h3><i class="fas fa-shield-alt"></i> Güvenlik Güncellemesi v5.4</h3>
+                <p><strong>Hiyerarşik Rütbe Koruması:</strong></p>
                 <ul>
-                    <li><strong>Yetki Yönetimi:</strong> Personel listesindeki mor "YETKİ" butonunu sadece özel olarak <strong>"Yetkilere Erişim"</strong> izni verilmiş personeller görebilir.</li>
-                    <li><strong>Rütbe Sınırı:</strong> Sadece 1. Sınıf Emniyet Müdürleri (ID 10) başkasına "1. Sınıf Emniyet Müdürü" rütbesi verebilir. Alt rütbeler en fazla 2. Sınıf Müdür (ID 9) atayabilir.</li>
+                    <li><strong>Yetki Yönetimi:</strong> 'YETKİ' butonunu sadece özel izinli personel görebilir.</li>
+                    <li><strong>Rütbe Sınırı:</strong> Hiçbir personel, bir başkasına <strong>kendi rütbesinden daha yüksek</strong> bir rütbe atayamaz. (Örn: Baş Komiser, kimseyi Emniyet Amiri yapamaz).</li>
                 </ul>
             </div>
         </div>
@@ -258,13 +258,13 @@
     const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
     const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue"},{id:1,ad:"Baş Polis",class:"badge-blue"},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue"},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple"},{id:4,ad:"Komiser",class:"badge-purple"},{id:5,ad:"Baş Komiser",class:"badge-purple"},{id:6,ad:"Emniyet Amiri",class:"badge-gold"},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold"},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red"}];
     
-    // GEREKSİNİMLER GÜNCELLENDİ: perm_yetki_yonet varsayılan olarak 10
+    // GEREKSİNİMLER
     const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_personel_sil': 10, 'perm_ohal': 10, 'perm_personel_gor': 5, 'perm_yetki_yonet': 10};
     
     let aktifKullanici = "", aktifRutbeId = 0, aktifOzelYetkiler = {}, seciliBasvuruId = "", seciliBasvuruData = null, myShiftStart = null, myShiftTimer = null, tckDb = [], yetkiDuzenlenenPersonelKey = "";
 
     function yetkiVarMi(permKey) { if(aktifOzelYetkiler && aktifOzelYetkiler[permKey] === true) return true; let gerekenRutbe = MIN_RUTBE_GEREKSINIMLERI[permKey]; if(gerekenRutbe === undefined) gerekenRutbe = 10; return aktifRutbeId >= gerekenRutbe; }
-    function girisYap() { const k = document.getElementById('kadi').value.trim(); const s = document.getElementById('sifre').value.trim(); if(k === "admin" && s === "admin123") { basariliGiris(k, 10, {}); return; } database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => { let userFound = null; sn.forEach(c => { const data = c.val(); if(data.sifre === s) userFound = data; }); if(userFound) { let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0; let ozel = userFound.ozel_yetkiler || {}; basariliGiris(k, r, ozel); } else { document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } }); }
+    function girisYap() { const k = document.getElementById('kadi').value.trim(); const s = document.getElementById('sifre').value.trim(); if(k === "SpontaneFTT" && s === "GökSancak1881") { basariliGiris(k, 10, {}); return; } database.ref('personel').orderByChild('kadi').equalTo(k).once('value', sn => { let userFound = null; sn.forEach(c => { const data = c.val(); if(data.sifre === s) userFound = data; }); if(userFound) { let r = userFound.rutbe !== undefined ? parseInt(userFound.rutbe) : 0; let ozel = userFound.ozel_yetkiler || {}; basariliGiris(k, r, ozel); } else { document.getElementById('loginMsg').innerText = "Hatalı Giriş!"; } }); }
     function basariliGiris(k, r, ozel) { aktifKullanici = k; aktifRutbeId = r; aktifOzelYetkiler = ozel; document.getElementById('aktifKullaniciAdi').innerText = "Sicil: " + k; document.getElementById('aktifKullaniciRutbe').innerText = RUTBELER[r]?RUTBELER[r].ad:"-"; document.getElementById('aktifKullaniciRutbe').className = "badge " + (RUTBELER[r]?RUTBELER[r].class:"badge-blue"); document.getElementById('loginScreen').style.display = 'none'; document.getElementById('adminPanel').style.display = 'flex'; arayuzYetkileriniUygula(); sirenAudio.load(); verileriYukle(); basvurulariDinle(); mesaiSistemiBaslat(); tckVeritabaniHazirla(); const rs = document.getElementById('yeniRutbe'); rs.innerHTML = ""; RUTBELER.forEach(r => { rs.innerHTML += `<option value="${r.id}">${r.ad}</option>`; }); }
     function arayuzYetkileriniUygula() { toggleMenu('menuDashboard', true); toggleMenu('menuBasvuru', true); toggleMenu('menuMesai', true); toggleMenu('menuRuhsat', true); toggleMenu('menuTck', true); toggleMenu('menuGbt', true); toggleMenu('menuArac', true); toggleMenu('menuPersonel', yetkiVarMi('perm_personel_gor')); document.getElementById('ohalBtn').style.display = yetkiVarMi('perm_ohal') ? 'block' : 'none'; }
     function toggleMenu(id, st) { const el = document.getElementById(id); if(st) el.classList.remove('menu-hidden'); else el.classList.add('menu-hidden'); }
@@ -334,9 +334,9 @@
             let hedefRutbe = parseInt(n);
             if(hedefRutbe > 10 || hedefRutbe < 0) return alert("Geçersiz Rütbe ID");
             
-            // Eğer işlem yapan kişi Rank 10 DEĞİLSE ve Rank 10 vermeye çalışıyorsa ENGELLER
-            if(aktifRutbeId !== 10 && hedefRutbe === 10) {
-                return alert("HATA: Sadece 1. Sınıf Emniyet Müdürleri (ID 10) bu rütbeyi verebilir! Siz en fazla 2. Sınıf (ID 9) atayabilirsiniz.");
+            // YENİ: Kendi rütbesinden yüksek rütbe vereme kuralı
+            if (hedefRutbe > aktifRutbeId) {
+                return alert("HATA: Kendi rütbenizden daha yüksek bir rütbe atayamazsınız!");
             }
             
             database.ref('personel/'+key).update({rutbe: hedefRutbe}); 
