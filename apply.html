@@ -40,7 +40,7 @@
 
 <script src="config.js"></script>
 <script>
-    const q = [
+    const sabitSorular = [
         {id:'i', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz sisteme işlenecektir.<br>Sorular havuzdan rastgele seçilir.'},
         {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
         {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakter Adı Soyadı (IC):'},
@@ -49,6 +49,19 @@
         {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakter hikayeniz ve polis olma motivasyonunuz?'}
     ];
     
+    const havuz = [
+        {id:'h1', t:'textarea', h:'KURAL', s:'Powergaming (PG) nedir? Örnek veriniz.'},
+        {id:'h2', t:'textarea', h:'KURAL', s:'Metagaming (MG) nedir?'},
+        {id:'s1', t:'textarea', h:'SENARYO', s:'Trafik kontrolünde size silah çekildi. Ne yaparsınız?'},
+        {id:'s2', t:'textarea', h:'SENARYO', s:'Ortağınız vuruldu. İlk hamleniz ne olur?'}
+    ];
+
+    function sorulariHazirla() {
+        const karisik = havuz.sort(() => 0.5 - Math.random()).slice(0, 5);
+        return [...sabitSorular, ...karisik];
+    }
+
+    const q = sorulariHazirla();
     let idx = 0; let ans = {}; let soruMetinleri = {};
 
     function render() {
@@ -73,17 +86,11 @@
     }
 
     function nav(d) {
-        if(d === 1) {
-            const currentItem = q[idx];
-            if(currentItem.t !== 'info') {
-                const inp = document.getElementById('inp');
-                if(inp) {
-                    const val = inp.value.trim();
-                    if(!val) return alert('Bu alan boş bırakılamaz!');
-                    ans[currentItem.id] = val;
-                    soruMetinleri[currentItem.id] = currentItem.s;
-                }
-            }
+        if(d === 1 && idx > 0) {
+            const val = document.getElementById('inp').value.trim();
+            if(!val) return alert('Bu alan boş bırakılamaz!');
+            ans[q[idx].id] = val;
+            soruMetinleri[q[idx].id] = q[idx].s;
         }
         if(d === 1 && idx === q.length-1) return send();
         idx += d; render();
@@ -92,21 +99,36 @@
     function send() {
         database.ref('blacklist').orderByChild('discord_id').equalTo(ans.discord_id).once('value', snapshot => {
             if (snapshot.exists()) {
-                alert("⛔ HATA: Bu Discord ID kara listede!");
+                alert("⛔ HATA: Bu Discord ID kara listede olduğu için başvuru yapamazsınız!");
                 return; 
             } else {
+                const btn = document.getElementById('bNext');
+                btn.innerText = 'SİSTEME İŞLENİYOR...'; 
+                btn.disabled = true;
+
+                // İstediğin data yapısı ile güncellendi
                 const data = { 
                     discord_id: ans.discord_id, 
                     ic_isim: ans.ic_isim, 
                     ooc_yas: ans.ooc_yas, 
-                    durum: 'Beklemede', 
+                    durum: 'Beklemede', // Admin panelinde görünmesini sağlayan kritik alan
                     tarih: new Date().toISOString(), 
                     cevaplar: ans, 
                     soru_detaylari: soruMetinleri
                 };
                 
-                database.ref('basvurular').push(data).then(() => {
-                    document.querySelector('.card').innerHTML = `<h1 style="color:#00ff00;">BAŞVURU İLETİLDİ ✅</h1><button onclick="window.location.href='index.html'" class="btn btn-next">ÇIKIŞ</button>`;
+                database.ref('basvurular').push(data, (err) => {
+                    if(err) { 
+                        alert("Hata: " + err.message); 
+                        btn.innerText = 'VERİLERİ GÖNDER';
+                        btn.disabled = false; 
+                        return; 
+                    }
+                    document.querySelector('.card').innerHTML = `
+                        <h1 style="color:#00ff00;">BAŞVURU İLETİLDİ ✅</h1>
+                        <p>Verileriniz başarıyla kaydedildi.</p>
+                        <button onclick="window.location.href='index.html'" class="btn btn-next" style="margin-top:20px;">ÇIKIŞ</button>
+                    `;
                 });
             }
         });
