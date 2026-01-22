@@ -275,6 +275,11 @@
 
 <script src="config.js"></script>
 <script>
+    // --- SES DOSYASI TANIMLAMASI ---
+    const sirenAudio = new Audio('siren.mp3');
+    sirenAudio.loop = true; // Siren sürekli çalsın (döngü)
+    sirenAudio.volume = 0.5; // Ses seviyesi (%50)
+
     // --- KONFİGÜRASYON ---
     const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
 
@@ -391,6 +396,9 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         
+        // Ses sistemini tetikle (Tarayıcı izni için)
+        sirenAudio.load();
+
         verileriYukle();
         basvurulariDinle();
         mesaiSistemiBaslat();
@@ -469,7 +477,7 @@
         }
     }
 
-    // --- BAŞVURU SİSTEMİ & WEBHOOK (GÜNCELLENMİŞ VERSİYON) ---
+    // --- BAŞVURU SİSTEMİ & WEBHOOK (GÜNCELLENMİŞ VERSİYON + TABLO FİKSİ) ---
     function basvurulariDinle() {
         database.ref('basvurular').on('value', s => {
             const tb = document.getElementById('basvuruListesi'); 
@@ -610,8 +618,37 @@
     
     function ruhsatKaydet() { const sahip = document.getElementById('ruh_sahip').value; const tip = document.getElementById('ruh_tip').value; const tarih = document.getElementById('ruh_tarih').value; if(!sahip || !tarih) return alert("Tüm alanları doldurun!"); database.ref('ruhsatlar').push({ sahip: sahip, tip: tip, gecerlilik: tarih, veren: aktifKullanici, verilis_tarihi: Date.now() }); alert("Ruhsat başarıyla verildi!"); modalKapat(); }
     function plakaSorgula() { const p = document.getElementById('plakaInput').value; const r = document.getElementById('aracSonuc'); if(p === "34 TR 34") r.innerHTML = `<div class="card" style="border-left:5px solid red; text-align:center;"><h1>ÇALINTI ARAÇ</h1><p>Aranan Şahıs: Mehmet Yılmaz</p></div>`; else r.innerHTML = `<div class="card" style="border-left:5px solid green; text-align:center;"><h1>TEMİZ</h1><p>Ruhsat Sahibi: Ahmet Demir</p></div>`; }
-    function ohalDegistir() { if(aktifRutbeId !== 10) return; database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); }
-    database.ref('sistem/ohal').on('value', s => { if(s.val()) { document.body.classList.add('ohal-active'); document.getElementById('ohalAlertBar').style.display = 'block'; document.getElementById('ohalBtn').innerText = "⚠️ OHAL BİTİR"; } else { document.body.classList.remove('ohal-active'); document.getElementById('ohalAlertBar').style.display = 'none'; document.getElementById('ohalBtn').innerText = "🚨 OHAL BAŞLAT"; } });
+    
+    // --- OHAL BUTONU İŞLEVİ ---
+    function ohalDegistir() { 
+        if(aktifRutbeId !== 10) return; 
+        database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); 
+    }
+    
+    // --- OHAL DİNLEYİCİSİ VE SES ÇALICI ---
+    database.ref('sistem/ohal').on('value', s => { 
+        if(s.val()) { 
+            // OHAL AKTİF OLDUĞUNDA
+            document.body.classList.add('ohal-active'); 
+            document.getElementById('ohalAlertBar').style.display = 'block'; 
+            document.getElementById('ohalBtn').innerText = "⚠️ OHAL BİTİR";
+            
+            // Sesi oynat (Kullanıcı etkileşimi gerekebilir, bu yüzden catch bloğu var)
+            sirenAudio.play().catch(error => {
+                console.log("Ses çalma hatası (Tarayıcı politikası):", error);
+            });
+        } else { 
+            // OHAL BİTTİĞİNDE
+            document.body.classList.remove('ohal-active'); 
+            document.getElementById('ohalAlertBar').style.display = 'none'; 
+            document.getElementById('ohalBtn').innerText = "🚨 OHAL BAŞLAT";
+            
+            // Sesi durdur ve başa sar
+            sirenAudio.pause();
+            sirenAudio.currentTime = 0;
+        } 
+    });
+
     function dbSil(path) { if(aktifRutbeId >= 5 && confirm("Sil?")) database.ref(path).remove(); }
     function modalKapat() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
     function modalAc(id){ document.getElementById(id).style.display='flex'; }
