@@ -18,15 +18,14 @@
         #sonuc { margin-top: 25px; padding: 20px; display: none; border-radius: 8px; background: rgba(0,0,0,0.4); }
         .red-sebebi-kutu { margin-top: 15px; font-size: 0.9rem; color: #ffcccc; background: rgba(220, 53, 69, 0.2); padding: 10px; border-radius: 5px; border: 1px solid #dc3545; }
 
-        /* Gizli Buton */
-        .secret-admin { position: fixed; bottom: 10px; right: 10px; color: rgba(255,255,255,0.05); text-decoration: none; font-size: 12px; cursor: default; z-index: 9999; transition: 0.3s; }
-        .secret-admin:hover { color: rgba(255,255,255,0.5); cursor: pointer; }
+        .secret-admin { position: fixed; bottom: 10px; right: 10px; opacity: 0.3; text-decoration: none; color: white; font-size: 12px; }
+        .secret-admin:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <img src="egmm.png" class="logo" alt="EGM Logo">
+    <img src="egmm.png" class="logo" alt="EGM Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
     
     <h1>BAŞVURU SORGULAMA</h1>
     <p style="color:#aaa; font-size:0.9rem;">Discord ID ile durumunuzu kontrol edin.</p>
@@ -37,10 +36,10 @@
     <div id="sonuc"></div>
     
     <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0;">
-    <a href="apply.html" class="btn btn-blue">Başvuru Yap</a>
+    <a href="apply.html" class="btn btn-blue">BAŞVURU YAP</a>
 </div>
 
-<a href="admin.html" class="secret-admin" title="Yönetim">🔒</a>
+<a href="admin.html" class="secret-admin">Yönetim Paneli</a>
 
 <script src="config.js"></script>
 <script>
@@ -50,14 +49,16 @@
         if(!id) { alert("Lütfen Discord ID girin!"); return; }
         sonucDiv.style.display = 'none';
         
-        database.ref('basvurular').orderByChild('discord_id').equalTo(id).once('value', snapshot => {
+        // ID'ye göre son başvuruyu bul
+        database.ref('basvurular').orderByChild('discord_id').equalTo(id).limitToLast(1).once('value', snapshot => {
             if (snapshot.exists()) {
+                // Obje döndüğü için value'larını alıp ilkini seçiyoruz
                 const data = Object.values(snapshot.val())[0];
                 let mesaj = "DEĞERLENDİRİLİYOR ⏳";
                 let renk = "#ffc107";
                 let ekBilgi = "";
 
-                if (data.durum === 'Onaylandı') { mesaj = "ONAYLANDI ✅"; renk = "#28a745"; }
+                if (data.durum === 'Onaylandı') { mesaj = "ONAYLANDI ✅"; renk = "#28a745"; ekBilgi="<p>Lütfen Discord üzerinden yetkililere ulaşın.</p>"; }
                 if (data.durum === 'Reddedildi') { 
                     mesaj = "REDDEDİLDİ ❌"; 
                     renk = "#dc3545"; 
@@ -66,10 +67,11 @@
                     }
                 }
                 
-                sonucDiv.innerHTML = `<h3 style="color:${renk}; margin:0;">${mesaj}</h3><p style="margin-top:10px;">${data.ic_isim}</p>${ekBilgi}`;
+                sonucDiv.innerHTML = `<h3 style="color:${renk}; margin:0;">${mesaj}</h3><p style="margin-top:5px;">${data.ic_isim}</p>${ekBilgi}`;
                 sonucDiv.style.display = 'block';
             } else {
-                alert("Başvuru bulunamadı.");
+                sonucDiv.innerHTML = `<h3 style="color:#fff;">KAYIT BULUNAMADI</h3>`;
+                sonucDiv.style.display = 'block';
             }
         });
     }
