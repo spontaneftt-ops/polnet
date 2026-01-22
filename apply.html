@@ -30,7 +30,7 @@
 <div class="card">
     <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
     <div class="step-count" id="stepCount">Giriş</div>
-    <img src="egmm.png" class="logo">
+    <img src="egmm.png" class="logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/9203/9203764.png'">
     <div class="question-box" id="qBox"></div>
     <div class="footer">
         <button class="btn btn-back" id="bBack" onclick="nav(-1)">GERİ</button>
@@ -40,29 +40,35 @@
 
 <script src="config.js"></script>
 <script>
+    // --- SORULAR VE YAPILANDIRMA ---
     const sabitSorular = [
-        {id:'i', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz sisteme işlenecektir.<br>Sorular havuzdan rastgele seçilir.'},
+        {id:'i', t:'info', h:'EGM SİBER BAŞVURU', s:'Başvurunuz sisteme işlenecektir.<br>Yalan beyanda bulunmak yasaktır.'},
         {id:'discord_id', t:'text', h:'KİMLİK DOĞRULAMA', s:'Discord ID Giriniz:'},
         {id:'ic_isim', t:'text', h:'KİMLİK BİLGİLERİ', s:'Karakter Adı Soyadı (IC):'},
         {id:'ooc_yas', t:'number', h:'KİŞİSEL BİLGİLER', s:'Gerçek Yaşınız (OOC):'},
-        {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Günlük aktiflik süreniz?'},
+        {id:'aktiflik', t:'number', h:'AKTİFLİK', s:'Günlük kaç saat aktifsiniz?'},
         {id:'karakter_hikaye', t:'textarea', h:'KARAKTER ANALİZİ', s:'Karakter hikayeniz ve polis olma motivasyonunuz?'}
     ];
     
+    // Rastgele havuz
     const havuz = [
-        {id:'h1', t:'textarea', h:'KURAL', s:'Powergaming (PG) nedir? Örnek veriniz.'},
-        {id:'h2', t:'textarea', h:'KURAL', s:'Metagaming (MG) nedir?'},
+        {id:'h1', t:'textarea', h:'KURAL BİLGİSİ', s:'Powergaming (PG) nedir? Örnek veriniz.'},
+        {id:'h2', t:'textarea', h:'KURAL BİLGİSİ', s:'Metagaming (MG) nedir? Örnek veriniz.'},
+        {id:'h3', t:'textarea', h:'KURAL BİLGİSİ', s:'New Life Rule (NLR) nedir?'},
         {id:'s1', t:'textarea', h:'SENARYO', s:'Trafik kontrolünde size silah çekildi. Ne yaparsınız?'},
-        {id:'s2', t:'textarea', h:'SENARYO', s:'Ortağınız vuruldu. İlk hamleniz ne olur?'}
+        {id:'s2', t:'textarea', h:'SENARYO', s:'Üst rütbeniz size yasadışı bir emir verdi. Ne yaparsınız?'},
+        {id:'s3', t:'textarea', h:'SENARYO', s:'Bir rehine durumu var, müzakerecisiniz. İlk cümleniz ne olur?'}
     ];
 
     function sorulariHazirla() {
-        const karisik = havuz.sort(() => 0.5 - Math.random()).slice(0, 5);
+        const karisik = havuz.sort(() => 0.5 - Math.random()).slice(0, 4); // 4 Rastgele soru
         return [...sabitSorular, ...karisik];
     }
 
     const q = sorulariHazirla();
-    let idx = 0; let ans = {}; let soruMetinleri = {};
+    let idx = 0; 
+    let ans = {}; 
+    let soruMetinleri = {};
 
     function render() {
         const item = q[idx];
@@ -71,7 +77,10 @@
         const bBack = document.getElementById('bBack');
         const count = document.getElementById('stepCount');
         
-        let inputHTML = item.t === 'info' ? "" : (item.t==='textarea' ? `<textarea id="inp"></textarea>` : `<input type="${item.t}" id="inp">`);
+        let inputHTML = "";
+        if(item.t === 'textarea') inputHTML = `<textarea id="inp"></textarea>`;
+        else if(item.t !== 'info') inputHTML = `<input type="${item.t}" id="inp">`;
+
         box.innerHTML = `<div class="q-header">${item.h}</div><div class="q-text">${item.s}</div>${inputHTML}`;
         
         if(item.t !== 'info' && document.getElementById('inp')) {
@@ -80,39 +89,49 @@
         }
 
         bBack.style.visibility = idx === 0 ? 'hidden' : 'visible';
-        bNext.innerText = idx === 0 ? 'BAŞLAT' : (idx === q.length-1 ? 'VERİLERİ GÖNDER' : 'İLERİ');
+        bNext.innerText = idx === 0 ? 'BAŞLAT' : (idx === q.length-1 ? 'GÖNDER' : 'İLERİ');
         document.getElementById('pBar').style.width = ((idx / (q.length-1)) * 100) + '%';
         if(idx>0) count.innerText = `ADIM: ${idx} / ${q.length-1}`;
     }
 
     function nav(d) {
+        // İleri giderken veri kaydetme
         if(d === 1 && idx > 0) {
             const val = document.getElementById('inp').value.trim();
             if(!val) return alert('Bu alan boş bırakılamaz!');
+            
+            // Eğer sayısal alan ise kontrol et
+            if(q[idx].t === 'number' && isNaN(val)) return alert("Lütfen sayı giriniz.");
+
             ans[q[idx].id] = val;
-            soruMetinleri[q[idx].id] = q[idx].s;
+            soruMetinleri[q[idx].id] = q[idx].s; // Soru metnini de kaydet (Admin panelde göstermek için)
         }
+        
+        // Gönder butonu
         if(d === 1 && idx === q.length-1) return send();
-        idx += d; render();
+        
+        idx += d; 
+        render();
     }
 
     function send() {
+        // 1. Kara Liste Kontrolü
         database.ref('blacklist').orderByChild('discord_id').equalTo(ans.discord_id).once('value', snapshot => {
             if (snapshot.exists()) {
-                alert("⛔ HATA: Bu Discord ID kara listede olduğu için başvuru yapamazsınız!");
-                return; 
+                alert("⛔ HATA: Bu Discord ID kara listede bulunmaktadır!");
+                // Opsiyonel: Sayfayı yenile veya yönlendir
             } else {
+                // 2. Başvuru Gönderimi
                 const btn = document.getElementById('bNext');
-                btn.innerText = 'SİSTEME İŞLENİYOR...'; 
+                btn.innerText = 'LÜTFEN BEKLEYİN...'; 
                 btn.disabled = true;
 
-                // İstediğin data yapısı ile güncellendi
                 const data = { 
                     discord_id: ans.discord_id, 
                     ic_isim: ans.ic_isim, 
                     ooc_yas: ans.ooc_yas, 
-                    durum: 'Beklemede', // Admin panelinde görünmesini sağlayan kritik alan
-                    tarih: new Date().toISOString(), 
+                    durum: 'Beklemede', 
+                    tarih: Date.now(), // Timestamp olarak kaydetmek sıralama için daha iyidir
                     cevaplar: ans, 
                     soru_detaylari: soruMetinleri
                 };
@@ -120,19 +139,21 @@
                 database.ref('basvurular').push(data, (err) => {
                     if(err) { 
                         alert("Hata: " + err.message); 
-                        btn.innerText = 'VERİLERİ GÖNDER';
+                        btn.innerText = 'GÖNDER'; 
                         btn.disabled = false; 
-                        return; 
+                    } else {
+                        document.querySelector('.card').innerHTML = `
+                            <h1 style="color:#00ff00;">BAŞVURU İLETİLDİ ✅</h1>
+                            <p>Başvurunuz yetkililer ekranına düşmüştür.</p>
+                            <p>Sonucu "Başvuru Sorgulama" ekranından takip edebilirsiniz.</p>
+                            <button onclick="window.location.href='index.html'" class="btn btn-next" style="margin-top:20px;">ANA SAYFA</button>
+                        `;
                     }
-                    document.querySelector('.card').innerHTML = `
-                        <h1 style="color:#00ff00;">BAŞVURU İLETİLDİ ✅</h1>
-                        <p>Verileriniz başarıyla kaydedildi.</p>
-                        <button onclick="window.location.href='index.html'" class="btn btn-next" style="margin-top:20px;">ÇIKIŞ</button>
-                    `;
                 });
             }
         });
     }
+
     render();
 </script>
 </body>
