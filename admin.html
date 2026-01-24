@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLNET v6.3 - Salary System Fix</title>
+    <title>POLNET v6.3 - SpontaneFTT Web Coding</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -589,17 +589,19 @@
     function dbSil(p) { if(!yetkiVarMi('perm_ceza_sil')) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref(p).remove(); }
     
     // YENİ WEBHOOK SİSTEMİ İLE OHAL FONKSİYONU
-    function sendOhalWebhook(aktif) {
+    function sendOhalWebhook(aktif, memur) {
+        const descriptionSuffix = `\n\n👮 **İşlemi Yapan Yetkili:** ${memur}`;
+
         const embed = aktif ? {
             title: "⚠️ DİKKAT: OLAĞANÜSTÜ HAL (OHAL) İLAN EDİLDİ!",
-            description: "**ŞEHİRDEKİ TÜM VATANDAŞLARIN DİKKATİNE!**\n\nŞehirde artan güvenlik tehditleri nedeniyle Emniyet Müdürlüğü tarafından **OHAL** ilan edilmiştir.\n\n⛔ **Sokağa Çıkma Yasağı:** AKTİF\n🔫 **Güvenlik Protokolü:** GÖRÜLDÜĞÜ YERDE VUR EMRİ\n\nLütfen can güvenliğiniz için derhal evlerinize dönünüz ve pencerelerden uzak durunuz.",
+            description: "**ŞEHİRDEKİ TÜM VATANDAŞLARIN DİKKATİNE!**\n\nŞehirde artan güvenlik tehditleri nedeniyle Emniyet Müdürlüğü tarafından **OHAL** ilan edilmiştir.\n\n⛔ **Sokağa Çıkma Yasağı:** AKTİF\n🔫 **Güvenlik Protokolü:** Şüpheli Hareketler Sergileyenler'e Kaba Kuvvet Kullanmak Serbest 1.Vazifeniz Göz Altına Almak...\n\nLütfen can güvenliğiniz için derhal evlerinize dönünüz ve pencerelerden uzak durunuz." + descriptionSuffix,
             color: 15548997, 
             footer: { text: "Emniyet Genel Müdürlüğü - Komuta Kontrol Merkezi" },
             timestamp: new Date().toISOString(),
             thumbnail: { url: "https://cdn-icons-png.flaticon.com/512/10336/10336343.png" }
         } : {
             title: "🟢 OHAL DURUMU SONA ERDİ",
-            description: "Tehdit unsurları etkisiz hale getirilmiş ve şehir güvenliği yeniden sağlanmıştır.\n\nSokağa çıkma yasakları kaldırılmıştır. İşbirliğiniz için teşekkür ederiz.",
+            description: "Tehdit unsurları etkisiz hale getirilmiş ve şehir güvenliği yeniden sağlanmıştır.\n\nSokağa çıkma yasakları kaldırılmıştır. İşbirliğiniz için teşekkür ederiz." + descriptionSuffix,
             color: 5763719,
             footer: { text: "Emniyet Genel Müdürlüğü" },
             timestamp: new Date().toISOString()
@@ -625,7 +627,7 @@
             const yeniDurum = !s.val();
             database.ref('sistem/ohal').set(yeniDurum); 
             logEkle(yeniDurum ? "OHAL BAŞLATILDI" : "OHAL BİTİRİLDİ");
-            sendOhalWebhook(yeniDurum);
+            sendOhalWebhook(yeniDurum, aktifKullanici);
         }); 
     }
 
