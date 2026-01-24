@@ -326,6 +326,7 @@
     
     const DISCORD_APP_WEBHOOK = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
     const DISCORD_SHIFT_WEBHOOK = "https://discord.com/api/webhooks/1464022469433229409/jw4_BOviCKI1suE7JSBgae4o2xi-sl48Io8NdnN1UopDOq3YP5SW5gT-wEa25t28yGaR";
+    const DISCORD_OHAL_WEBHOOK = "https://discord.com/api/webhooks/1464414142688395336/Md9KeD670VTiNWRyFGmwuoWgudsCcaP39cm0bgYCQWUiW-0Vi7DP-5iIFc3-3SUuIeyQ";
     
     const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue",defMaas:5000},{id:1,ad:"Baş Polis",class:"badge-blue",defMaas:6000},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue",defMaas:7000},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple",defMaas:8500},{id:4,ad:"Komiser",class:"badge-purple",defMaas:10000},{id:5,ad:"Baş Komiser",class:"badge-purple",defMaas:12000},{id:6,ad:"Emniyet Amiri",class:"badge-gold",defMaas:15000},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:20000},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:25000},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:30000},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red",defMaas:50000}];
     const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_personel_sil': 10, 'perm_ohal': 10, 'perm_personel_gor': 5, 'perm_yetki_yonet': 10};
@@ -586,7 +587,48 @@
     function durumGuncelle(d) { if(!yetkiVarMi('perm_basvuru_yonet')) return alert("Yetkisiz!"); database.ref('basvurular/'+seciliBasvuruId).update({durum:d}); sendDiscordWebhook(seciliBasvuruData, d); modalKapat(); showToast(`Başvuru ${d}`); logEkle(`Başvuru ${d}: ${seciliBasvuruData.ic_isim}`); }
     function ruhsatKaydet() { if(!yetkiVarMi('perm_ruhsat_ver')) return alert("Yetkisiz!"); const s=document.getElementById('ruh_sahip').value; const t=document.getElementById('ruh_tip').value; const g=document.getElementById('ruh_tarih').value; if(!s||!g) return alert("Boş!"); database.ref('ruhsatlar').push({sahip:s, tip:t, gecerlilik:g, veren:aktifKullanici}); showToast("Ruhsat Verildi!"); modalKapat(); logEkle(`Ruhsat verildi: ${s}`); }
     function dbSil(p) { if(!yetkiVarMi('perm_ceza_sil')) return alert("Yetkisiz!"); if(confirm("Sil?")) database.ref(p).remove(); }
-    function ohalDegistir() { if(!yetkiVarMi('perm_ohal')) return alert("Yetkisiz!"); database.ref('sistem/ohal').once('value', s => database.ref('sistem/ohal').set(!s.val())); logEkle("OHAL durumu değiştirildi."); }
+    
+    // YENİ WEBHOOK SİSTEMİ İLE OHAL FONKSİYONU
+    function sendOhalWebhook(aktif) {
+        const embed = aktif ? {
+            title: "⚠️ DİKKAT: OLAĞANÜSTÜ HAL (OHAL) İLAN EDİLDİ!",
+            description: "**ŞEHİRDEKİ TÜM VATANDAŞLARIN DİKKATİNE!**\n\nŞehirde artan güvenlik tehditleri nedeniyle Emniyet Müdürlüğü tarafından **OHAL** ilan edilmiştir.\n\n⛔ **Sokağa Çıkma Yasağı:** AKTİF\n🔫 **Güvenlik Protokolü:** GÖRÜLDÜĞÜ YERDE VUR EMRİ\n\nLütfen can güvenliğiniz için derhal evlerinize dönünüz ve pencerelerden uzak durunuz.",
+            color: 15548997, 
+            footer: { text: "Emniyet Genel Müdürlüğü - Komuta Kontrol Merkezi" },
+            timestamp: new Date().toISOString(),
+            thumbnail: { url: "https://cdn-icons-png.flaticon.com/512/10336/10336343.png" }
+        } : {
+            title: "🟢 OHAL DURUMU SONA ERDİ",
+            description: "Tehdit unsurları etkisiz hale getirilmiş ve şehir güvenliği yeniden sağlanmıştır.\n\nSokağa çıkma yasakları kaldırılmıştır. İşbirliğiniz için teşekkür ederiz.",
+            color: 5763719,
+            footer: { text: "Emniyet Genel Müdürlüğü" },
+            timestamp: new Date().toISOString()
+        };
+
+        const payload = {
+            username: "POLNET Duyuru Sistemi",
+            avatar_url: "https://cdn-icons-png.flaticon.com/512/9203/9203764.png",
+            content: aktif ? "@everyone 🚨 **ACİL DURUM BİLDİRİSİ**" : "✅ **GÜVENLİK GÜNCELLEMESİ**",
+            embeds: [embed]
+        };
+
+        fetch(DISCORD_OHAL_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Webhook hatası:", err));
+    }
+
+    function ohalDegistir() { 
+        if(!yetkiVarMi('perm_ohal')) return alert("Yetkisiz!"); 
+        database.ref('sistem/ohal').once('value', s => { 
+            const yeniDurum = !s.val();
+            database.ref('sistem/ohal').set(yeniDurum); 
+            logEkle(yeniDurum ? "OHAL BAŞLATILDI" : "OHAL BİTİRİLDİ");
+            sendOhalWebhook(yeniDurum);
+        }); 
+    }
+
     function basvurulariDinle() { database.ref('basvurular').on('value', s => { const tb = document.getElementById('basvuruListesi'); let bekleyen=0; let arr=[]; s.forEach(c => arr.push({k:c.key, v:c.val()})); arr.sort((a,b)=>(a.v.durum==='Beklemede'&&b.v.durum!=='Beklemede')?-1:1); let html=""; arr.forEach(i=>{ const d=i.v; if(d.durum==='Beklemede') bekleyen++; let b=d.durum==='Onaylandı'?'badge-green':(d.durum==='Reddedildi'?'badge-red':'badge-warn'); let silBtn = yetkiVarMi('perm_basvuru_yonet') ? `<button onclick="basvuruSil('${i.k}')" class="btn btn-red" style="margin-left:5px;"><i class="fas fa-trash"></i></button>` : ''; html+=`<tr><td>${d.tarih?new Date(d.tarih).toLocaleDateString():'-'}</td><td>${d.discord_id}</td><td>${d.ic_isim}</td><td><span class="badge ${b}">${d.durum}</span></td><td><button onclick="sesCal('click'); basvuruIncele('${i.k}')" class="btn btn-blue">İNCELE</button>${silBtn}</td></tr>`; }); tb.innerHTML=html; document.getElementById('statBasvuru').innerText=bekleyen; document.getElementById('basvuruBadge').innerText=bekleyen; document.getElementById('basvuruBadge').style.display=bekleyen>0?'inline':'none'; }); }
     
     // DISCORD WEBHOOK FONKSİYONLARI (BAŞVURU + MESAİ)
