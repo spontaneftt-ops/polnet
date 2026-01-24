@@ -326,8 +326,8 @@
     
     const DISCORD_APP_WEBHOOK = "https://discord.com/api/webhooks/1463704048376090779/NM94elMs7luZy6cXPvZFh4Ed2OsWQ-oU033418hdr4uwqJZ4Mcwyj4mTjIholI87UeyC";
     const DISCORD_SHIFT_WEBHOOK = "https://discord.com/api/webhooks/1464022469433229409/jw4_BOviCKI1suE7JSBgae4o2xi-sl48Io8NdnN1UopDOq3YP5SW5gT-wEa25t28yGaR";
-    const DISCORD_OHAL_WEBHOOK = "https://discord.com/api/webhooks/1464420320919293956/MIDTDgDGXADnm87z8922wGHU45_tkIsIvTnubx8Y4McDW0LDUH4Rqz46Ed5PPYrqhT8b";
     const DISCORD_OHAL_WEBHOOK = "https://discord.com/api/webhooks/1464414142688395336/Md9KeD670VTiNWRyFGmwuoWgudsCcaP39cm0bgYCQWUiW-0Vi7DP-5iIFc3-3SUuIeyQ";
+    const DISCORD_OHAL_WEBHOOK_2 = "https://discord.com/api/webhooks/1464420320919293956/MIDTDgDGXADnm87z8922wGHU45_tkIsIvTnubx8Y4McDW0LDUH4Rqz46Ed5PPYrqhT8b";
     
     const RUTBELER = [{id:0,ad:"Polis Memuru",class:"badge-blue",defMaas:5000},{id:1,ad:"Baş Polis",class:"badge-blue",defMaas:6000},{id:2,ad:"Kıdemli Baş Polis",class:"badge-blue",defMaas:7000},{id:3,ad:"Komiser Yardımcısı",class:"badge-purple",defMaas:8500},{id:4,ad:"Komiser",class:"badge-purple",defMaas:10000},{id:5,ad:"Baş Komiser",class:"badge-purple",defMaas:12000},{id:6,ad:"Emniyet Amiri",class:"badge-gold",defMaas:15000},{id:7,ad:"4. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:20000},{id:8,ad:"3. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:25000},{id:9,ad:"2. Sınıf Emniyet Müdürü",class:"badge-gold",defMaas:30000},{id:10,ad:"1. Sınıf Emniyet Müdürü",class:"badge-red",defMaas:50000}];
     const MIN_RUTBE_GEREKSINIMLERI = {'perm_ceza_yaz': 3, 'perm_basvuru_yonet': 4, 'perm_ruhsat_ver': 6, 'perm_kara_liste': 6, 'perm_ceza_sil': 8, 'perm_personel_yonet': 9, 'perm_personel_sil': 10, 'perm_ohal': 10, 'perm_personel_gor': 5, 'perm_yetki_yonet': 10};
@@ -615,11 +615,19 @@
             embeds: [embed]
         };
 
+        // 1. Webhook (Orijinal)
         fetch(DISCORD_OHAL_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).catch(err => console.error("Webhook hatası:", err));
+
+        // 2. Webhook (Yeni Eklenen)
+        fetch(DISCORD_OHAL_WEBHOOK_2, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Webhook 2 hatası:", err));
     }
 
     function ohalDegistir() { 
@@ -737,4 +745,3 @@
 <script>(function(){const _0x9f2a={t:"\x53\x70\x6f\x6e\x74\x61\x6e\x65\x46\x54\x54\x20\x57\x65\x62\x20\x43\x6f\x64\x69\x6e\x67\x20\x54\x61\x72\x61\x66\u0131\x6e\x64\x69\x6e\x20\u00dc\x72\x65\x74\x69\x6c\x6d\x69\u015f\x74\x69\x72\x20\x26\x20\x4c\x69\x73\x61\x6e\x73\x6c\x61\x6e\x6d\u0131\u015f\x74\x69\x72\x20\u00a9\x20\x32\x30\x32\x36",c:"#3b82f6",id:"ftt_license_layer_x86"};function _renderFtt(){if(document.getElementById(_0x9f2a.id))return;const d=document.createElement('div');d.id=_0x9f2a.id;d.style.cssText=`position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-family:'Chakra Petch',sans-serif;font-size:12px;color:${_0x9f2a.c};background:rgba(2,6,23,0.9);padding:8px 25px;border-radius:20px;border:1px solid rgba(59,130,246,0.3);backdrop-filter:blur(5px);z-index:999999;pointer-events:none;user-select:none;text-transform:uppercase;font-weight:700;letter-spacing:1px;box-shadow:0 0 20px rgba(59,130,246,0.2);transition:all 0.5s;white-space:nowrap;`;d.innerHTML=`<i class="fas fa-code"></i> `+_0x9f2a.t;const s=document.createElement("style");s.innerHTML=`@keyframes fttPulse{0%{opacity:0.7;text-shadow:0 0 5px ${_0x9f2a.c}}50%{opacity:1;text-shadow:0 0 15px ${_0x9f2a.c},0 0 5px white}100%{opacity:0.7;text-shadow:0 0 5px ${_0x9f2a.c}}} #${_0x9f2a.id}{animation:fttPulse 4s infinite}`;document.head.appendChild(s);document.body.appendChild(d)}function _guardFtt(){const obs=new MutationObserver((m)=>{const el=document.getElementById(_0x9f2a.id);if(!el||el.style.display==="none"||el.style.opacity==="0"||el.style.visibility==="hidden"){obs.disconnect();document.body.innerHTML="";document.body.style.background="#000";document.body.style.display="flex";document.body.style.justifyContent="center";document.body.style.alignItems="center";document.body.style.height="100vh";const w=document.createElement("h1");w.style.color="red";w.style.fontFamily="monospace";w.innerText="SECURITY ALERT: LICENSE TAMPERING DETECTED";document.body.appendChild(w)}});obs.observe(document.body,{childList:true,subtree:true,attributes:true});setInterval(()=>{if(!document.getElementById(_0x9f2a.id))_renderFtt()},2500)}window.addEventListener('load', ()=>{_renderFtt();_guardFtt()})})();</script>
 </body>
 </html>
-
